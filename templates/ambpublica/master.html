@@ -1,0 +1,74 @@
+{# BASE DE EL AMBIENTE PUBLICO #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title>
+      {% block title %}
+      {% endblock title %}
+    </title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.2/minty/bootstrap.min.css"
+          integrity="sha512-eIWDPd26e4DL6modlm5smdzpfAMb8DmCBVxQAVxVJWDmevrMLVHcWaBEpG8eKiYZgLOZzxfS2dW67QhtqIgKdw=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{% static 'web/estilo.css' %}" />
+  </head>
+  <body>
+    {# Navbar Bootstrap dinamica mediante la verificacion de la URL #}
+    <nav class="navbar navbar-expand-lg ficat-green" data-bs-theme="dark">
+      <div class="container-fluid">
+        <div class="logo-container">
+          <img src="{% static 'Imagenes/Logo.png' %}" alt="Logo FiCats" class="logo" style="max-width: 100px; height: auto;">
+        </div>
+        <a class="navbar-brand" href="{% url 'ambpublico_index' %}"> Arce Vet</a>
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarMenuPrincipal"
+                aria-controls="navbarMenuPrincipal"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMenuPrincipal">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link{% if request.path_info|length == 0 %} active{% endif %}"
+                 href="{% url 'ambpublico_index' %}">Inicio</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if request.path_info == '/consulta_mascota/' %} active{% endif %}"
+                 href="{% url 'ambpublico_consulta' %}">Consulta Mascota</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if request.path_info == '/reservahora/' %} active{% endif %}"
+                 href="{% url 'ambpublico_reserva' %}">Reserva de Horas</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'panel_home' %}">Panel</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    {# Verificamos si la URL es 0, es decir, está en la página de inicio #}
+    {% if request.path_info|length != 0 %}<div class="container-fluid my-2">{% endif %}
+      {# Cargamos los mensajes de Django #}
+      {% include "../djangomessages.html" %}
+      {# Mostramos el contenido #}
+      {% block content %}
+      {% endblock content %}
+      {# Terminacion del div de más arriba #}
+      {% if request.path_info|length != 0 %}</div>{% endif %}
+    {# Pie #}
+    <footer class="bg-light text-center py-3">
+      <div class="container">
+        <p>(c) 2023 Veterinaria FiCats. Todos los derechos reservados.</p>
+      </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+  </body>
+</html>

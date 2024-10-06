@@ -1,0 +1,14 @@
+{# Form separado para mostrar la lista de mascotas #}
+{% extends "../master.html" %}
+{% block title %}
+  Editor Cliente
+{% endblock title %}
+{% block content %}
+  <form method="post">
+    {% csrf_token %} {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Aceptar</button>
+  </form>
+  <hr />
+  <h3>Mascotas</h3>
+  {% include "../mascota/tabla_listado.html" with mostrar_cliente=False %}
+{% endblock content %}

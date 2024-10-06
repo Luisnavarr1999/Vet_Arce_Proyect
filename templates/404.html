@@ -1,0 +1,9 @@
+{% extends "./ambpublica/master.html" %}
+{% block title %}
+    {{ titulo }}
+{% endblock title %}
+{% block content %}
+    <h1>Error 404</h1>
+    <p>No se ha encontrado lo solicitado...</p>
+    <a href="{% url 'ambpublico_index' %}">Volver al inicio</a>
+{% endblock content %}

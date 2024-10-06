@@ -1,0 +1,38 @@
+{% extends "./master.html" %}
+{% block title %}
+  Inicio
+{% endblock title %}
+{% block content %}
+  {% comment %} Página de inicio del paneltrabajador. {% endcomment %}
+  <div class="text-center p-3">
+    <h1 class="fw-light">¡Bienvenido!</h1>
+    <p class="lead">Esperamos que tenga un día muy productivo.</p>
+  </div>
+  <div class="row">
+    <div class="col-lg-8">
+      {# Verificamos si tiene permisos #}
+      {% if perms.paneltrabajador.view_cita %}
+        <div class="card mb-1 border-primary">
+          <div class="card-header bg-primary text-white text-center">Mis Citas</div>
+          <div class="card-body">
+            {# Tiene citas? #}
+            {% if citas %}
+              {% include "./cita/tabla.html" with es_home=True %}
+            {% else %}
+              <div class="alert alert-secondary">Usted no tiene ninguna cita reservada</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    {# Mostrar su nombre y su grupo (rol) #}
+    <div class="col-lg-4">
+      <div class="card mb-1">
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ first_name }} {{ last_name }}</h5>
+          <p class="card-text">{{ grupo }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

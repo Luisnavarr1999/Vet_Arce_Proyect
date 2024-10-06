@@ -1,0 +1,35 @@
+{# Este codigo sera reutilizado, por eso está separado del listado #}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>ID de Mascota</th>
+      <th>Nombre</th>
+      <th>Número de Chip</th>
+      {# Verificamos si debemos mostrar el cliente (esto se hace con el With al hacer include) #}
+      {% if mostrar_cliente == True %}<th>Cliente</th>{% endif %}
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for mascota in mascotas %}
+      <tr>
+        <td>{{ mascota.id_mascota }}</td>
+        <td>{{ mascota.nombre }}</td>
+        <td>{{ mascota.numero_chip }}</td>
+        {# Verificamos si debemos mostrar el cliente (esto se hace con el With al hacer include) #}
+        {% if mostrar_cliente == True %}<td>{{ mascota.cliente }}</td>{% endif %}
+        <td>
+          {# Verificamos permisos #}
+          {% if perms.paneltrabajador.change_mascota %}
+            <a href="{% url 'panel_mascota_editar' mascota.id_mascota %}"
+               class="btn btn-primary">Editar</a>
+          {% endif %}
+          {% if perms.paneltrabajador.delete_mascota %}
+            <a href="{% url 'panel_mascota_eliminar' mascota.id_mascota %}"
+               class="btn btn-danger">Eliminar</a>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

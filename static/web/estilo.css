@@ -1,0 +1,10 @@
+.ficat-green {
+  background: #db9615;
+}
+header.home {
+  background: #dd6f08; /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #ec711e, #d49815); /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #df6d11, #ce8210); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+  padding: 6rem;
+}
+

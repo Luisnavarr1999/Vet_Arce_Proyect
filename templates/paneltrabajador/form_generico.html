@@ -1,0 +1,11 @@
+{% extends "./master.html" %}
+{% block title %}
+  Editor
+{% endblock title %}
+{% block content %}
+  {% comment %} Este archivo se usará para aquellas vistas que no requieran mostrar informacion adicional. {% endcomment %}
+  <form method="post">
+    {% csrf_token %} {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Aceptar</button>
+  </form>
+{% endblock content %}

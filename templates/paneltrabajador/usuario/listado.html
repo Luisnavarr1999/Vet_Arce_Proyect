@@ -1,0 +1,49 @@
+{% extends "../master.html" %}
+{% block title %}
+  Listado - Usuarios
+{% endblock title %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="fw-light">Listado de usuarios</h3>
+    {# Verificamos permisos #}
+    {% if perms.auth.add_user %}
+      <a href="{% url 'panel_usuario_agregar' %}" class="btn btn-success">Agregar nuevo usuario</a>
+    {% endif %}
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre de Usuario</th>
+        <th>Correo Electrónico</th>
+        <th>Fecha de Registro</th>
+        <th>Último Acceso</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in usuarios %}
+        <tr>
+          <td>{{ user.id }}</td>
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.date_joined }}</td>
+          <td>{{ user.last_login }}</td>
+          <td>
+            {# Verificamos permisos #}
+            {% if perms.auth.change_user %}
+              <a href="{% url 'panel_usuario_editar' user.id %}"
+                 class="btn btn-primary">Editar</a>
+              <a href="{% url 'panel_usuario_newpassword' user.id %}"
+                 class="btn btn-warning">Generar Nueva Contraseña</a>
+            {% endif %}
+            {% if perms.auth.delete_user %}
+              <a href="{% url 'panel_usuario_eliminar' user.id %}"
+                 class="btn btn-danger">Eliminar</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock content %}

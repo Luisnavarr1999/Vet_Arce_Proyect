@@ -1,0 +1,46 @@
+{% extends "../master.html" %}
+{% block title %}
+  Listado - Clientes
+{% endblock title %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="fw-light">Listado de clientes</h3>
+    {% if perms.paneltrabajador.add_cliente %}
+      <a href="{% url 'panel_cliente_nuevo' %}" class="btn btn-success">Agregar nuevo cliente</a>
+    {% endif %}
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>RUT</th>
+        <th>Nombre</th>
+        <th>Dirección</th>
+        <th>Teléfono</th>
+        <th>E-mail</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cliente in clientes %}
+        <tr>
+          <td>{{ cliente.rut }}</td>
+          <td>{{ cliente.nombre_cliente }}</td>
+          <td>{{ cliente.direccion }}</td>
+          <td>{{ cliente.telefono }}</td>
+          <td>{{ cliente.email }}</td>
+          <td>
+            {# Verificamos permisos #}
+            {% if perms.paneltrabajador.change_cliente %}
+              <a href="{% url 'panel_cliente_editar' cliente.rut %}"
+                 class="btn btn-primary">Editar</a>
+            {% endif %}
+            {% if perms.paneltrabajador.delete_cliente %}
+              <a href="{% url 'panel_cliente_eliminar' cliente.rut %}"
+                 class="btn btn-danger">Eliminar</a>
+            </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock content %}

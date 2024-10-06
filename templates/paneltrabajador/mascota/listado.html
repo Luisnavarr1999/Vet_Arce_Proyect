@@ -1,0 +1,14 @@
+{% extends "../master.html" %}
+{% block title %}
+  Listado - Mascotas
+{% endblock title %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="fw-light">Listado de mascotas</h3>
+    {# Verificamos permisos #}
+    {% if perms.paneltrabajador.add_mascota %}
+      <a href="{% url 'panel_mascota_nuevo' %}" class="btn btn-success">Agregar nueva mascota</a>
+    {% endif %}
+  </div>
+  {% include "./tabla_listado.html" with mostrar_cliente=True %}
+{% endblock content %}

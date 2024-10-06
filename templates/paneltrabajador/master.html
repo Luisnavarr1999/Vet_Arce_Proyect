@@ -1,0 +1,113 @@
+{# BASE DEL PANEL #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title>
+      {% block title %}
+      {% endblock title %}
+    - Panel de Veterinarai de Arce</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.2/zephyr/bootstrap.min.css"
+          integrity="sha512-tVaFJG+ePp27IMFymeEddl8DmqmDjlc2eInwfQ83Bddk8TC0lXUZ9kPy0VKGyQr52CY4THcBRBvCEZnsh63WmA=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{% static 'panel/estilo.css' %}" />
+  </head>
+  <body>
+    <header class="navbar navbar-dark sticky-top bg-primary flex-md-nowrap p-0 shadow navbar-expand">
+      
+      <a class="navbar-brand col-4 col-lg-2 me-0 px-3 fs-6 text-truncate"
+         href="{% url 'panel_home' %}">Arce</a>
+      <div class="navbar-nav w-100">
+        <button class="navbar-toggler d-lg-none d-block collapsed border-0 order-1 order-lg-0 ms-auto mx-1"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#sidebarMenu"
+                aria-controls="sidebarMenu"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="nav-item dropdown text-nowrap ms-lg-auto order-0 order-lg-1">
+          <a class="nav-link dropdown-toggle px-3"
+             href="#"
+             role="button"
+             data-bs-toggle="dropdown"
+             aria-expanded="false">Opciones</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="{% url 'ambpublico_index' %}">Volver al Portal</a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'panel_logout' %}">Cerrar Sesión</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+    <div class="container-fluid">
+      <div class="row">
+        {% comment %} Navbar de Boostrap. Asigna la clase CSS active mediante la URL. {% endcomment %}
+        <nav id="sidebarMenu"
+             class="col-lg-2 d-lg-block bg-light sidebar collapse">
+          <div class="position-sticky pt-3 sidebar-sticky">
+            <ul class="nav nav-pills px-2 flex-column mb-auto">
+              <li class="nav-item">
+                <a class="nav-link{% if request.path_info == '/panel/' %} active{% endif %}"
+                   href="{% url 'panel_home' %}">Inicio</a>
+              </li>
+              {% if perms.paneltrabajador.view_cliente %}
+                <li class="nav-item">
+                  <a class="nav-link{% if '/panel/clientes/' in request.path_info %} active{% endif %}"
+                     href="{% url 'panel_cliente_listado' %}">Clientes</a>
+                </li>
+              {% endif %}
+              {% if perms.paneltrabajador.view_mascota %}
+                <li class="nav-item">
+                  <a class="nav-link{% if '/panel/mascotas/' in request.path_info %} active{% endif %}"
+                     href="{% url 'panel_mascota_listar' %}">Mascotas</a>
+                </li>
+              {% endif %}
+              {% if perms.paneltrabajador.view_cita %}
+                <li class="nav-item">
+                  <a class="nav-link{% if '/panel/citas/' in request.path_info %} active{% endif %}"
+                     href="{% url 'panel_cita_listar' %}">Citas</a>
+                </li>
+              {% endif %}
+              {% if perms.paneltrabajador.view_producto %}
+                <li class="nav-item">
+                  <a class="nav-link{% if '/panel/productos/' in request.path_info %} active{% endif %}"
+                     href="{% url 'panel_producto_listar' %}">Inventario</a>
+                </li>
+              {% endif %}
+              {% if perms.paneltrabajador.view_factura %}
+                <li class="nav-item">
+                  <a class="nav-link{% if '/panel/facturas/' in request.path_info %} active{% endif %}"
+                     href="{% url 'panel_factura_listar' %}">Facturaciones</a>
+                </li>
+              {% endif %}
+              {% if perms.auth.view_user %}
+                <li class="nav-item">
+                  <a class="nav-link{% if '/panel/usuarios/' in request.path_info %} active{% endif %}"
+                     href="{% url 'panel_usuario_listar' %}">Usuarios</a>
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+        </nav>
+        <main class="ms-sm-auto col-lg-10 px-md-4 my-2">
+          {# Mensajes de Django #}
+          <div id="alerts">{% include "../djangomessages.html" %}</div>
+          <div class="dj-b-content">
+            {% block content %}
+            {% endblock content %}
+          </div>
+        </main>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+  </body>
+</html>

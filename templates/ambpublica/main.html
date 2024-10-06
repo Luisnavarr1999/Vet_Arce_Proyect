@@ -1,0 +1,146 @@
+{% extends "./master.html" %}
+{% load static %}
+{% block title %}
+  Arce Vet
+{% endblock title %}
+{% block content %}
+  {# Pagina de inicio de FiCats #}
+  {# Encabezado #}
+  <header class="text-center home text-white">
+    <div class="logo-container">
+      <img src="{% static 'Imagenes/Logo.png' %}" alt="Logo FiCats" class="logo" style="max-width: 200px; height: auto;">
+    </div>
+    <h1 class="text-light">Veterinaria de Arce</h1>
+    <p class="lead">Cuidando la salud y felicidad de tus mascotas</p>
+  </header>
+  {# Nuestros Servicios #}
+  <section id="servicios" class="py-5">
+    <div class="container">
+      <h2 class="text-center">Nuestros Servicios</h2>
+      <hr class="w-25 mx-auto" />
+      <div class="row">
+        <div class="col-lg-4 mb-2">
+          <div class="card shadow-lg ficat-green text-white border-0 h-100">
+            <div class="card-body text-center p-5 d-flex justify-content-center align-items-center">
+              <div>
+                <h4>Consulta General</h4>
+                <p>Exámenes de rutina, vacunas y atención médica general para mascotas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-2">
+          <div class="card shadow-lg ficat-green text-white border-0 h-100">
+            <div class="card-body text-center p-5 d-flex justify-content-center align-items-c enter">
+              <div>
+                <h4>Cirugía</h4>
+                <p>Realizamos cirugías con estándares médicos de alta calidad.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 mb-2">
+          <div class="card shadow-lg ficat-green text-white border-0 h-100">
+            <div class="card-body text-center p-5 d-flex justify-content-center align-items-center">
+              <div>
+                <h4>Dentista</h4>
+                <p>Cuidado dental especializado para mascotas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {# Reserva de Horas Online #}
+  <section id="reserva" class="py-5">
+    <div class="container">
+      <h2 class="text-center">Reserva de Horas Online</h2>
+      <p class="text-center">Ahorra tiempo y agenda la atención que necesita tu mascota con solo unos clics.</p>
+      <div class="text-center">
+        <a href="{% url 'ambpublico_reserva' %}" class="btn btn-primary btn-lg">Reservar Ahora</a>
+      </div>
+    </div>
+  </section>
+  {# Revisión de Ficha Clínica Online #}
+  <section id="ficha-clinica" class="py-5">
+    <div class="container">
+      <h2 class="text-center">Revisión de Ficha Clínica Online</h2>
+      <p class="text-center">Accede a la historia médica de tu mascota desde la comodidad de tu hogar.</p>
+      <div class="text-center">
+        <a href="{% url 'ambpublico_consulta' %}" class="btn btn-info btn-lg">Ver Detalles</a>
+      </div>
+    </div>
+  </section>
+  {# Opiniones de Nuestros Clientes #}
+  <section id="opiniones" class="py-5 bg-light">
+    <div class="container">
+      <h2 class="text-center">Opiniones de Nuestros Clientes</h2>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-text">"Mi gata Josefa Faraona recibió un excelente cuidado aquí. ¡Realmente se peinan!" - Cesar Arce</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-text">
+                "El equipo de Arce tienen los chakras muy alineados. Realmente se preocupan por nuestros amigos peludos." - Robinson Contreras
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <p class="card-text">"¡Servicio profesional y amigable! Mi perico siempre está en buenas manos." - Danilo Jose Arias</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {# Contáctanos #}
+  <section id="contacto" class="py-5">
+    <div class="container">
+      <h2 class="text-center">Contáctanos</h2>
+      <p class="text-center">
+        Estamos aquí para ayudarte. Si tienes alguna pregunta o necesitas más información, no dudes en ponerte en contacto con nosotros.
+      </p>
+      <div class="row">
+        <div class="col-md-6 mx-auto">
+          <form id="form-contacto">
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="nombre" required />
+            </div>
+            <div class="mb-3">
+              <label for="correo" class="form-label">Correo Electrónico</label>
+              <input type="email" class="form-control" id="correo" required />
+            </div>
+            <div class="mb-3">
+              <label for="mensaje" class="form-label">Mensaje</label>
+              <textarea class="form-control" id="mensaje" rows="4" required></textarea>
+            </div>
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+  {# Todavia no estará listo el formulario contacto #}
+  <script>
+  (function () {
+    "use strict";
+    document.querySelector("#form-contacto").addEventListener("submit", (e) => {
+      e.preventDefault();
+      alert("En construcción...");
+    });
+  })();
+  </script>
+{% endblock content %}
