@@ -1,0 +1,40 @@
+{# En este caso, la tabla se encuentra separada ya que la reutilizaremos en otros templates aparte de la seccion cita #}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>Número de Cita</th>
+      <th>Cliente</th>
+      <th>Mascota</th>
+      <th>Estado</th>
+      <th>Usuario</th>
+      <th>Fecha</th>
+      {% if es_home == False %}<th>Acciones</th>{% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for cita in citas %}
+      <tr>
+        <td>{{ cita.n_cita }}</td>
+        <td>{{ cita.cliente }}</td>
+        <td>{{ cita.mascota }}</td>
+        <td>{{ cita.estado }}</td>
+        <td>{{ cita.usuario }}</td>
+        <td>{{ cita.fecha }}</td>
+        {# Ya que estamos reutilizando este codigo, poner a disposicion esta variable que verificará si NO estamos en la pagina de inicio del panel #}
+        {% if es_home == False %}
+          <td>
+            {# Verificamos permisos #}
+            {% if perms.paneltrabajador.change_cita %}
+              <a href="{% url 'panel_cita_editar' cita.n_cita %}"
+                 class="btn btn-primary">Editar</a>
+            {% endif %}
+            {% if perms.paneltrabajador.delete_cita %}
+              <a href="{% url 'panel_cita_eliminar' cita.n_cita %}"
+                 class="btn btn-danger">Eliminar</a>
+            {% endif %}
+          </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

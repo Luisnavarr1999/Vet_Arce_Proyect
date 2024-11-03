@@ -1,0 +1,14 @@
+{% extends "../master.html" %}
+{% block title %}
+  Listado - Citas
+{% endblock title %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="fw-light">Listado de citas</h3>
+    {# Verificamos permisos #}
+    {% if perms.paneltrabajador.add_cita %}
+      <a href="{% url 'panel_cita_nuevo' %}" class="btn btn-success">Agregar nueva cita</a>
+    {% endif %}
+  </div>
+  {% include "./tabla.html" with es_home=False %}
+{% endblock content %}

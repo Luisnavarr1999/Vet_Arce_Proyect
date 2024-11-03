@@ -22,6 +22,26 @@ class DateTimeLocalField(forms.DateTimeField):
     widget = DateTimeLocalInput(format="%Y-%m-%dT%H:%M", attrs={'class': 'form-control'})
 
 
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['rut', 'nombre_cliente', 'direccion', 'telefono', 'email']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Agrega clases de Bootstrap a los campos
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
+        # Deshabilitar la edición del campo 'rut' si ya existe el cliente
+        # se asegura de que el formulario esté en modo de edición y no en modo de creación.
+        if self.instance and self.instance.pk:
+            self.fields['rut'].widget = forms.HiddenInput()
+
+
+class CitaForm(forms.ModelForm):
+
     class Meta:
         model = Cita
         fields = ['cliente', 'mascota', 'estado', 'usuario', 'fecha']

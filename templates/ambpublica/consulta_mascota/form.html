@@ -1,0 +1,22 @@
+{% extends "../master.html" %}
+{% block title %}
+  Arce Vet - Consulta de mascotas
+{% endblock title %}
+{% block content %}
+  <div class="p-5 my-2 border-0 rounded ficat-green text-light">
+    <div class="text-center py-5">
+      <h1 class="display-4 text-light">Consulta de mascotas</h1>
+      <hr class="sep-short" />
+      <p class="lead">Consulte la ficha y otro tipo de datos de su mascota registrados en nuestra clínica.</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>Complete con los datos requeridos</h3>
+      <form method="post">
+        {% csrf_token %} {{ form.as_p }}
+        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

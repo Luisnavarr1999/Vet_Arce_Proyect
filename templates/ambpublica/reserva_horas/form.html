@@ -1,0 +1,75 @@
+{% extends "../master.html" %}
+{% block title %}
+  Arce Vet - Reserva de horas
+{% endblock title %}
+{% block content %}
+  {% if step == '' or step == 'nohours' %}
+    <div class="p-5 my-2 border-0 rounded ficat-green text-light">
+      <div class="text-center py-5">
+        <h1 class="display-4 text-light">Reserva de horas</h1>
+        <hr class="sep-short" />
+        <p class="lead">Desde la comodidad de su casa solicite nuestra atención médica en un par de clics.</p>
+      </div>
+    </div>
+  {% endif %}
+  {% if step == 'nohours' %}
+    <div class="alert alert-secondary">Lo sentimos, no tenemos más horas disponibles. Vuelva más tarde porfavor...</div>
+  {% else %}
+    {% if step == 'final' %}
+      <div class="p-5 my-2 border-0 rounded ficat-green text-light">
+        <div class="text-center py-5">
+          <h1 class="display-4 text-light">¡Está apunto de reservar su hora!</h1>
+          <p class="lead">Por favor, revise su información...</p>
+        </div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-body">
+          <h3>Detalles del Cliente</h3>
+          <ul>
+            <li>
+              <strong>Rut:</strong> {{ cliente.rut }}
+            </li>
+            <li>
+              <strong>Nombre:</strong> {{ cliente.nombre_cliente }}
+            </li>
+            <li>
+              <strong>Dirección:</strong> {{ cliente.direccion }}
+            </li>
+            <li>
+              <strong>Teléfono:</strong> {{ cliente.telefono }}
+            </li>
+            <li>
+              <strong>Email:</strong> {{ cliente.email }}
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-body">
+          <h3>Detalles de la Mascota</h3>
+          <ul>
+            <li>
+              <strong>Nombre:</strong> {{ mascota.nombre }}
+            </li>
+            <li>
+              <strong>Número de Chip:</strong> {{ mascota.numero_chip }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+    <div class="card mb-2">
+      <div class="card-body">
+        {% if step != '' and step != 'final' %}<h1>{{ titulo }}</h1>{% endif %}
+        <form method="post">
+          {% csrf_token %} {{ form.as_p }}
+          <button type="submit" class="btn btn-primary w-100">Continuar</button>
+        </form>
+      </div>
+    </div>
+    {% if step != '' %}
+      <a href="{% url 'ambpublico_reserva_cancelar' %}"
+         class="btn btn-danger w-100">Cancelar</a>
+    {% endif %}
+  {% endif %}
+{% endblock content %}

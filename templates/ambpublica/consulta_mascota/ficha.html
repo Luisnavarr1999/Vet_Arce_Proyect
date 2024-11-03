@@ -1,0 +1,26 @@
+{% extends "../master.html" %}
+{% block title %}
+    Arce Vet - Consulta de mascotas
+{% endblock title %}
+{% block content %}
+  <h1>{{ mascota.nombre }}</h1>
+  <hr />
+  <h3>Datos personales</h3>
+  {# Listado usando componente Bootstrap #}
+  <ul class="list-group">
+    <li class="list-group-item">
+      <strong>Número de Chip:</strong> {{ mascota.numero_chip }}
+    </li>
+    <li class="list-group-item">
+      <strong>Especie:</strong> {{ mascota.especie }}
+    </li>
+    <li class="list-group-item">
+      <strong>Raza:</strong> {{ mascota.raza }}
+    </li>
+    <li class="list-group-item">
+      <strong>Fecha de Nacimiento:</strong> {{ mascota.fecha_nacimiento }}
+    </li>
+  </ul>
+  <h3>Historial Médico</h3>
+  <div>{{ mascota.historial_medico }}</div>
+{% endblock content %}

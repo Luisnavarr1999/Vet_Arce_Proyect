@@ -1,0 +1,47 @@
+{% extends "../master.html" %}
+{% block title %}
+  Listado - Facturas
+{% endblock title %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h3 class="fw-light">Listado de facturas</h3>
+    {# Verificamos permisos #}
+    {% if perms.paneltrabajador.add_factura %}
+      <a href="{% url 'panel_factura_nuevo' %}" class="btn btn-success">Agregar nueva factura</a>
+    {% endif %}
+  </div>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Número de Factura</th>
+        <th>Cliente</th>
+        <th>Total a Pagar</th>
+        <th>Detalle</th>
+        <th>Estado de Pago</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for factura in facturas %}
+        <tr>
+          <td>{{ factura.numero_factura }}</td>
+          <td>{{ factura.cliente }}</td>
+          <td>{{ factura.total_pagar }}</td>
+          <td>{{ factura.detalle }}</td>
+          <td>{{ factura.estado_pago }}</td>
+          <td>
+            {# Verificamos permisos #}
+            {% if perms.paneltrabajador.change_factura %}
+              <a href="{% url 'panel_factura_editar' factura.numero_factura %}"
+                 class="btn btn-primary">Editar</a>
+            {% endif %}
+            {% if perms.paneltrabajador.delete_factura %}
+              <a href="{% url 'panel_factura_eliminar' factura.numero_factura %}"
+                 class="btn btn-danger">Eliminar</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock content %}
