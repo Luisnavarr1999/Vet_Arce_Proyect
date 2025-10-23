@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 from django.contrib import messages
 from dotenv import load_dotenv
+
 load_dotenv()  # loads the configs from .env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,7 +32,20 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # Ahora lee la variable desde .ENV. False en caso de no existir.
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(' ')
+#esto es para permitir ngrok prueba
+#ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(' ')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split() + [".ngrok-free.dev", "localhost", "127.0.0.1"]
+
+# Permitir peticiones desde dominios ngrok (HTTPS)
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.dev", 
+    "https://symphystic-nonseparable-archer.ngrok-free.dev",   # Django 4.2 soporta comodines
+]
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = False
 
 
 # Application definition
