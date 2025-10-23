@@ -1,6 +1,10 @@
 from django import forms
 from .models import Cita, Cliente, Mascota, Factura, Producto
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import PasswordResetForm 
+from django.contrib.auth.forms import SetPasswordForm
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 # https://stackoverflow.com/a/69965027
 class DateTimeLocalInput(forms.DateTimeInput):
@@ -155,5 +159,66 @@ class UsuarioForm(forms.ModelForm):
 
         # Agrega clases de Bootstrap a los campos
         for field_name, field in self.fields.items():
-            if field_name is not 'is_active':
+            if field_name != 'is_active':
                 field.widget.attrs['class'] = 'form-control'
+            else:
+                field.widget.attrs['class'] = 'form-check-input'
+
+class PasswordResetRequestForm(PasswordResetForm):
+    """Valida que el correo exista y envía el mail con HTML + Reply-To."""
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if not list(self.get_users(email)):
+            raise forms.ValidationError(
+                "No existe un usuario registrado con ese correo electrónico.",
+                code="email_not_found",
+            )
+        return email
+
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
+    ):
+        # subject sin saltos de línea
+        subject = render_to_string(subject_template_name, context).strip()
+
+        # texto plano
+        body_text = render_to_string(email_template_name, context)
+
+        # Construye el mensaje
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=body_text,
+            from_email=from_email,
+            to=[to_email],
+            headers=({"Reply-To": context.get("reply_to")} if context.get("reply_to") else None),
+        )
+
+        # HTML
+        if html_email_template_name:
+            body_html = render_to_string(html_email_template_name, context)
+            msg.attach_alternative(body_html, "text/html")
+
+        msg.send()
+    
+class StyledSetPasswordForm(SetPasswordForm):
+    """Agrega clases Bootstrap a los campos del formulario de nueva contraseña."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            # clase Bootstrap
+            field.widget.attrs.setdefault("class", "form-control")
+            # autocompletado recomendado por Django para nuevos passwords
+            field.widget.attrs.setdefault("autocomplete", "new-password")
+            # placeholders opcionales
+            if name == "new_password1":
+                field.widget.attrs.setdefault("placeholder", "Nueva contraseña")
+            elif name == "new_password2":
+                field.widget.attrs.setdefault("placeholder", "Confirmar contraseña")
+

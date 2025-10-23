@@ -189,5 +189,10 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")          # 99dff9001@smtp-brevo.c
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")  # mi_API_KEY
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# Expiración del enlace de restablecimiento (24 horas)
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
+# Prefijo en los asuntos de los correos
+EMAIL_SUBJECT_PREFIX = "[Arce’s Manager] "
+
 
 

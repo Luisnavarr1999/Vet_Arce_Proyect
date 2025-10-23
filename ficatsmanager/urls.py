@@ -18,12 +18,21 @@ from django.contrib import admin
 from django.urls import include, path
 from ambpublica import views as vistas_publica
 from paneltrabajador import views as vistas_panel
+from django.contrib.auth import views as auth_views
+from paneltrabajador.forms import StyledSetPasswordForm
+from django.urls import reverse_lazy
 
 urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
 
     path('panel/', vistas_panel.home, name="panel_home"),
+    
+    path('panel/password/recuperar/', vistas_panel.password_reset_request, name='panel_password_reset'),
+    path('panel/password/recuperar/exito/', auth_views.PasswordResetDoneView.as_view(template_name='paneltrabajador/password_reset_done.html'), name='panel_password_reset_done',),
+    path('panel/password/restablecer/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='paneltrabajador/password_reset_confirm.html', form_class=StyledSetPasswordForm, success_url=reverse_lazy('panel_password_reset_complete'),), name='panel_password_reset_confirm',),
+    path('panel/password/completado/', auth_views.PasswordResetCompleteView.as_view(template_name='paneltrabajador/password_reset_complete.html'), name='panel_password_reset_complete',),
+    
     path('panel/logout/', vistas_panel.cerrar_sesion, name="panel_logout"),
 
     path('panel/clientes/', vistas_panel.cliente_listado, name="panel_cliente_listado"),

@@ -1,4 +1,5 @@
 from .home import home, cerrar_sesion
+from .password_reset import password_reset_request, PanelPasswordResetView
 from .cita import cita_agregar, cita_editar, cita_eliminar, cita_listar
 from .cliente import cliente_crear, cliente_editar, cliente_eliminar, cliente_listado
 from .factura import factura_agregar, factura_editar, factura_eliminar, factura_listar
