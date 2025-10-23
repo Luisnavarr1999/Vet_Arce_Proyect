@@ -33,7 +33,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG') == 'True'
 
 #esto es para permitir ngrok prueba
-#ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(' ')
+#ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(' ') >>> antiguo dejar si existe error o solo querer ejecutar el localhost
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split() + [".ngrok-free.dev", "localhost", "127.0.0.1"]
 
 # Permitir peticiones desde dominios ngrok (HTTPS)
@@ -186,7 +186,7 @@ EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")          # 99dff9001@smtp-brevo.com
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")  # TU_API_KEY
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")  # mi_API_KEY
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 

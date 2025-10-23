@@ -4,7 +4,89 @@
   Arce Vet
 {% endblock title %}
 {% block content %}
-  {# Pagina de inicio de FiCats #}
+
+  <style>
+    .chatbot-widget {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 1050;
+      max-width: 320px;
+      width: calc(100% - 3rem);
+    }
+
+    .chatbot-panel {
+      max-height: 420px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chatbot-messages {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 0.5rem;
+      background: #f8f9fa;
+      border-radius: 0.5rem;
+    }
+
+    .chatbot-bubble {
+      display: inline-block;
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.75rem;
+      margin-bottom: 0.5rem;
+      max-width: 90%;
+      word-break: break-word;
+    }
+
+    .chatbot-bubble.bot {
+      background: #ffffff;
+      border: 1px solid #dee2e6;
+    }
+
+    .chatbot-bubble.user {
+      background: #198754;
+      color: #ffffff;
+      margin-left: auto;
+    }
+
+    /* 🔧 FIX visual: evita que el botón "Enviar" desaparezca */
+  .chatbot-panel {
+    height: 420px; /* reemplaza max-height */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chatbot-panel .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    min-height: 0;
+    padding: .75rem;
+  }
+
+  .chatbot-messages {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: .5rem;
+    background: #f8f9fa;
+    border-radius: .5rem;
+    margin-bottom: 0;
+  }
+
+  #chatbot-form {
+    display: flex;
+    gap: .5rem;
+    margin-top: auto;
+  }
+
+  #chatbot-input {
+    flex: 1 1 auto;
+  }
+
+  </style>
+
+  {# Pagina de inicio de Veterinaria de Arce #}
   {# Encabezado #}
   <header class="text-center home text-white">
     <div class="logo-container">
@@ -147,13 +229,115 @@
     </div>
   </section>
   {# Todavia no estará listo el formulario contacto #}
+  <div id="chatbot-widget" class="chatbot-widget">
+    <button id="chatbot-toggle" class="btn btn-success w-100 mb-2" type="button">
+      💬 Asistente virtual
+    </button>
+    <div class="card shadow chatbot-panel d-none">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Asistente Arce</span>
+        <button type="button" class="btn-close" aria-label="Cerrar" id="chatbot-close"></button>
+      </div>
+      <div class="card-body d-flex flex-column">
+        <div id="chatbot-messages" class="chatbot-messages mb-2">
+          <div class="chatbot-bubble bot">
+            ¡Hola! Soy el asistente virtual de la Veterinaria de Arce. Pregúntame por horarios, reservas o pagos.
+          </div>
+        </div>
+        <form id="chatbot-form" class="d-flex gap-2" autocomplete="off">
+          <input type="text" class="form-control" id="chatbot-input" placeholder="Escribe tu pregunta..." required />
+          <button class="btn btn-success" type="submit">Enviar</button>
+        </form>
+        <small id="chatbot-handoff" class="text-muted mt-2 d-none">
+          Hemos avisado a recepción. Un miembro del equipo se conectará contigo en breve.
+        </small>
+      </div>
+    </div>
+  </div>
   <script>
-  (function () {
-    "use strict";
-    document.querySelector("#form-contacto").addEventListener("submit", (e) => {
+(function () {
+  "use strict";
+
+  // --- FORM CONTACTO (demo) ---
+  const contactForm = document.querySelector("#form-contacto");
+  if (contactForm) {
+    contactForm.addEventListener("submit", (e) => {
       e.preventDefault();
       alert("En construcción...");
     });
-  })();
-  </script>
+  }
+
+  // --- CHATBOT WIDGET ---
+  const widget = document.getElementById("chatbot-widget");
+  if (!widget) return;
+
+  const toggleButton  = document.getElementById("chatbot-toggle");
+  const closeButton   = document.getElementById("chatbot-close");
+  const panel         = widget.querySelector(".chatbot-panel");
+  const messageList   = document.getElementById("chatbot-messages");
+  const form          = document.getElementById("chatbot-form");
+  const input         = document.getElementById("chatbot-input");
+  const handoffNotice = document.getElementById("chatbot-handoff");
+
+  const togglePanel = (show) => {
+    const shouldShow = typeof show === "boolean" ? show : panel.classList.contains("d-none");
+    panel.classList.toggle("d-none", !shouldShow);
+    if (shouldShow) input.focus();
+  };
+
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return null;
+  };
+
+  const appendMessage = (text, author) => {
+    const bubble = document.createElement("div");
+    bubble.className = `chatbot-bubble ${author}`;
+    bubble.textContent = text;
+    messageList.appendChild(bubble);
+    messageList.scrollTop = messageList.scrollHeight;
+  };
+
+  const handleError = () => {
+    appendMessage("No pude conectar con el asistente en este momento. Intenta nuevamente más tarde.", "bot");
+  };
+
+  toggleButton.addEventListener("click", () => togglePanel());
+  closeButton.addEventListener("click", () => togglePanel(false));
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const message = input.value.trim();
+    if (!message) return;
+
+    appendMessage(message, "user");
+    input.value = "";
+    handoffNotice.classList.add("d-none");
+
+    try {
+      const response = await fetch("{% url 'ambpublico_chatbot_message' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ message }),
+        // explícito: incluye cookies de mismo origen
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) return handleError();
+
+      const data = await response.json();
+      if (data.reply)   appendMessage(data.reply, "bot");
+      if (data.handoff) handoffNotice.classList.remove("d-none");
+    } catch (err) {
+      handleError();
+    }
+  });
+
+})(); 
+</script>
 {% endblock content %}

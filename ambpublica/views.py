@@ -1,6 +1,5 @@
 from ast import And
 from urllib import request
-from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template import loader
 from django.contrib import messages
@@ -8,12 +7,147 @@ from ambpublica.forms import BuscarMascotaForm, CitaForm, MascotaSelectForm, Rut
 from paneltrabajador.forms import ClienteForm, MascotaForm
 from paneltrabajador.models import Cita, Cliente, Mascota
 
+import json
+from django.http import HttpResponse, JsonResponse
+import logging
+from django.core.cache import cache
+
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
+import re, unicodedata
+
 # Create your views here.
 
 # Renderiza la página principal
+@ensure_csrf_cookie
 def main(request):
     template = loader.get_template('ambpublica/main.html')
     return HttpResponse(template.render())
+
+# cosas que responde el chat demo
+
+def _normalize(txt: str) -> str:
+    # minúsculas + sin acentos
+    txt = txt.lower()
+    txt = unicodedata.normalize("NFD", txt)
+    return "".join(c for c in txt if unicodedata.category(c) != "Mn")
+
+# Cada intent tiene un patrón regex y una respuesta
+INTENTS = [
+    # Saludo / Despedida
+    (re.compile(r"^(ola|hola|buenas|buenos dias|buenas tardes|buenas noches)\b"), 
+     "¡Hola! 😊 Soy el asistente de la Veterinaria de Arce. ¿En qué te ayudo?"),
+    (re.compile(r"\b(gracias|chau|adios|adiós|nos vemos)\b"), 
+     "¡Gracias por escribirnos! 🐾"),
+
+    # Horarios
+    (re.compile(r"\b(horario|horarios|abren|cierran|apertura|cierre)\b"), 
+     "Atendemos de lunes a viernes 09:00–19:00 y sábados 10:00–14:00 🕘"),
+
+    # Ubicación
+    (re.compile(r"\b(ubicacion|ubicación|direccion|dirección|donde|dónde|como llegar)\b"), 
+     "Estamos en Santiago Centro. En la sección Contacto tienes el mapa exacto 📍"),
+
+    # Contacto
+    (re.compile(r"\b(contacto|telefono|teléfono|whatsapp|correo|email)\b"), 
+     "Puedes escribirnos por este chat o llamarnos a recepción. También respondemos por correo."),
+
+    # Servicios y precios
+    (re.compile(r"\b(servicio|servicios|vacuna|vacunas|cirugia|cirugía|dentista|odontologia|peluquer|baño|desparasita)\b"), 
+     "Ofrecemos consulta general, vacunas, odontología y cirugías. ¿Qué servicio te interesa?"),
+    (re.compile(r"\b(precio|precios|cuanto cuesta|tarifa|valen)\b"), 
+     "Los precios varían según el servicio y la mascota. Podemos orientarte por aquí y confirmas en recepción 💳"),
+
+    # Pagos
+    (re.compile(r"\b(pago|pagos|tarjeta|efectivo|transfer|transferencia|webpay|promocion|promoción)\b"), 
+     "Aceptamos tarjeta, transferencia y efectivo. Pregunta en recepción por promociones 💳"),
+
+    # Reservas / Cancelaciones
+    (re.compile(r"\b(reserv(ar|a)|agendar|sacar hora|cita nueva)\b"), 
+     "Puedes reservar desde “Reserva de Horas Online”. Si quieres, te voy guiando paso a paso 👍"),
+    (re.compile(r"\b(cancelar (cita|hora)|anular (cita|hora)|reagendar|cambiar hora)\b"), 
+     "Para cancelar o reagendar, indícanos tu número de cita o contáctanos por recepción."),
+
+    # Emergencias
+    (re.compile(r"\b(emergencia|emergencias|urgencia|urgencias|fuera de horario)\b"), 
+     "Para emergencias fuera de horario, llámanos y coordinamos ayuda 📞"),
+
+    # Políticas / tiempos / requisitos
+    (re.compile(r"\b(politica|política|no show|atraso|tarde|cancelacion|cancelación)\b"), 
+     "Si no puedes asistir, avísanos con anticipación para liberar el cupo. ¡Gracias! 🙏"),
+    (re.compile(r"\b(tiempo|demora|cola|espera|cuanto se demoran)\b"), 
+     "El tiempo de atención depende del día y la demanda. ¡Hacemos lo posible por atender rápido!"),
+    (re.compile(r"\b(requisito|requisitos|primera consulta|documento|documentos)\b"), 
+     "Trae el RUT del tutor y, si tienes, el historial o carnet de tu mascota."),
+    
+    # Otros comunes
+    (re.compile(r"\b(estacionamiento|parking)\b"), 
+     "Tenemos estacionamiento cercano con convenios en ciertos horarios."),
+    (re.compile(r"\b(exotica|exótica|aves|reptil|reptiles|huron|hurón)\b"), 
+     "Atendemos mascotas comunes. Para exóticos, consúltanos caso a caso."),
+    (re.compile(r"\b(domicilio|a domicilio|visita a domicilio)\b"), 
+     "Podemos coordinar visitas a domicilio en zonas cercanas. Escríbenos para evaluar."),
+]
+
+def _rule_based_answer(message: str) -> tuple[str, bool]:
+    q = _normalize(message)
+    for pattern, reply in INTENTS:
+        if pattern.search(q):
+            return reply, False
+    # fallback
+    return ("No estoy seguro de cómo ayudarte con eso. ¿Quieres que avise a recepción para que te contacten?", True)
+
+def _find_chatbot_answer(message: str):
+    return _rule_based_answer(message)
+
+logger = logging.getLogger(__name__)
+
+MAX_MSG_LEN = 500          # Máximo ancho de mensaje aceptado
+RATE_LIMIT_WINDOW = 30     # Ventana en segundos
+RATE_LIMIT_MAX = 15        # Máximo de mensajes por ventana e IP
+
+def _rate_key(request):
+  ip = request.META.get("REMOTE_ADDR", "anon")
+  return f"chatbot_rl:{ip}"
+
+def _rate_limit(request):
+  key = _rate_key(request)
+  hits = (cache.get(key) or 0) + 1
+  cache.set(key, hits, RATE_LIMIT_WINDOW)
+  return hits <= RATE_LIMIT_MAX
+
+@require_POST
+def chatbot_message(request):
+  # 1) Content-Type
+  ctype = request.headers.get("Content-Type", "")
+  if "application/json" not in ctype:
+    return JsonResponse({"error": "Content-Type inválido"}, status=415)
+
+  # 2) Rate limit
+  if not _rate_limit(request):
+    return JsonResponse({"error": "Demasiados mensajes. Intenta en unos segundos."}, status=429)
+
+  # 3) Parse JSON
+  try:
+    payload = json.loads(request.body.decode("utf-8"))
+  except Exception as e:
+    logger.warning("JSON inválido: %s", e)
+    return JsonResponse({"error": "JSON inválido."}, status=400)
+
+  # 4) Validaciones de negocio
+  message = (payload.get("message") or "").strip()
+  if not message:
+    return JsonResponse({"error": "El mensaje no puede estar vacío."}, status=400)
+  if len(message) > MAX_MSG_LEN:
+    return JsonResponse({"error": "Mensaje demasiado largo."}, status=400)
+
+  # 5) Lógica de respuesta (tu función existente)
+  try:
+    answer, handoff = _find_chatbot_answer(message)
+    return JsonResponse({"reply": answer, "handoff": handoff})
+  except Exception as e:
+    logger.exception("Error chatbot_message: %s", e)
+    return JsonResponse({"error": "Error interno."}, status=500)
 
 
 def consulta_mascota(request):
