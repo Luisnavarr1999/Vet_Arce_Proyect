@@ -155,10 +155,25 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
-# Datos servidor SMTP
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = str(os.getenv('EMAIL_HOST'))
-EMAIL_HOST_USER = str(os.getenv('EMAIL_HOST_USER'))
-EMAIL_HOST_PASSWORD = str(os.getenv('EMAIL_HOST_PASSWORD'))
-EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
+# Datos servidor SMTP (antiguo)
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_HOST = str(os.getenv('EMAIL_HOST'))
+#EMAIL_HOST_USER = str(os.getenv('EMAIL_HOST_USER'))
+#EMAIL_HOST_PASSWORD = str(os.getenv('EMAIL_HOST_PASSWORD'))
+#EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
+#EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
+
+# Datos servidor SMTP Nuevo
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")          # 99dff9001@smtp-brevo.com
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")  # TU_API_KEY
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+

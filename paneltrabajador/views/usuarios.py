@@ -5,6 +5,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail
 from paneltrabajador.forms import UsuarioForm
+from django.db import transaction
+from django.core.mail import EmailMultiAlternatives
+from django.templatetags.static import static
 
 def usuario_listar(request):
     """
@@ -177,51 +180,77 @@ def usuario_eliminar(request, id_usuario):
 def usuario_newpassword(request, id_usuario):
     """
     Genera y envía una nueva contraseña a un usuario si el usuario está autenticado y tiene los permisos necesarios.
-
-    Args:
-        request: La solicitud HTTP.
-        id_usuario: El ID del usuario al que se le enviará la nueva contraseña.
-
-    Returns:
-        HttpResponse: La respuesta HTTP que contiene un mensaje sobre el envío de la nueva contraseña o redirige al inicio.
     """
-    # El usuario no está autenticado, redireccionar al inicio
+    # Validaciones de autenticación y permisos
     if not request.user.is_authenticated:
         return redirect('panel_home')
 
-    # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
     if not request.user.has_perm('auth.change_user'):
         messages.error(request, "No tiene los permisos para realizar esto.")
         return redirect('panel_home')
 
-    # Existe? Entonces asignar. No existe? Entonces mostrar un error 404.
+    # Buscar usuario o lanzar error 404
     user = get_object_or_404(get_user_model(), id=id_usuario)
 
     try:
-        # Intentamos generar una nueva clave
+        # Generar nueva contraseña aleatoria
         raw_password = get_user_model().objects.make_random_password()
 
-        # Enviar por correo
-        send_mail(
-            "Nueva contraseña",
-            "Se ha generado una nueva contraseña para el usuario {} sistema de FiCats. Su nueva contraseña es: {}".format(user.get_username(), raw_password),
-            settings.EMAIL_HOST_USER,
-            [user.email],
-            fail_silently=False,
+        # logo
+        logo_url = "https://i.postimg.cc/x1RJ1G0t/Logovetarce.png"
+
+        # Asunto y cuerpo
+        subject = "Nueva contraseña – Veterinaria de Arce 🐾"
+        text_body = (
+            f"Hola {user.get_username()},\n\n"
+            f"Se ha generado una nueva contraseña para tu cuenta en el sistema Veterinaria de Arce.\n"
+            f"Tu nueva contraseña es: {raw_password}\n\n"
+            f"Por seguridad, cámbiala al iniciar sesión.\n\n"
+            f"— Veterinaria de Arce"
         )
 
-        # Poner la clave
+        # Versión HTML con logo
+        html_body = f"""
+        <div style="font-family:Arial,Helvetica,sans-serif; color:#333; line-height:1.6; max-width:600px; margin:auto; border:1px solid #e0e0e0; border-radius:10px; padding:20px;">
+            <div style="text-align:center; margin-bottom:20px;">
+                <img src="{logo_url}" alt="Logo Veterinaria de Arce" style="width:120px; height:auto;">
+            </div>
+            <h2 style="color:#1a73e8; text-align:center;">Nueva Contraseña Generada</h2>
+            <p>Hola <strong>{user.get_username()}</strong>,</p>
+            <p>Se ha generado una nueva contraseña para tu cuenta en <b>Veterinaria de Arce</b>.</p>
+            <p><b>Tu nueva contraseña:</b> 
+                <span style="background:#f0f0f0; padding:6px 12px; border-radius:6px; font-weight:bold; display:inline-block;">
+                    {raw_password}
+                </span>
+            </p>
+            <p>Por seguridad, te recomendamos cambiarla al iniciar sesión.</p>
+            <hr style="margin:20px 0; border:none; border-top:1px solid #ddd;">
+            <p style="text-align:center; font-size:14px; color:#555;">
+                — Equipo de <strong>Veterinaria de Arce 🐾</strong><br>
+                <a href="https://tusitio.cl" style="color:#1a73e8; text-decoration:none;">www.veterinariadearce.cl</a>
+            </p>
+        </div>
+        """
+
+        # Crear y enviar el correo
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,  # ✅ Remitente verificado
+            to=[user.email],
+            headers={"Reply-To": "shadowxd41@gmail.com"},
+        )
+        msg.attach_alternative(html_body, "text/html")
+        msg.send(fail_silently=False)
+
+        # Actualizar la contraseña solo si el correo se envió con éxito
         user.set_password(raw_password)
+        user.save(update_fields=["password"])
 
-        # Guardar datos del usuario
-        user.save()
-
-        # Todo ok
         messages.success(request, "Se ha enviado una nueva contraseña por correo al usuario.")
+    
+    except Exception as e:
+        print(f"Error al enviar correo de nueva contraseña: {e}")
+        messages.error(request, "Ha ocurrido un error y no se ha podido enviar la nueva contraseña.")
 
-        # Fallo algun procedimiento...
-    except:
-        messages.error(request, "Ha ocurrido un error y no se ha cambiado la contraseña del usuario. Por favor, contacte con el equipo de Pericoders para más información.")
-
-    # Finalmente redireccionar en cualquier caso
     return redirect('panel_usuario_listar')
