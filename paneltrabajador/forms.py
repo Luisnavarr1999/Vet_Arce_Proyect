@@ -72,6 +72,64 @@ class CitaForm(forms.ModelForm):
             self.fields['cliente'].widget = forms.HiddenInput()
             self.fields['mascota'].widget = forms.HiddenInput()
 
+ESPECIE_CHOICES = [
+    ("Perro", "Perro"),
+    ("Gato", "Gato"),
+    ("Otros", "Otros"),
+]
+
+
+RAZA_OPTIONS = {
+    "Perro": [
+        "Mestizo",
+        "Labrador Retriever",
+        "Pastor Alemán",
+        "Poodle",
+        "Bulldog",
+        "Beagle",
+        "Golden Retriever",
+        "Chihuahua",
+        "Pug",
+        "Schnauzer",
+    ],
+    "Gato": [
+        "Mestizo",
+        "Siamés",
+        "Persa",
+        "Maine Coon",
+        "Bengalí",
+        "Sphynx",
+        "British Shorthair",
+        "Abisinio",
+        "Angora Turco",
+        "Ragdoll",
+    ],
+    "Otros": [
+        "Erizo",
+        "Hámster",
+        "Ratón",
+        "Cobaya",
+        "Conejo",
+        "Hurón",
+        "Tortuga",
+        "Iguana",
+        "Ave Exótica",
+        "Pez",
+    ],
+}
+
+
+def _flatten_raza_choices():
+    """Genera las tuplas (valor, etiqueta) para todas las razas disponibles."""
+
+    flattened = []
+    for razas in RAZA_OPTIONS.values():
+        for raza in razas:
+            choice = (raza, raza)
+            if choice not in flattened:
+                flattened.append(choice)
+    return flattened
+
 
 class MascotaForm(forms.ModelForm):
     class Meta:
@@ -86,12 +144,29 @@ class MascotaForm(forms.ModelForm):
     def __init__(self, *args, es_reserva=False, **kwargs):
         super().__init__(*args, **kwargs)
 
+        raza_choices = _flatten_raza_choices()
+
+        # Configura el selector de especie
+        self.fields['especie'].widget = forms.Select(choices=ESPECIE_CHOICES)
+        self.fields['especie'].choices = ESPECIE_CHOICES
+
+        # Configura el selector de raza
+        self.fields['raza'].widget = forms.Select(choices=raza_choices)
+        self.fields['raza'].choices = raza_choices
+
         # Agrega clases de Bootstrap a los campos
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if field_name in ('especie', 'raza', 'cliente'):
+                field.widget.attrs['class'] = 'form-select'
+            else:
+                field.widget.attrs['class'] = 'form-control'
 
-        self.fields['cliente'].widget.attrs['class'] = 'form-select'
-
+        # Asegura que la raza actual esté presente en la lista de opciones (edición)
+        if self.instance and self.instance.pk:
+            raza_actual = self.instance.raza
+            if raza_actual and (raza_actual, raza_actual) not in self.fields['raza'].choices:
+                self.fields['raza'].choices = list(self.fields['raza'].choices) + [(raza_actual, raza_actual)]
+                
         if es_reserva == True:
             self.fields.pop('cliente')
             self.fields.pop('historial_medico')

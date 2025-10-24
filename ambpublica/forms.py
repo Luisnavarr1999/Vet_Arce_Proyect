@@ -2,6 +2,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.formats import date_format
 from django.contrib.auth.forms import PasswordResetForm
+from django.utils.timezone import localtime
 
 from paneltrabajador.models import Cita
 
@@ -53,9 +54,26 @@ class CitaForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
 
-        # Filtra las citas con estado igual a 0 y obtén sus fechas e ID
-        citas_disponibles = Cita.objects.filter(estado='0').values_list('n_cita', 'fecha')
+        # Filtra las citas con estado igual a 0 y obtén sus fechas junto al veterinario asignado
+        citas_disponibles = Cita.objects.filter(estado='0').select_related('usuario')
+
         # Crea una lista de tuplas en el formato adecuado para el campo de selección
-        opciones = [(cita[0], date_format(cita[1], 'DATETIME_FORMAT')) for cita in citas_disponibles]
+        opciones = []
+        for cita in citas_disponibles:
+            fecha_local = localtime(cita.fecha)
+            fecha_texto = date_format(fecha_local, 'DATE_FORMAT')
+            hora_texto = date_format(fecha_local, 'TIME_FORMAT')
+            veterinario = cita.usuario.get_full_name() or cita.usuario.get_username()
+            opciones.append(
+                (
+                    cita.n_cita,
+                    f"{fecha_texto} a las {hora_texto} - Veterinario: {veterinario}",
+                )
+            )
+
         # Agrega las opciones al campo de selección
-        self.fields['n_cita'] = forms.ChoiceField(choices=opciones, widget=forms.Select(attrs={'class': 'form-control'}), label="Seleccione una Fecha:")
+        self.fields['n_cita'] = forms.ChoiceField(
+            choices=opciones,
+            widget=forms.Select(attrs={'class': 'form-control'}),
+            label="Seleccione una Fecha y Hora:",
+        )

@@ -11,6 +11,11 @@ import json
 from django.http import HttpResponse, JsonResponse
 import logging
 from django.core.cache import cache
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils import timezone
+from django.utils.formats import date_format
+from django.core.mail import EmailMultiAlternatives
 
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
@@ -359,6 +364,62 @@ def reserva_hora(request):
                     cita.cliente = cliente
                     cita.mascota = mascota
                     cita.save()
+
+                    # Intenta enviar un correo de confirmación al cliente
+                    try:
+                        cita_fecha = cita.fecha
+                        if timezone.is_naive(cita_fecha):
+                            cita_fecha = timezone.make_aware(cita_fecha, timezone.get_current_timezone())
+                        cita_fecha = timezone.localtime(cita_fecha)
+
+                        veterinario_nombre = cita.usuario.get_full_name().strip() or cita.usuario.get_username()
+                        cita_fecha_str = date_format(cita_fecha, "DATETIME_FORMAT")
+
+                        text_body = (
+                            f"Hola {cliente.nombre_cliente},\n\n"
+                            f"Tu reserva fue agendada para el {cita_fecha_str} con el/la veterinario(a) {veterinario_nombre}.\n"
+                            f"Mascota: {mascota.nombre}.\n\n"
+                            "Te esperamos en Veterinaria de Arce.\n\n"
+                            "Si no puedes asistir, avísanos con anticipación.\n\n"
+                            "Saludos,\n"
+                            "Veterinaria de Arce"
+                        )
+
+                        logo_url = "https://i.postimg.cc/x1RJ1G0t/Logovetarce.png"
+                        html_body = f"""
+                        <div style="font-family:Arial,Helvetica,sans-serif; color:#333; line-height:1.6; max-width:600px; margin:auto; border:1px solid #e0e0e0; border-radius:10px; padding:20px;">
+                            <div style="text-align:center; margin-bottom:20px;">
+                                <img src="{logo_url}" alt="Logo Veterinaria de Arce" style="width:120px; height:auto;">
+                            </div>
+                            <h2 style="color:#1a73e8; text-align:center;">¡Tu cita está confirmada!</h2>
+                            <p>Hola <strong>{cliente.nombre_cliente}</strong>,</p>
+                            <p>Hemos agendado tu cita en <strong>Veterinaria de Arce</strong>.</p>
+                            <div style="background:#f7fbff; border:1px solid #d1e7ff; border-radius:8px; padding:16px; margin:18px 0;">
+                                <p style="margin:0 0 8px 0;"><strong>Fecha y hora:</strong> {cita_fecha_str}</p>
+                                <p style="margin:0 0 8px 0;"><strong>Veterinario(a):</strong> {veterinario_nombre}</p>
+                                <p style="margin:0;"><strong>Mascota:</strong> {mascota.nombre}</p>
+                            </div>
+                            <p>Te esperamos en nuestra clínica. Si no puedes asistir, avísanos con anticipación para reagendar tu hora.</p>
+                            <hr style="margin:20px 0; border:none; border-top:1px solid #ddd;">
+                            <p style="text-align:center; font-size:14px; color:#555;">
+                                — Equipo de <strong>Veterinaria de Arce 🐾</strong><br>
+                                <a href="https://tusitio.cl" style="color:#1a73e8; text-decoration:none;">www.veterinariadearce.cl</a>
+                            </p>
+                        </div>
+                        """
+
+                        message = EmailMultiAlternatives(
+                            subject="Confirmación de reserva - Veterinaria de Arce",
+                            body=text_body,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[cliente.email],
+                            headers={"Reply-To": "shadowxd41@gmail.com"},
+                        )
+                        message.attach_alternative(html_body, "text/html")
+                        message.send(fail_silently=False)
+                    except Exception as email_error:
+                        logger.warning("No se pudo enviar el correo de confirmación para la cita %s: %s", cita.n_cita, email_error)
+                        
                 # Error generico
                 except:
                     messages.error(request, 'Ha ocurrido un error. Intente nuevamente...')

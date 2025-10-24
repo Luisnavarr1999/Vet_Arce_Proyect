@@ -65,6 +65,100 @@
           {% csrf_token %} {{ form.as_p }}
           <button type="submit" class="btn btn-primary w-100">Continuar</button>
         </form>
+        {% if step == 'crear_mascota' %}
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              const speciesField = document.getElementById('id_especie');
+              const breedField = document.getElementById('id_raza');
+
+              if (!speciesField || !breedField) {
+                return;
+              }
+
+              const breedOptions = {
+                'Perro': [
+                  'Mestizo',
+                  'Labrador Retriever',
+                  'Pastor Alemán',
+                  'Poodle',
+                  'Bulldog',
+                  'Beagle',
+                  'Golden Retriever',
+                  'Chihuahua',
+                  'Pug',
+                  'Schnauzer'
+                ],
+                'Gato': [
+                  'Mestizo',
+                  'Siamés',
+                  'Persa',
+                  'Maine Coon',
+                  'Bengalí',
+                  'Sphynx',
+                  'British Shorthair',
+                  'Abisinio',
+                  'Angora Turco',
+                  'Ragdoll'
+                ],
+                'Otros': [
+                  'Erizo',
+                  'Hámster',
+                  'Ratón',
+                  'Cobaya',
+                  'Conejo',
+                  'Hurón',
+                  'Tortuga',
+                  'Iguana',
+                  'Ave Exótica',
+                  'Pez'
+                ]
+              };
+
+              const createPlaceholder = () => {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Seleccione una raza';
+                option.disabled = true;
+                return option;
+              };
+
+              const populateBreeds = (species, preserveSelection = false) => {
+                const previousValue = preserveSelection ? breedField.value : '';
+                const options = breedOptions[species] ? [...breedOptions[species]] : [];
+
+                if (previousValue && !options.includes(previousValue)) {
+                  options.push(previousValue);
+                }
+
+                breedField.innerHTML = '';
+                const placeholder = createPlaceholder();
+                breedField.appendChild(placeholder);
+
+                options.forEach((breed) => {
+                  const option = document.createElement('option');
+                  option.value = breed;
+                  option.textContent = breed;
+                  breedField.appendChild(option);
+                });
+
+                if (previousValue && options.includes(previousValue)) {
+                  breedField.value = previousValue;
+                  placeholder.selected = false;
+                } else {
+                  placeholder.selected = true;
+                }
+
+                breedField.disabled = options.length === 0;
+              };
+
+              speciesField.addEventListener('change', function (event) {
+                populateBreeds(event.target.value, false);
+              });
+
+              populateBreeds(speciesField.value, true);
+            });
+          </script>
+        {% endif %}
       </div>
     </div>
     {% if step != '' %}
