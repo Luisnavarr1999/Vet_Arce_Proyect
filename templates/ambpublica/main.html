@@ -84,17 +84,54 @@
     flex: 1 1 auto;
   }
 
+  .service-icon {
+    max-width: 80px;
+    height: auto;
+    margin-bottom: 1rem;
+  }
+
   </style>
 
   {# Pagina de inicio de Veterinaria de Arce #}
   {# Encabezado #}
-  <header class="text-center home text-white">
-    <div class="logo-container">
-      <img src="{% static 'Imagenes/Logo.png' %}" alt="Logo FiCats" class="logo" style="max-width: 200px; height: auto;">
+  <header class="text-center home text-white hero-carousel">
+  <!-- Carrusel de fondo (autoplay) -->
+  <div id="heroCarousel" class="carousel slide"
+       data-bs-ride="carousel"
+       data-bs-interval="4500"
+       data-bs-pause="false"
+       data-bs-touch="true" aria-hidden="true">
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <img src="{% static 'Imagenes/hero-vet.jpg' %}" class="d-block w-100 hero-bg" alt="Portada veterinaria">
+      </div>
+      <div class="carousel-item">
+        <img src="{% static 'Imagenes/gallery-1.jpg' %}" class="d-block w-100 hero-bg" alt="Revisión de mascota">
+      </div>
+      <div class="carousel-item">
+        <img src="{% static 'Imagenes/gallery-2.jpg' %}" class="d-block w-100 hero-bg" alt="Perro feliz">
+      </div>
+      <div class="carousel-item">
+        <img src="{% static 'Imagenes/gallery-3.jpg' %}" class="d-block w-100 hero-bg" alt="Gato cariñoso">
+      </div>
+      <div class="carousel-item">
+        <img src="{% static 'Imagenes/gallery-4.jpg' %}" class="d-block w-100 hero-bg" alt="Dueños y veterinarios">
+      </div>
     </div>
-    <h1 class="text-light">Veterinaria de Arce</h1>
-    <p class="lead">Cuidando la salud y felicidad de tus mascotas</p>
-  </header>
+  </div>
+
+  <!-- Overlay para que el logo y textos siempre se lean -->
+  <div class="hero-overlay"></div>
+
+  <!-- Contenido encima del carrusel -->
+  <div class="container hero-content">
+    <div class="logo-container mb-2">
+      <img src="{% static 'Imagenes/Logo.png' %}" alt="Logo FiCats" class="logo hero-logo" style="max-width: 200px; height: auto;">
+    </div>
+    <h1 class="text-light display-6 fw-bold mb-2">Veterinaria de Arce</h1>
+    <p class="lead mb-0">Cuidando la salud y felicidad de tus mascotas</p>
+  </div>
+</header>
   {# Nuestros Servicios #}
   <section id="servicios" class="py-5">
     <div class="container">
@@ -105,6 +142,7 @@
           <div class="card shadow-lg ficat-green text-white border-0 h-100">
             <div class="card-body text-center p-5 d-flex justify-content-center align-items-center">
               <div>
+                <img src="{% static 'Imagenes/service-cirugia.jpg' %}" alt="Consulta General" class="service-icon">
                 <h4>Consulta General</h4>
                 <p>Exámenes de rutina, vacunas y atención médica general para mascotas.</p>
               </div>
@@ -113,8 +151,9 @@
         </div>
         <div class="col-lg-4 mb-2">
           <div class="card shadow-lg ficat-green text-white border-0 h-100">
-            <div class="card-body text-center p-5 d-flex justify-content-center align-items-c enter">
+            <div class="card-body text-center p-5 d-flex justify-content-center align-items-center">
               <div>
+                <img src="{% static 'Imagenes/service-consulta.jpg' %}" alt="Cirugía" class="service-icon">
                 <h4>Cirugía</h4>
                 <p>Realizamos cirugías con estándares médicos de alta calidad.</p>
               </div>
@@ -125,6 +164,7 @@
           <div class="card shadow-lg ficat-green text-white border-0 h-100">
             <div class="card-body text-center p-5 d-flex justify-content-center align-items-center">
               <div>
+                <img src="{% static 'Imagenes/service-dentista.jpg' %}" alt="Dentista" class="service-icon">
                 <h4>Dentista</h4>
                 <p>Cuidado dental especializado para mascotas.</p>
               </div>

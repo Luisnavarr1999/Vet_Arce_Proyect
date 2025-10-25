@@ -8,3 +8,85 @@ header.home {
   padding: 6rem;
 }
 
+/* ===== FIXES para hero con carrusel ===== */
+
+/* Quita el padding grande del header que empujaba todo hacia abajo */
+header.home{
+  padding: 0 !important;
+}
+
+/* El hero se comporta como contenedor del fondo */
+.hero-carousel{
+  position: relative;
+  min-height: 60vh;         /* alto del hero */
+  max-height: 80vh;
+  overflow: hidden;
+  border-radius: 0 0 18px 18px; /* opcional, por estética */
+}
+
+/* El carrusel debe ocupar TODO el header y quedarse detrás */
+.hero-carousel .carousel{
+  position: absolute;
+  inset: 0;                 /* top:0; right:0; bottom:0; left:0 */
+  width: 100%;
+  height: 100%;
+  z-index: 1;               /* detrás del overlay y del contenido */
+}
+
+/* Asegura que cada slide llena el alto del hero */
+.hero-carousel .carousel-inner,
+.hero-carousel .carousel-item{
+  width: 100%;
+  height: 100%;
+}
+
+/* La imagen llena sin deformarse y no deja espacios */
+.hero-carousel .carousel-item img{
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;        /* recorta sin estirar */
+  object-position: center;
+  transition: transform .9s ease-in-out, opacity .9s ease-in-out;
+}
+
+/* Efecto sutil al cambiar de slide */
+.hero-carousel .carousel-item.active img{
+  transform: scale(1.03);
+}
+
+/* Capa oscura para que logo y textos siempre se lean bien */
+.hero-overlay{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    to bottom,
+    rgba(43, 30, 18, 0.55),
+    rgba(43, 30, 18, 0.40)
+  );
+}
+
+/* Contenido (logo + títulos) centrado encima del overlay */
+.hero-content{
+  position: relative;       /* relativo al header */
+  z-index: 3;               /* por encima del overlay y carrusel */
+  min-height: 60vh;         /* mismo alto que el hero */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 2rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,.35);
+}
+
+.hero-logo{
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
+  max-width: 200px;
+  height: auto;
+}
+
+@media (min-width: 992px){
+  .hero-carousel{ min-height: 70vh; }
+  .hero-content{  min-height: 70vh; }
+}
