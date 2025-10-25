@@ -14,11 +14,16 @@
           referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{% static 'panel/estilo.css' %}" />
   </head>
-  <body>
-    <header class="navbar navbar-dark sticky-top bg-primary flex-md-nowrap p-0 shadow navbar-expand">
-      
-      <a class="navbar-brand col-4 col-lg-2 me-0 px-3 fs-6 text-truncate"
-         href="{% url 'panel_home' %}">Arce</a>
+  <body class="dashboard-body">
+    <header class="navbar navbar-dark sticky-top flex-md-nowrap p-0 shadow navbar-expand dashboard-navbar">
+
+      <a class="navbar-brand col-6 col-lg-3 me-0 px-3 fs-6 d-flex align-items-center"
+         href="{% url 'panel_home' %}">
+        <img class="brand-logo me-2"
+             src="{% static 'Imagenes/Logo.png' %}"
+             alt="Logo de Veterinaria Arce" />
+        <span class="brand-text text-truncate">Veterinaria Arce</span>
+      </a>
       <div class="navbar-nav w-100">
         <button class="navbar-toggler d-lg-none d-block collapsed border-0 order-1 order-lg-0 ms-auto mx-1"
                 type="button"
@@ -50,7 +55,7 @@
       <div class="row">
         {% comment %} Navbar de Boostrap. Asigna la clase CSS active mediante la URL. {% endcomment %}
         <nav id="sidebarMenu"
-             class="col-lg-2 d-lg-block bg-light sidebar collapse">
+             class="col-lg-2 d-lg-block sidebar collapse">
           <div class="position-sticky pt-3 sidebar-sticky">
             <ul class="nav nav-pills px-2 flex-column mb-auto">
               <li class="nav-item">
@@ -96,7 +101,7 @@
             </ul>
           </div>
         </nav>
-        <main class="ms-sm-auto col-lg-10 px-md-4 my-2">
+        <main class="ms-sm-auto col-lg-10 px-md-4 my-3 dashboard-main">
           {# Mensajes de Django #}
           <div id="alerts">{% include "../djangomessages.html" %}</div>
           <div class="dj-b-content">
