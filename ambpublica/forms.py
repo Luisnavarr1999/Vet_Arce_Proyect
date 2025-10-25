@@ -6,6 +6,17 @@ from django.utils.timezone import localtime
 
 from paneltrabajador.models import Cita
 
+class ContactForm(forms.Form):
+    nombre = forms.CharField(label='Nombre', max_length=150)
+    correo = forms.EmailField(label='Correo Electrónico')
+    mensaje = forms.CharField(label='Mensaje', widget=forms.Textarea(attrs={'rows': 4}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.setdefault('class', 'form-control')
+            field.widget.attrs.setdefault('id', field_name)
+
 class BuscarMascotaForm(forms.Form):
     rut = forms.IntegerField()
     id_mascota = forms.IntegerField()

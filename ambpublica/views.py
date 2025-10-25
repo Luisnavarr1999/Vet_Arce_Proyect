@@ -3,7 +3,7 @@ from urllib import request
 from django.shortcuts import redirect, render
 from django.template import loader
 from django.contrib import messages
-from ambpublica.forms import BuscarMascotaForm, CitaForm, MascotaSelectForm, RutForm
+from ambpublica.forms import ContactForm, BuscarMascotaForm, CitaForm, MascotaSelectForm, RutForm
 from paneltrabajador.forms import ClienteForm, MascotaForm
 from paneltrabajador.models import Cita, Cliente, Mascota
 
@@ -26,8 +26,51 @@ import re, unicodedata
 # Renderiza la página principal
 @ensure_csrf_cookie
 def main(request):
-    template = loader.get_template('ambpublica/main.html')
-    return HttpResponse(template.render())
+    contact_success = False
+    contact_error = None
+
+    if request.method == 'POST':
+        contact_form = ContactForm(request.POST)
+        if contact_form.is_valid():
+            data = contact_form.cleaned_data
+            subject = f"Consulta desde la web - {data['nombre']}"
+            message_body = (
+                "Se ha recibido un nuevo mensaje desde la página principal.\n\n"
+                f"Nombre: {data['nombre']}\n"
+                f"Correo: {data['correo']}\n"
+                f"Fecha: {timezone.localtime(timezone.now()).strftime('%d-%m-%Y %H:%M')}\n\n"
+                "Mensaje:\n"
+                f"{data['mensaje']}"
+            )
+
+            try:
+                send_mail(
+                    subject,
+                    message_body,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [getattr(settings, 'CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)],
+                    fail_silently=False,
+                )
+            except Exception as exc:
+                contact_error = (
+                    'Ocurrió un problema al enviar tu mensaje. Por favor, inténtalo nuevamente más tarde.'
+                )
+                logger.exception('Error enviando mensaje de contacto: %s', exc)
+            else:
+                contact_success = True
+                contact_form = ContactForm()
+        else:
+            contact_error = None
+    else:
+        contact_form = ContactForm()
+
+    context = {
+        'contact_form': contact_form,
+        'contact_success': contact_success,
+        'contact_error': contact_error,
+    }
+
+    return render(request, 'ambpublica/main.html', context)
 
 # cosas que responde el chat demo
 

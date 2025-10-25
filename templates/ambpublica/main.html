@@ -207,18 +207,54 @@
 
         <!--formulario -->
         <div class="col-lg-6">
-          <form id="form-contacto">
+          <form id="form-contacto" method="post" action="#contacto">
+            {% csrf_token %}
+
+            {% if contact_success %}
+              <div class="alert alert-success" role="alert">
+                ¡Gracias por contactarnos! Tu mensaje fue enviado correctamente y te responderemos a la brevedad.
+              </div>
+            {% elif contact_error %}
+              <div class="alert alert-danger" role="alert">
+                {{ contact_error }}
+              </div>
+            {% endif %}
+
+            {% if contact_form.errors %}
+              <div class="alert alert-danger" role="alert">
+                <p class="mb-1">Revisa los datos ingresados:</p>
+                <ul class="mb-0">
+                  {% for field in contact_form %}
+                    {% for error in field.errors %}
+                      <li>{{ error }}</li>
+                    {% endfor %}
+                  {% endfor %}
+                  {% for error in contact_form.non_field_errors %}
+                    <li>{{ error }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
             <div class="mb-3">
-              <label for="nombre" class="form-label">Nombre</label>
-              <input type="text" class="form-control" id="nombre" required />
+              <label for="{{ contact_form.nombre.id_for_label }}" class="form-label">Nombre</label>
+              {{ contact_form.nombre }}
+              {% for error in contact_form.nombre.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
             </div>
             <div class="mb-3">
-              <label for="correo" class="form-label">Correo Electrónico</label>
-              <input type="email" class="form-control" id="correo" required />
+              <label for="{{ contact_form.correo.id_for_label }}" class="form-label">Correo Electrónico</label>
+              {{ contact_form.correo }}
+              {% for error in contact_form.correo.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
             </div>
             <div class="mb-3">
-              <label for="mensaje" class="form-label">Mensaje</label>
-              <textarea class="form-control" id="mensaje" rows="4" required></textarea>
+              <label for="{{ contact_form.mensaje.id_for_label }}" class="form-label">Mensaje</label>
+              {{ contact_form.mensaje }}
+              {% for error in contact_form.mensaje.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
             </div>
             <div class="text-center">
               <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
@@ -258,14 +294,6 @@
 (function () {
   "use strict";
 
-  // --- FORM CONTACTO (demo) ---
-  const contactForm = document.querySelector("#form-contacto");
-  if (contactForm) {
-    contactForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      alert("En construcción...");
-    });
-  }
 
   // --- CHATBOT WIDGET ---
   const widget = document.getElementById("chatbot-widget");
