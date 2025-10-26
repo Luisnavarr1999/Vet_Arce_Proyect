@@ -21,6 +21,15 @@
         <td>
           {# Verificamos permisos #}
           {% if perms.paneltrabajador.change_mascota %}
+            <form action="{% url 'panel_mascota_recordatorio' mascota.id_mascota %}"
+                  method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-info">
+                Enviar recordatorio
+              </button>
+            </form>
+          {% endif %}
+          {% if perms.paneltrabajador.change_mascota %}
             <a href="{% url 'panel_mascota_editar' mascota.id_mascota %}"
                class="btn btn-primary">Editar</a>
           {% endif %}

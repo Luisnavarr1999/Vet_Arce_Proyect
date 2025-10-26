@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>Ficha clínica disponible</title>
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no">
+  </head>
+  <body style="margin:0; padding:24px; background:#f5f7fb; font-family:Arial,Helvetica,sans-serif; color:#333;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+      <tr>
+        <td>
+          <div style="max-width:640px; margin:0 auto; background:#ffffff; border-radius:12px; box-shadow:0 2px 8px rgba(16,24,40,.08);">
+            <div style="padding:24px;">
+
+              <!-- LOGO -->
+              <div style="text-align:center; margin-bottom:8px;">
+                <img src="{{ logo_url }}" alt="{{ site_name }}" style="height:64px; width:auto; display:inline-block;">
+              </div>
+
+              <!-- TÍTULO -->
+              <h2 style="margin:8px 0 16px; font-size:22px; color:{{ primary_color }}; text-align:center;">
+                ¡La ficha clínica de {{ mascota.nombre }} está lista!
+              </h2>
+
+              <!-- TEXTO PRINCIPAL -->
+              <p style="margin:0 0 16px; color:#475467; font-size:14px; line-height:1.6;">
+                Hola <strong>{{ cliente.nombre_cliente }}</strong>,<br>
+                te avisamos que actualizamos la ficha clínica de tu mascota <strong>{{ mascota.nombre }}</strong>
+                (ID: {{ mascota.id_mascota }}). Ya puedes revisarla o descargarla cuando quieras.
+              </p>
+
+              <!-- BOTÓN -->
+              <div style="text-align:center; margin:18px 0;">
+                <a href="{{ consulta_url }}"
+                   style="background:{{ primary_color }}; color:#fff; text-decoration:none; padding:12px 20px; border-radius:8px; display:inline-block; font-weight:600;">
+                  Ir a Consulta de Mascota
+                </a>
+              </div>
+
+              <!-- DATOS NECESARIOS -->
+              <div style="background:#eef2ff; padding:16px; border-radius:10px; margin-bottom:16px; color:#1f2937;">
+                <p style="margin:0 0 8px; font-weight:600;">Usa estos datos para ver la información:</p>
+                <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.6;">
+                  <li><strong>RUT registrado:</strong> {{ cliente.rut }}</li>
+                  <li><strong>ID de mascota:</strong> {{ mascota.id_mascota }}</li>
+                </ul>
+              </div>
+
+              <p style="margin:0 0 16px; color:#667085; font-size:13px; line-height:1.6;">
+                En la sección Consulta de Mascota, ingresa tu RUT sin puntos y el ID de tu mascota para acceder a los resultados actualizados.
+                Si necesitas apoyo, contáctanos respondiendo este correo.
+              </p>
+
+              <hr style="border:none; border-top:1px solid #eef2f7; margin:16px 0;">
+
+              <!-- PIE -->
+              <div style="text-align:center; color:#98a2b3; font-size:12px;">
+                — Equipo de {{ site_name }} 🐾<br>
+                <a href="{{ website_url }}" style="color:{{ primary_color }}; text-decoration:none;">{{ website_url }}</a>
+              </div>
+
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+</html>

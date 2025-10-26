@@ -1,10 +1,19 @@
 from django.shortcuts import get_object_or_404, redirect, render
+from django.conf import settings
 from django.contrib import messages
 from paneltrabajador.forms import MascotaForm
 from paneltrabajador.models import Mascota
 from paneltrabajador.forms import MascotaDocumentoForm
 from paneltrabajador.models import MascotaDocumento
 from django.views.decorators.http import require_POST
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.html import strip_tags
+from urllib.parse import urljoin
+
+from paneltrabajador.forms import MascotaDocumentoForm, MascotaForm
+from paneltrabajador.models import Mascota, MascotaDocumento
 
 def mascota_listar(request):
     """
@@ -169,6 +178,59 @@ def mascota_eliminar(request, id_mascota):
     }
 
     return render(request, 'paneltrabajador/eliminar_generico.html', contexto)
+
+def mascota_enviar_recordatorio(request, id_mascota):
+    """Envía un recordatorio al cliente con los datos de consulta de la mascota."""
+
+    if not request.user.is_authenticated:
+        return redirect('panel_home')
+
+    if not request.user.has_perm('paneltrabajador.change_mascota'):
+        messages.error(request, "No tiene los permisos para realizar esto.")
+        return redirect('panel_home')
+
+    mascota = get_object_or_404(Mascota, id_mascota=id_mascota)
+
+    if request.method != 'POST':
+        messages.warning(request, "Para enviar un recordatorio debe utilizar el botón correspondiente.")
+        return redirect('panel_mascota_listar')
+
+    path_consulta = reverse('ambpublico_consulta')
+
+    if getattr(settings, "PUBLIC_BASE_URL", ""):
+        consulta_url = urljoin(settings.PUBLIC_BASE_URL + "/", path_consulta.lstrip("/"))
+    else:
+        consulta_url = request.build_absolute_uri(path_consulta)
+
+    contexto_email = {
+        'mascota': mascota,
+        'cliente': mascota.cliente,
+        'consulta_url': consulta_url,
+        'site_name': 'Veterinaria de Arce',
+        'logo_url': 'https://i.postimg.cc/x1RJ1G0t/Logovetarce.png',
+        'primary_color': '#1a73e8',
+        'website_url': 'https://www.veterinariadearce.cl',
+    }
+
+    asunto = "Ficha clínica actualizada de {}".format(mascota.nombre)
+    cuerpo_html = render_to_string('paneltrabajador/emails/mascota_recordatorio.html', contexto_email)
+    cuerpo_texto = strip_tags(cuerpo_html)
+
+    mensaje = EmailMultiAlternatives(
+        subject=asunto,
+        body=cuerpo_texto,
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+        to=[mascota.cliente.email],
+    )
+    mensaje.attach_alternative(cuerpo_html, 'text/html')
+
+    try:
+        mensaje.send()
+        messages.success(request, "Se ha enviado el recordatorio al cliente {}.".format(mascota.cliente.nombre_cliente))
+    except Exception:
+        messages.error(request, "No se pudo enviar el correo de recordatorio. Inténtelo nuevamente más tarde.")
+
+    return redirect('panel_mascota_listar')
 
 @require_POST
 def mascota_doc_eliminar(request, id_mascota, doc_id):

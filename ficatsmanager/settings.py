@@ -41,6 +41,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.dev", 
     "https://symphystic-nonseparable-archer.ngrok-free.dev",   # Django 4.2 soporta comodines
 ]
+# URL pública base (para correos, etc.)
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
+
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_COOKIE_SECURE = False
