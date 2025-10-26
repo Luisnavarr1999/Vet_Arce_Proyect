@@ -6,6 +6,10 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
+from django.forms.widgets import DateTimeInput
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
 # https://stackoverflow.com/a/69965027
 class DateTimeLocalInput(forms.DateTimeInput):
     input_type = "datetime-local"
@@ -45,32 +49,55 @@ class ClienteForm(forms.ModelForm):
 
 
 class CitaForm(forms.ModelForm):
-
+    
     class Meta:
         model = Cita
-        fields = ['cliente', 'mascota', 'estado', 'usuario', 'fecha']
+        fields = ['cliente', 'mascota', 'estado', 'usuario', 'fecha', 'asistencia']
+        widgets = {
+            'estado': forms.Select(attrs={'class': 'form-select'}),
+            'cliente': forms.Select(attrs={'class': 'form-select'}),
+            'usuario': forms.Select(attrs={'class': 'form-select'}),
+            'mascota': forms.Select(attrs={'class': 'form-select'}),
+            'asistencia': forms.Select(attrs={'class': 'form-select'}),
+        }
+        
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Agrega clases de Bootstrap a los campos
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+         # Bootstrap para todos los campos (por si algún widget no es select)
+        for _, field in self.fields.items():
+            field.widget.attrs.setdefault('class', 'form-control')
 
+         # Input de fecha/hora local (usa tu DateTimeLocalField definido arriba)
         self.fields['fecha'] = DateTimeLocalField()
 
-        self.fields['estado'].widget.attrs['class'] = 'form-select'
-        self.fields['cliente'].widget.attrs['class'] = 'form-select'
-        self.fields['usuario'].widget.attrs['class'] = 'form-select'
-        self.fields['mascota'].widget.attrs['class'] = 'form-select'
-
+        # Reglas de requerido
         self.fields['cliente'].required = False
         self.fields['mascota'].required = False
 
-        # Ocultamos los campos "cliente" y "mascota" si estamos agregando una nueva cita
-        if not self.instance.pk:  # Verificamos si la instancia ya tiene una clave primaria
+         # Ocultar cliente/mascota al crear (como ya hacías)
+        if not (self.instance and self.instance.pk):
             self.fields['cliente'].widget = forms.HiddenInput()
             self.fields['mascota'].widget = forms.HiddenInput()
+        else:
+            # Valor inicial cuando EDITAS: respeta lo que tenga el modelo (default 'P')
+            self.fields['asistencia'].initial = self.instance.asistencia or 'P'
+        
+    def clean(self):
+        cleaned = super().clean()
+        estado = cleaned.get('estado')            # '0','1','2'
+        fecha = cleaned.get('fecha')
+        asistencia = cleaned.get('asistencia')    # 'P','A','N'
+        now = timezone.now()
+
+        # Solo permite A/N si estaba RESERVADA y ya ocurrió
+        if asistencia in ('A', 'N'):
+            if estado != '1' or (fecha and fecha > now):
+                raise ValidationError(
+                    "Solo puedes marcar 'Asistió' o 'No asistió' cuando la cita fue 'Reservada' y ya ocurrió."
+                )
+        return cleaned
 
 ESPECIE_CHOICES = [
     ("Perro", "Perro"),

@@ -44,6 +44,8 @@ urlpatterns = [
     path('panel/citas/nuevo/', vistas_panel.cita_agregar, name="panel_cita_nuevo"),
     path('panel/citas/editar/<int:n_cita>/', vistas_panel.cita_editar, name='panel_cita_editar'),
     path('panel/citas/eliminar/<int:n_cita>/', vistas_panel.cita_eliminar, name='panel_cita_eliminar'),
+    path('panel/citas/<int:n_cita>/checkin/', vistas_panel.cita_checkin, name='panel_cita_checkin'),
+    path('panel/citas/<int:n_cita>/no-asistio/', vistas_panel.cita_noasistio, name='panel_cita_noasistio'),
 
     path('panel/mascotas/', vistas_panel.mascota_listar, name='panel_mascota_listar'),
     path('panel/mascotas/nuevo/', vistas_panel.mascota_agregar, name='panel_mascota_nuevo'),

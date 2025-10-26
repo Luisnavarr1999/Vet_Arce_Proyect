@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from paneltrabajador.forms import CitaForm
 from paneltrabajador.models import Cita
+from django.utils import timezone
 
 def cita_listar(request):
     """
@@ -23,7 +24,7 @@ def cita_listar(request):
     # Obtenemos todos los objetos del modelo
     # Usamos la funcion personalizada del modelo
     citas = Cita.get_for_listado()
-    return render(request, 'paneltrabajador/cita/listado.html', {'citas': citas})
+    return render(request, 'paneltrabajador/cita/listado.html', {'citas': citas, 'es_home': False,})
 
 def cita_agregar(request):
     """
@@ -137,3 +138,66 @@ def cita_eliminar(request, n_cita):
     }
 
     return render(request, 'paneltrabajador/eliminar_generico.html', contexto)
+
+def cita_checkin(request, n_cita):
+    """
+    Marca una cita como 'Asistió' (check-in rápido desde el listado).
+    Requiere autenticación y permiso change_cita.
+    """
+    if not request.user.is_authenticated:
+        return redirect('panel_home')
+
+    if not request.user.has_perm('paneltrabajador.change_cita'):
+        messages.error(request, "No tiene los permisos para realizar esto.")
+        return redirect('panel_home')
+
+    cita = get_object_or_404(Cita, n_cita=n_cita)
+
+    # Reglas: solo si estaba reservada y ya ocurrió
+    if not (cita.estado == '1' and cita.fecha <= timezone.now()):
+        messages.error(request, "Solo puedes hacer check-in cuando la cita fue 'Reservada' y ya ocurrió.")
+        return redirect('panel_cita_listar')
+
+    cita.asistencia = 'A'
+    # Si agregaste auditoría en el modelo, guarda quién/cuándo:
+    if hasattr(cita, 'checked_in_at'):
+        cita.checked_in_at = timezone.now()
+    if hasattr(cita, 'checked_in_by'):
+        cita.checked_in_by = request.user
+
+    # Guarda (si tienes auditoría, optimiza con update_fields)
+    fields = ['asistencia']
+    if hasattr(cita, 'checked_in_at'):
+        fields.append('checked_in_at')
+    if hasattr(cita, 'checked_in_by'):
+        fields.append('checked_in_by')
+    cita.save(update_fields=fields)
+
+    messages.success(request, "Asistencia registrada (check-in).")
+    return redirect('panel_cita_listar')
+
+
+def cita_noasistio(request, n_cita):
+    """
+    Marca una cita como 'No asistió' (rápido desde el listado).
+    Requiere autenticación y permiso change_cita.
+    """
+    if not request.user.is_authenticated:
+        return redirect('panel_home')
+
+    if not request.user.has_perm('paneltrabajador.change_cita'):
+        messages.error(request, "No tiene los permisos para realizar esto.")
+        return redirect('panel_home')
+
+    cita = get_object_or_404(Cita, n_cita=n_cita)
+
+    # Reglas: solo si estaba reservada y ya ocurrió
+    if not (cita.estado == '1' and cita.fecha <= timezone.now()):
+        messages.error(request, "Solo puedes marcar 'No asistió' cuando la cita fue 'Reservada' y ya ocurrió.")
+        return redirect('panel_cita_listar')
+
+    cita.asistencia = 'N'
+    cita.save(update_fields=['asistencia'])
+
+    messages.success(request, "Marcado como 'No asistió'.")
+    return redirect('panel_cita_listar')

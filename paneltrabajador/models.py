@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
+from django.utils import timezone
+
 # Create your models here.
 
 class Cliente(models.Model):
@@ -83,40 +84,43 @@ class Cita (models.Model):
         ('2', 'Cancelada'),
     ]
 
+    ASISTENCIA_CHOICES = [
+        ('P', 'Pendiente'),
+        ('A', 'Asistió'),
+        ('N', 'No asistió'),
+    ]
+
     n_cita = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, null=True)
     mascota = models.ForeignKey(Mascota, on_delete=models.CASCADE, null=True)
     estado = models.CharField(max_length=1, choices=ESTADO_CHOICES)
     usuario = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     fecha = models.DateTimeField()
+    asistencia = models.CharField(max_length=1, choices=ASISTENCIA_CHOICES, default='P')
 
-    # Obtenemos el estado pero transformado para el objeto actual
-    # Es decir, si self.estado es = 0 entonces se mostrará "Disponible"
-    def get_estado_display(self):
-        """
-        Devuelve el valor de visualización para el campo 'estado'.
-        """
-        return self.ESTADO_CHOICES[int(self.estado)][1]
+     # Auditoría del check-in (sirve para registrar automáticamente quién y cuándo marcó la asistencia)
+    checked_in_at = models.DateTimeField(null=True, blank=True)
+    checked_in_by = models.ForeignKey(
+        get_user_model(), null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='checkins'
+    )
 
-    # Obtener el listado de citas
-    # Se hizo esta función para que el listado salga con todos los estados transformados por defecto
+    @property
+    def puede_confirmar_asistencia(self):
+        # solo si está reservada y la hora ya llegó o pasó
+        return self.estado == '1' and self.fecha <= timezone.now()
+
+    @property
+    def asistio(self):
+        return self.asistencia == 'A'
+
+    @property
+    def no_asistio(self):
+        return self.asistencia == 'N'
+
+    @staticmethod
     def get_for_listado(**args):
-        """
-        Devuelve una lista de citas con valores de estado transformados.
-
-        Args:
-            **args: Argumentos adicionales de consulta.
-
-        Returns:
-            queryset: Un queryset de citas.
-        """
-
-        listado = Cita.objects.filter(**args)
-
-        # Mostramos el estado que corresponde
-        for cita in listado:
-            cita.estado = cita.get_estado_display()
-        return listado
+        return Cita.objects.filter(**args)
 
 
 class Producto (models.Model):

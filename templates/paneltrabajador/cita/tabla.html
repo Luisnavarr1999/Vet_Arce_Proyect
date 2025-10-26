@@ -1,11 +1,13 @@
-{# En este caso, la tabla se encuentra separada ya que la reutilizaremos en otros templates aparte de la seccion cita #}
-<table class="table table-hover">
-  <thead>
+{# Tabla reutilizable para citas #}
+
+<table class="table table-hover align-middle">
+  <thead class="table-light">
     <tr>
-      <th>Número de Cita</th>
+      <th>N° Cita</th>
       <th>Cliente</th>
       <th>Mascota</th>
       <th>Estado</th>
+      <th>Asistencia</th>
       <th>Usuario</th>
       <th>Fecha</th>
       {% if es_home == False %}<th>Acciones</th>{% endif %}
@@ -17,23 +19,70 @@
         <td>{{ cita.n_cita }}</td>
         <td>{{ cita.cliente }}</td>
         <td>{{ cita.mascota }}</td>
-        <td>{{ cita.estado }}</td>
+
+        {# Estado con badge de color (comparando por código 0/1/2) #}
+        <td>
+          {% if cita.estado == '0' %}
+            <span class="badge bg-success">{{ cita.get_estado_display }}</span>
+          {% elif cita.estado == '1' %}
+            <span class="badge bg-warning text-dark">{{ cita.get_estado_display }}</span>
+          {% elif cita.estado == '2' %}
+            <span class="badge bg-danger">{{ cita.get_estado_display }}</span>
+          {% else %}
+            {{ cita.get_estado_display }}
+          {% endif %}
+        </td>
+
+        {# Asistencia con badges visuales #}
+        <td>
+          {% if cita.asistencia == "A" %}
+            <span class="badge bg-success">Asistió</span>
+          {% elif cita.asistencia == "N" %}
+            <span class="badge bg-danger">No asistió</span>
+          {% else %}
+            <span class="badge bg-secondary">Pendiente</span>
+          {% endif %}
+        </td>
+
         <td>{{ cita.usuario }}</td>
-        <td>{{ cita.fecha }}</td>
-        {# Ya que estamos reutilizando este codigo, poner a disposicion esta variable que verificará si NO estamos en la pagina de inicio del panel #}
+        <td>{{ cita.fecha|date:"d/m/Y H:i" }}</td>
+
         {% if es_home == False %}
           <td>
-            {# Verificamos permisos #}
+            {# --- Botones de gestión --- #}
             {% if perms.paneltrabajador.change_cita %}
-              <a href="{% url 'panel_cita_editar' cita.n_cita %}"
-                 class="btn btn-primary">Editar</a>
+              <a href="{% url 'panel_cita_editar' cita.n_cita %}" class="btn btn-sm btn-primary mb-1">Editar</a>
             {% endif %}
             {% if perms.paneltrabajador.delete_cita %}
-              <a href="{% url 'panel_cita_eliminar' cita.n_cita %}"
-                 class="btn btn-danger">Eliminar</a>
+              <a href="{% url 'panel_cita_eliminar' cita.n_cita %}" class="btn btn-sm btn-danger mb-1">Eliminar</a>
+            {% endif %}
+
+            {# --- NUEVOS BOTONES DE ASISTENCIA (solo si ya pasó la hora y está reservada) --- #}
+            {% if perms.paneltrabajador.change_cita and cita.puede_confirmar_asistencia %}
+              <form action="{% url 'panel_cita_checkin' cita.n_cita %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-sm mb-1"
+                        {% if cita.asistencia == 'A' %}disabled{% endif %}>
+                  ✅ Check-in
+                </button>
+              </form>
+
+              <form action="{% url 'panel_cita_noasistio' cita.n_cita %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm mb-1"
+                        {% if cita.asistencia == 'N' %}disabled{% endif %}>
+                  🚫 No asistió
+                </button>
+              </form>
             {% endif %}
           </td>
         {% endif %}
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="8" class="text-center text-muted py-3">
+          No hay citas registradas.
+        </td>
       </tr>
     {% endfor %}
   </tbody>
