@@ -225,8 +225,14 @@ def consulta_mascota(request):
             # Si el cliente o la mascota no existen, redirecciona a la página de consulta con un mensaje de error.
             try:
                 cliente = Cliente.objects.get(rut=rut)
-                mascota = Mascota.objects.get(cliente=cliente, id_mascota=id_mascota)
-                return render(request, 'ambpublica/consulta_mascota/ficha.html', {'mascota': mascota})
+                mascota = Mascota.objects.prefetch_related('documentos').get(
+                cliente=cliente, id_mascota=id_mascota)
+                contexto = {
+                    'mascota': mascota,
+                    'documentos': mascota.documentos.all(),
+                }
+                return render(request, 'ambpublica/consulta_mascota/ficha.html', contexto)
+                
             except Cliente.DoesNotExist:
                 messages.error(request, 'Cliente con Rut {} no encontrado.'.format(rut))
                 return redirect('ambpublico_consulta')

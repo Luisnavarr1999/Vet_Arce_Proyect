@@ -4,8 +4,38 @@
 {% endblock title %}
 {% block content %}
   {% comment %} Este archivo se usará para aquellas vistas que no requieran mostrar informacion adicional. {% endcomment %}
-  <form method="post">
-    {% csrf_token %} {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Aceptar</button>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+    {{ form.as_p }}
+
+    {% if doc_form %}
+      <hr />
+      <h5>Adjuntar documentos al historial médico</h5>
+      <p class="text-muted">
+        Los archivos se almacenarán junto al historial médico y podrán consultarse en el portal público.
+      </p>
+      {{ doc_form.non_field_errors }}
+      {{ doc_form.as_p }}
+    {% endif %}
+
+    {% if documentos %}
+      <div class="mt-4">
+        <h5>Documentos cargados</h5>
+        <ul class="list-group">
+          {% for documento in documentos %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <a href="{{ documento.archivo.url }}" target="_blank" rel="noopener">
+                {{ documento.nombre_archivo }}
+              </a>
+              <small class="text-muted">{{ documento.subido_en|date:"d/m/Y H:i" }}</small>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary mt-3">Aceptar</button>
   </form>
 {% endblock content %}

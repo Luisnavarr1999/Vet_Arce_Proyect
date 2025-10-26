@@ -198,6 +198,26 @@ class MascotaForm(forms.ModelForm):
             self.fields.pop('cliente')
             self.fields.pop('historial_medico')
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MascotaDocumentoForm(forms.Form):
+    archivos = forms.FileField(
+        label='Seleccionar archivos',
+        required=False,
+        widget=MultipleFileInput(attrs={'multiple': True}),
+        help_text='Puedes adjuntar uno o varios archivos (PDF, imágenes, etc.).',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['archivos'].widget.attrs.setdefault('class', 'form-control')
+
+    def clean_archivos(self):
+        archivos = self.files.getlist('archivos')
+        return archivos or []
+
 
 class FacturaForm(forms.ModelForm):
     class Meta:

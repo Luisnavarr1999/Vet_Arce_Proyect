@@ -21,6 +21,8 @@ from paneltrabajador import views as vistas_panel
 from django.contrib.auth import views as auth_views
 from paneltrabajador.forms import StyledSetPasswordForm
 from django.urls import reverse_lazy
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/doc/', include('django.contrib.admindocs.urls')),
@@ -74,3 +76,6 @@ urlpatterns = [
     path('reservahora/', vistas_publica.reserva_hora, name="ambpublico_reserva"),
     path('reservahora/cancelar/', vistas_publica.reserva_hora_cancelar, name="ambpublico_reserva_cancelar"),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

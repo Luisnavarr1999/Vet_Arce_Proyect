@@ -1,3 +1,4 @@
+import os
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -62,6 +63,26 @@ class Mascota(models.Model):
         """
         return f"{self.nombre} (ID: {self.id_mascota}) de {self.cliente.nombre_cliente} (RUT: {self.cliente.rut})"
 
+class MascotaDocumento(models.Model):
+    """Documento asociado al historial clínico de una mascota."""
+
+    mascota = models.ForeignKey(
+        Mascota,
+        on_delete=models.CASCADE,
+        related_name='documentos',
+    )
+    archivo = models.FileField(upload_to='mascotas/documentos/')
+    subido_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-subido_en']
+
+    def __str__(self):
+        return self.nombre_archivo
+
+    @property
+    def nombre_archivo(self) -> str:
+        return os.path.basename(self.archivo.name)
 
 class Cita (models.Model):
     """

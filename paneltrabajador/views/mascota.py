@@ -2,6 +2,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from paneltrabajador.forms import MascotaForm
 from paneltrabajador.models import Mascota
+from paneltrabajador.forms import MascotaDocumentoForm
+from paneltrabajador.models import MascotaDocumento
+
 def mascota_listar(request):
     """
     Lista todas las mascotas si el usuario está autenticado y tiene los permisos necesarios.
@@ -35,30 +38,41 @@ def mascota_agregar(request):
     Returns:
         HttpResponse: La respuesta HTTP que contiene el formulario de mascota o redirige al inicio.
     """
-    # El usuario no está autenticado, redireccionar al inicio
+     # El usuario no está autenticado → redireccionar al inicio
     if not request.user.is_authenticated:
         return redirect('panel_home')
 
-    # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
+    # El usuario no tiene permisos → mensaje y redirección
     if not request.user.has_perm('paneltrabajador.add_mascota'):
         messages.error(request, "No tiene los permisos para realizar esto.")
         return redirect('panel_home')
 
-    # Se ha enviado el formulario
+    # Si se envió el formulario
     if request.method == 'POST':
-        # Pasar los datos de la peticion al formulario para la validacion
         form = MascotaForm(request.POST)
-        # Todo Ok?
-        if form.is_valid():
-            # Agregar nuevo objeto
-            form.save()
-            # Redirige a la página de listado después de agregar un nuevo objeto
+        doc_form = MascotaDocumentoForm(request.POST, request.FILES)
+
+        if form.is_valid() and doc_form.is_valid():
+            # Guardar la mascota
+            mascota = form.save()
+
+            # Guardar cada archivo adjunto
+            for archivo in doc_form.cleaned_data['archivos']:
+                MascotaDocumento.objects.create(mascota=mascota, archivo=archivo)
+
             messages.success(request, "Se ha agregado la mascota correctamente.")
             return redirect('panel_mascota_listar')
-    else:
-        form = MascotaForm()
 
-    return render(request, 'paneltrabajador/form_generico.html', {'form': form})
+    else:
+        # Mostrar formulario vacío si es GET
+        form = MascotaForm()
+        doc_form = MascotaDocumentoForm()
+
+    # Renderizar con ambos formularios
+    return render(request, 'paneltrabajador/form_generico.html', {
+        'form': form,
+        'doc_form': doc_form,
+    })
 
 def mascota_editar(request, id_mascota):
     """
@@ -71,36 +85,49 @@ def mascota_editar(request, id_mascota):
     Returns:
         HttpResponse: La respuesta HTTP que contiene el formulario de edición de mascota o redirige al inicio.
     """
-    # El usuario no está autenticado, redireccionar al inicio
+    # El usuario no está autenticado → redireccionar al inicio
     if not request.user.is_authenticated:
         return redirect('panel_home')
 
-    # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
+    # El usuario no tiene permisos → mensaje y redirección
     if not request.user.has_perm('paneltrabajador.change_mascota'):
         messages.error(request, "No tiene los permisos para realizar esto.")
         return redirect('panel_home')
 
-    # Existe? Entonces asignar. No existe? Entonces mostrar un error 404.
+    # Obtener mascota o 404
     mascota = get_object_or_404(Mascota, id_mascota=id_mascota)
 
-    # Se ha enviado el formulario
+    # Para listar en el template los documentos ya existentes
+    documentos = mascota.documentos.all()
+
     if request.method == 'POST':
-        # Pasar los datos de la peticion al formulario para la validacion
-        # Aparte le pasamos el objeto para que pueda saber que estamos editando ese objeto en particular
-        # En el caso de que no asignaramos instance, pensará que debemos agregar un objeto nuevo
+        # Form principal + form de archivos
         form = MascotaForm(request.POST, instance=mascota)
-        # Todo Ok?
-        if form.is_valid():
-            # Guardar
-            form.save()
-            # Redirige a la página de listado después de editar
+        doc_form = MascotaDocumentoForm(request.POST, request.FILES)
+
+        if form.is_valid() and doc_form.is_valid():
+            # Guardar cambios de la mascota
+            mascota = form.save()
+
+            # Guardar cada archivo adjunto nuevo (si hay)
+            for archivo in doc_form.cleaned_data['archivos']:
+                MascotaDocumento.objects.create(mascota=mascota, archivo=archivo)
+
             messages.success(request, "Se ha editado la mascota correctamente.")
             return redirect('panel_mascota_listar')
-    else:
-        # Asignar form para mostrarlo en el template
-        form = MascotaForm(instance=mascota)
 
-    return render(request, 'paneltrabajador/form_generico.html', {'form': form, 'mascota': mascota})
+    else:
+        form = MascotaForm(instance=mascota)
+        doc_form = MascotaDocumentoForm()
+
+    # Render con ambos formularios y lista de documentos existentes
+    return render(request, 'paneltrabajador/form_generico.html', {
+        'form': form,
+        'doc_form': doc_form,
+        'mascota': mascota,
+        'documentos': documentos,
+    })
+
 
 def mascota_eliminar(request, id_mascota):
     """
