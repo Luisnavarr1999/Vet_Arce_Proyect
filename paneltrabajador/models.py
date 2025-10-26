@@ -83,6 +83,16 @@ class MascotaDocumento(models.Model):
     @property
     def nombre_archivo(self) -> str:
         return os.path.basename(self.archivo.name)
+    
+    def delete(self, using=None, keep_parents=False):
+        """
+        Borra primero el registro y luego elimina el archivo del storage si existe.
+        """
+        storage = self.archivo.storage
+        name = self.archivo.name
+        super().delete(using=using, keep_parents=keep_parents)
+        if name and storage.exists(name):
+            storage.delete(name)
 
 class Cita (models.Model):
     """

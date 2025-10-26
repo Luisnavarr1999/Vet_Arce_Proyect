@@ -53,6 +53,7 @@ urlpatterns = [
     path('panel/mascotas/nuevo/', vistas_panel.mascota_agregar, name='panel_mascota_nuevo'),
     path('panel/mascotas/editar/<int:id_mascota>/', vistas_panel.mascota_editar, name='panel_mascota_editar'),
     path('panel/mascotas/eliminar/<int:id_mascota>/', vistas_panel.mascota_eliminar, name='panel_mascota_eliminar'),
+    path('panel/mascotas/<int:id_mascota>/documentos/<int:doc_id>/eliminar/', vistas_panel.mascota_doc_eliminar, name='panel_mascota_doc_eliminar'),
 
     path('panel/facturas/', vistas_panel.factura_listar, name='panel_factura_listar'),
     path('panel/facturas/nuevo/', vistas_panel.factura_agregar, name='panel_factura_nuevo'),

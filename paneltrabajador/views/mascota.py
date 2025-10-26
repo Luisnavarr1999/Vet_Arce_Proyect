@@ -4,6 +4,7 @@ from paneltrabajador.forms import MascotaForm
 from paneltrabajador.models import Mascota
 from paneltrabajador.forms import MascotaDocumentoForm
 from paneltrabajador.models import MascotaDocumento
+from django.views.decorators.http import require_POST
 
 def mascota_listar(request):
     """
@@ -168,3 +169,28 @@ def mascota_eliminar(request, id_mascota):
     }
 
     return render(request, 'paneltrabajador/eliminar_generico.html', contexto)
+
+@require_POST
+def mascota_doc_eliminar(request, id_mascota, doc_id):
+    """
+    Elimina un documento adjunto de una mascota.
+    Permisos: usuario autenticado y con change_mascota o delete_mascotadocumento.
+    """
+    if not request.user.is_authenticated:
+        return redirect('panel_home')
+
+    if not (
+        request.user.has_perm('paneltrabajador.change_mascota')
+        or request.user.has_perm('paneltrabajador.delete_mascotadocumento')
+    ):
+        messages.error(request, "No tiene los permisos para realizar esto.")
+        return redirect('panel_home')
+
+    mascota = get_object_or_404(Mascota, id_mascota=id_mascota)
+    documento = get_object_or_404(MascotaDocumento, pk=doc_id, mascota=mascota)
+
+    # Borra (esto también elimina el archivo físico por el método delete() del modelo)
+    documento.delete()
+    messages.success(request, "Documento eliminado correctamente.")
+
+    return redirect('panel_mascota_editar', id_mascota=mascota.id_mascota)

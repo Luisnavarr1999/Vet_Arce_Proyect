@@ -201,9 +201,36 @@ class MascotaForm(forms.ModelForm):
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
 
+class MultipleFileField(forms.FileField):
+    """Permite manejar uno o varios archivos usando el mismo campo."""
+
+    widget = MultipleFileInput
+
+    def clean(self, data, initial=None):
+        if data in self.empty_values:
+            if self.required and not initial:
+                raise ValidationError(self.error_messages['required'], code='required')
+            return [] if not initial else initial
+
+        if not isinstance(data, (list, tuple)):
+            data = [data]
+
+        cleaned_files = []
+        errors = []
+
+        for uploaded_file in data:
+            try:
+                cleaned_files.append(super().clean(uploaded_file, initial))
+            except ValidationError as exc:
+                errors.extend(exc.error_list)
+
+        if errors:
+            raise ValidationError(errors)
+
+        return cleaned_files
 
 class MascotaDocumentoForm(forms.Form):
-    archivos = forms.FileField(
+    archivos = MultipleFileField(
         label='Seleccionar archivos',
         required=False,
         widget=MultipleFileInput(attrs={'multiple': True}),
@@ -215,7 +242,7 @@ class MascotaDocumentoForm(forms.Form):
         self.fields['archivos'].widget.attrs.setdefault('class', 'form-control')
 
     def clean_archivos(self):
-        archivos = self.files.getlist('archivos')
+        archivos = self.cleaned_data.get('archivos')
         return archivos or []
 
 

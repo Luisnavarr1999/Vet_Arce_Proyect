@@ -26,10 +26,24 @@
         <ul class="list-group">
           {% for documento in documentos %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
-              <a href="{{ documento.archivo.url }}" target="_blank" rel="noopener">
-                {{ documento.nombre_archivo }}
-              </a>
-              <small class="text-muted">{{ documento.subido_en|date:"d/m/Y H:i" }}</small>
+              <div class="me-3">
+                <a href="{{ documento.archivo.url }}" target="_blank" rel="noopener">
+                  {{ documento.nombre_archivo }}
+                </a>
+                <br>
+                <small class="text-muted">{{ documento.subido_en|date:"d/m/Y H:i" }}</small>
+              </div>
+
+              {% if perms.paneltrabajador.change_mascota or perms.paneltrabajador.delete_mascotadocumento %}
+                <form method="post"
+                      action="{% url 'panel_mascota_doc_eliminar' mascota.id_mascota documento.id %}"
+                      onsubmit="return confirm('¿Eliminar este documento? Esta acción no se puede deshacer.');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    Eliminar
+                  </button>
+                </form>
+              {% endif %}
             </li>
           {% endfor %}
         </ul>
