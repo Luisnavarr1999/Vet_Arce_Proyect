@@ -90,3 +90,146 @@ header.home{
   .hero-carousel{ min-height: 70vh; }
   .hero-content{  min-height: 70vh; }
 }
+
+/* ===== Servicios (versión final) ===== */
+:root{
+  --mustard: #d79416;
+  --mustard-hover: #c78311;
+  --card-radius: 14px;
+}
+
+.service-card{
+  background: var(--mustard);
+  color: #fff;
+  border-radius: var(--card-radius);
+  padding: 2rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 6px 14px rgba(0,0,0,.08);
+  transition: transform .25s ease, box-shadow .25s ease, background-color .25s ease;
+  height: 100%;
+  cursor: default;
+}
+
+/* Ícono (SVG o JPG) centrado y grande */
+.service-card .service-icon{
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  object-fit: contain; /* útil si usas JPG/PNG */
+  filter: drop-shadow(0 1px 6px rgba(0,0,0,.15));
+}
+
+/* Títulos blancos (h3 y h4 por si acaso) */
+.service-card h3,
+.service-card h4{
+  color: #fff !important;  /* fuerza sobre bootstrap si hace falta */
+  font-weight: 700;
+  margin-bottom: .5rem;
+}
+
+/* Texto */
+.service-card p{
+  color: #fff;
+  opacity: .95;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Hover elegante */
+.service-card:hover,
+.service-card:focus-within{
+  transform: translateY(-6px);
+  background-color: var(--mustard-hover);
+  box-shadow: 0 14px 32px rgba(0,0,0,.12);
+}
+
+/* Accesibilidad teclado */
+.service-card:focus-within{
+  outline: 2px solid rgba(255,255,255,.7);
+  outline-offset: 3px;
+}
+
+/* Menos movimiento si el usuario lo pidió */
+@media (prefers-reduced-motion: reduce){
+  .service-card{ transition: background-color .24s ease, box-shadow .24s ease; }
+}
+
+/* ===== Footer Redes Sociales ===== */
+.social-icons .social-link {
+  color: #d79416;               /* Mostaza */
+  font-size: 2rem;              /* Tamaño más grande */
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.social-icons .social-link:hover {
+  color: #000;                  /* Negro al pasar el mouse */
+  transform: scale(1.15);       /* Ligeramente más grande */
+}
+
+
+/* ===== Decoración de árboles (full-bleed y más grandes) ===== */
+.autumn-decor{
+  position: relative;
+  isolation: isolate;
+  /* separa el contenido del tronco/hojas; ajusta si hiciera falta */
+  padding-left: clamp(0px, 8vw, 140px);
+  padding-right: clamp(0px, 8vw, 140px);
+}
+
+/* Truco full-bleed: empuja los pseudo-elementos hasta los bordes del viewport,
+   aunque la sección esté dentro de un container con márgenes laterales */
+.autumn-decor::before,
+.autumn-decor::after{
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  /* Lleva el origen a los bordes del viewport */
+  left: calc((100% - 100vw) / 2);
+  right: auto;
+  width: min(36vw, 420px);       /* MÁS GRANDE */
+  aspect-ratio: 3 / 4;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: left bottom;
+  z-index: -1;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,.15));
+  opacity: .98;
+}
+
+/* Árbol derecho: anclado al borde derecho del viewport */
+.autumn-decor::after{
+  left: auto;
+  right: calc((100% - 100vw) / 2);
+  background-position: right bottom;
+}
+
+/* Rutas de imagen (ajústalas si usas otra carpeta/nombre) */
+.autumn-decor::before{  background-image: url("/static/Imagenes/tree-left.png"); }
+.autumn-decor::after{   background-image: url("/static/Imagenes/tree-right.png"); }
+
+/* Responsive: reduce tamaño en pantallas medianas y chicas */
+@media (max-width: 992px){
+  .autumn-decor{
+    padding-left: clamp(0px, 6vw, 100px);
+    padding-right: clamp(0px, 6vw, 100px);
+  }
+  .autumn-decor::before,
+  .autumn-decor::after{
+    width: min(32vw, 360px);
+    bottom: -8px;
+  }
+}
+
+@media (max-width: 768px){
+  .autumn-decor{
+    padding-left: clamp(0px, 4vw, 72px);
+    padding-right: clamp(0px, 4vw, 72px);
+  }
+  .autumn-decor::before,
+  .autumn-decor::after{
+    width: min(28vw, 240px);
+    bottom: -6px;
+  }
+}
