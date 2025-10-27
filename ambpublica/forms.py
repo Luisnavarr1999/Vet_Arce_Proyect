@@ -59,6 +59,7 @@ class CitaForm(forms.ModelForm):
         fields = ['n_cita']
 
     def __init__(self, *args, **kwargs):
+        servicio = kwargs.pop('servicio', None)
         super().__init__(*args, **kwargs)
 
         # Agrega clases de Bootstrap a los campos
@@ -67,6 +68,8 @@ class CitaForm(forms.ModelForm):
 
         # Filtra las citas con estado igual a 0 y obtén sus fechas junto al veterinario asignado
         citas_disponibles = Cita.objects.filter(estado='0').select_related('usuario')
+        if servicio:
+            citas_disponibles = citas_disponibles.filter(servicio=servicio)
 
         # Crea una lista de tuplas en el formato adecuado para el campo de selección
         opciones = []
@@ -88,3 +91,22 @@ class CitaForm(forms.ModelForm):
             widget=forms.Select(attrs={'class': 'form-control'}),
             label="Seleccione una Fecha y Hora:",
         )
+
+class ServicioForm(forms.Form):
+    servicio = forms.ChoiceField(
+        choices=Cita.SERVICIO_CHOICES,
+        label='Seleccione un servicio',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    def __init__(self, *args, available_services=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if available_services is not None:
+            choices = [
+                (value, label)
+                for value, label in Cita.SERVICIO_CHOICES
+                if value in available_services
+            ]
+            if choices:
+                self.fields['servicio'].choices = choices

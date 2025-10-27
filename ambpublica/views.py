@@ -2,8 +2,9 @@ from ast import And
 from urllib import request
 from django.shortcuts import redirect, render
 from django.template import loader
+from django import forms
 from django.contrib import messages
-from ambpublica.forms import ContactForm, BuscarMascotaForm, CitaForm, MascotaSelectForm, RutForm
+from ambpublica.forms import ContactForm, BuscarMascotaForm, CitaForm, MascotaSelectForm, RutForm, ServicioForm
 from paneltrabajador.forms import ClienteForm, MascotaForm
 from paneltrabajador.models import Cita, Cliente, Mascota
 
@@ -259,7 +260,10 @@ def reserva_hora(request):
     """
 
     # Definicion de variables por defecto
-    titulo = "Por favor, ingrese su RUT."
+    titulo = "Seleccione el servicio que necesita."
+    servicio_codigo = request.session.get('reserva_servicio')
+    servicio_nombre = dict(Cita.SERVICIO_CHOICES).get(servicio_codigo)
+    cliente_rut = request.session.get('reserva_c_rut')
 
     # Verificamos si el usuario ya está en algún paso y lo asignamos a la variable
     if request.session.has_key('reserva_step'):
@@ -267,16 +271,32 @@ def reserva_hora(request):
     else:
         step = ''
 
+    if step == '':
+        cleared = False
+        for key in ('reserva_servicio', 'reserva_c_rut', 'reserva_m_id'):
+            if key in request.session:
+                del request.session[key]
+                cleared = True
+        if cleared:
+            servicio_codigo = None
+            servicio_nombre = None
+            cliente_rut = None
+
     # Los pasos incluyen la creación de un cliente, una mascota, la selección de una mascota existente o la finalización del proceso.
     # Renderiza diferentes formularios y vistas según el paso actual.
 
     if step == "crear_cliente":
         titulo = "Por favor, ingrese sus datos."
 
+        if 'reserva_c_rut' not in request.session or 'reserva_servicio' not in request.session:
+            return redirect('ambpublico_reserva_cancelar')
+
         # Formulario fue enviado
         if request.method == 'POST':
             # Pasamos los datos de la peticion al formulario
             form = ClienteForm(request.POST)
+            form.fields['rut'].widget = forms.HiddenInput()
+            form.fields['rut'].initial = request.session['reserva_c_rut']
 
             # Formulario es válido, crea el cliente y lo inserta, pasa al siguiente paso
             if form.is_valid():
@@ -290,8 +310,12 @@ def reserva_hora(request):
             form = ClienteForm()
             # Le damos el valor del RUT ingresado en el primer paso
             form.fields['rut'].initial = request.session['reserva_c_rut']
+            form.fields['rut'].widget = forms.HiddenInput()
     elif step == "crear_mascota":
         titulo = "Por favor, ingrese los datos de su mascota."
+
+        if 'reserva_c_rut' not in request.session or 'reserva_servicio' not in request.session:
+            return redirect('ambpublico_reserva_cancelar')
 
         # Verificamos si el cliente que nos dieron anteriormente existe
         try:
@@ -330,6 +354,9 @@ def reserva_hora(request):
 
     elif step == "select_mascota":
         titulo = "Por favor, seleccione su mascota o agregue una nueva."
+
+        if 'reserva_c_rut' not in request.session or 'reserva_servicio' not in request.session:
+            return redirect('ambpublico_reserva_cancelar')
 
         # Debe el usuario crear una mascota antes de poder seleccionar?
         crear_mascota = False
@@ -382,6 +409,10 @@ def reserva_hora(request):
                 request.session['reserva_step'] = "final"
                 return redirect('ambpublico_reserva')
     elif step == "final":
+
+        if 'reserva_c_rut' not in request.session or 'reserva_m_id' not in request.session or 'reserva_servicio' not in request.session:
+            return redirect('ambpublico_reserva_cancelar')
+        
         # Intentamos obtener el cliente y la mascota
         try:
             cliente = Cliente.objects.get(rut=request.session['reserva_c_rut'])
@@ -399,7 +430,7 @@ def reserva_hora(request):
         # Se envia el formulario
         if request.method == 'POST':
             # Pasamos los datos de la peticion al formulario
-            form = CitaForm(request.POST)
+            form = CitaForm(request.POST, servicio=servicio_codigo)
 
             # Todo OK
             if form.is_valid():
@@ -408,7 +439,10 @@ def reserva_hora(request):
 
                 # Verificamos que la cita ingresada sea real, ingresamos los datos del cliente y la mascota a ella
                 try:
-                    cita = Cita.objects.get(n_cita=n_cita)
+                    cita = Cita.objects.get(n_cita=n_cita, servicio=servicio_codigo)
+                    if cita.estado != '0':
+                        messages.error(request, 'Lo sentimos, la cita seleccionada ya no está disponible.')
+                        return redirect('ambpublico_reserva_cancelar')
                     cita.estado = '1'
                     cita.cliente = cliente
                     cita.mascota = mascota
@@ -424,10 +458,13 @@ def reserva_hora(request):
                         veterinario_nombre = cita.usuario.get_full_name().strip() or cita.usuario.get_username()
                         cita_fecha_str = date_format(cita_fecha, "DATETIME_FORMAT")
 
+                        servicio_str = dict(Cita.SERVICIO_CHOICES).get(cita.servicio, cita.servicio)
+
                         text_body = (
                             f"Hola {cliente.nombre_cliente},\n\n"
                             f"Tu reserva fue agendada para el {cita_fecha_str} con el/la veterinario(a) {veterinario_nombre}.\n"
                             f"Mascota: {mascota.nombre}.\n\n"
+                            f"Servicio: {servicio_str}.\n\n"
                             "Te esperamos en Veterinaria de Arce.\n\n"
                             "Si no puedes asistir, avísanos con anticipación.\n\n"
                             "Saludos,\n"
@@ -446,6 +483,8 @@ def reserva_hora(request):
                             <div style="background:#f7fbff; border:1px solid #d1e7ff; border-radius:8px; padding:16px; margin:18px 0;">
                                 <p style="margin:0 0 8px 0;"><strong>Fecha y hora:</strong> {cita_fecha_str}</p>
                                 <p style="margin:0 0 8px 0;"><strong>Veterinario(a):</strong> {veterinario_nombre}</p>
+                                <p style="margin:0 0 8px 0;"><strong>Mascota:</strong> {mascota.nombre}</p>
+                                <p style="margin:0;"><strong>Servicio:</strong> {servicio_str}</p>
                                 <p style="margin:0;"><strong>Mascota:</strong> {mascota.nombre}</p>
                             </div>
                             <p>Te esperamos en nuestra clínica. Si no puedes asistir, avísanos con anticipación para reagendar tu hora.</p>
@@ -479,57 +518,86 @@ def reserva_hora(request):
                     del request.session['reserva_step']
                 except:
                     pass
+                for key in ('reserva_servicio', 'reserva_c_rut', 'reserva_m_id'):
+                    try:
+                        del request.session[key]
+                    except:
+                        pass
 
                 # Todo OK, nos devolvemos
                 messages.success(request, '¡Se ha reservado su hora exitosamente!')
                 return redirect('ambpublico_reserva')
 
         # Definimos el formulario para ser usado más abajo en la renderizacion del template
-        form = CitaForm()
+        form = CitaForm(servicio=servicio_codigo)
 
         # Contexto distinto para mostrar toda la información en el resumen ya que es el paso final
-        context = {'form': form, 'step': step, 'mascota': mascota, 'cliente': cliente}
+        context = {
+            'form': form,
+            'step': step,
+            'mascota': mascota,
+            'cliente': cliente,
+            'servicio_nombre': servicio_nombre,
+        }
 
         # Hacemos return aquí para que no se cargue el contexto de más abajo
         return render(request, 'ambpublica/reserva_horas/form.html', context)
+    elif step == "ingresar_rut":
+        titulo = "Por favor, ingrese su RUT."
+
+        if 'reserva_servicio' not in request.session:
+            return redirect('ambpublico_reserva_cancelar')
+
+        if not Cita.objects.filter(estado='0', servicio=servicio_codigo).exists():
+            messages.error(request, 'Lo sentimos, ya no quedan citas disponibles para el servicio seleccionado.')
+            return redirect('ambpublico_reserva_cancelar')
+
+        if request.method == 'POST':
+            form = RutForm(request.POST)
+            if form.is_valid():
+                rut = form.cleaned_data['rut']
+                cliente = Cliente.objects.filter(rut=rut).first()
+
+                request.session['reserva_c_rut'] = rut
+
+                if cliente:
+                    request.session['reserva_step'] = "select_mascota"
+                else:
+                    request.session['reserva_step'] = "crear_cliente"
+                return redirect('ambpublico_reserva')
+        else:
+            form = RutForm()
     else:
-        # Obtenemos la lista de todas las citas
         citas = Cita.objects.filter(estado='0')
 
-        # Si no hay citas, entonces le asignamos al formulario un contexto personalizado
-        # Para mostrar que no hay citas
         if not citas.exists():
             return render(request, 'ambpublica/reserva_horas/form.html', {'step': 'nohours'})
+        
+        servicios_disponibles = list(citas.values_list('servicio', flat=True).distinct())
+
+        if not servicios_disponibles:
+            return render(request, 'ambpublica/reserva_horas/form.html', {'step': 'nohours'})
+
+        if request.method == 'POST':
+            form = ServicioForm(request.POST, available_services=servicios_disponibles)
+            if form.is_valid():
+                servicio = form.cleaned_data['servicio']
+
+                if not Cita.objects.filter(estado='0', servicio=servicio).exists():
+                    messages.error(request, 'No hay citas disponibles para el servicio seleccionado.')
+                else:
+                    request.session['reserva_servicio'] = servicio
+                    request.session['reserva_step'] = "ingresar_rut"
+                    return redirect('ambpublico_reserva')
         else:
-            # Se envia el formulario
-            if request.method == 'POST':
-                # Pasamos los datos de la peticion al formulario
-                form = RutForm(request.POST)
-                # Verificamos que todo este bien
-                if form.is_valid():
-                    # Obtenemos la información sanitizada por seguridad
-                    rut = form.cleaned_data['rut']
-
-                    # Obtenemos el cliente
-                    cliente = Cliente.objects.filter(rut=rut).first()
-
-                    # Existe el cliente, ir directamente a la seleccion de mascotas
-                    if cliente:
-                        request.session['reserva_c_rut'] = cliente.rut
-                        request.session['reserva_step'] = "select_mascota"
-                        return redirect('ambpublico_reserva')
-
-                    # No existe, tendrá que ingresar sus datos entonces
-                    else:
-                        request.session['reserva_c_rut'] = rut
-                        request.session['reserva_step'] = "crear_cliente"
-                        return redirect('ambpublico_reserva')
-
-            # Definimos el formulario para ser usado más abajo en la renderizacion del template
-            form = RutForm()
+            form = ServicioForm(available_services=servicios_disponibles)
 
     # Definimos las diferentes variables mediante el contexto Django
     context = {'titulo': titulo, 'form': form, 'step': step}
+    if servicio_nombre:
+        context['servicio_nombre'] = servicio_nombre
+    if cliente_rut:
+        context['cliente_rut'] = cliente_rut
     return render(request, 'ambpublica/reserva_horas/form.html', context)
 
 # Funcion simple para eliminar la variable de sesion para cancelar el proceso de reserva
@@ -543,9 +611,10 @@ def reserva_hora_cancelar(request):
     Returns:
         HttpResponse: La respuesta HTTP que redirige a la vista de reserva.
     """
-    try:
-        del request.session['reserva_step']
-    except:
-        pass
+    for key in ('reserva_step', 'reserva_servicio', 'reserva_c_rut', 'reserva_m_id'):
+        try:
+            del request.session[key]
+        except:
+            pass
     messages.success(request, "El proceso de reserva ha sido cancelado.")
     return redirect('ambpublico_reserva')

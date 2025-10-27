@@ -52,13 +52,14 @@ class CitaForm(forms.ModelForm):
     
     class Meta:
         model = Cita
-        fields = ['cliente', 'mascota', 'estado', 'usuario', 'fecha', 'asistencia']
+        fields = ['cliente', 'mascota', 'servicio', 'estado', 'usuario', 'fecha', 'asistencia']
         widgets = {
             'estado': forms.Select(attrs={'class': 'form-select'}),
             'cliente': forms.Select(attrs={'class': 'form-select'}),
             'usuario': forms.Select(attrs={'class': 'form-select'}),
             'mascota': forms.Select(attrs={'class': 'form-select'}),
             'asistencia': forms.Select(attrs={'class': 'form-select'}),
+            'servicio': forms.Select(attrs={'class': 'form-select'}),
         }
         
 

@@ -121,6 +121,12 @@ class Cita (models.Model):
         ('N', 'No asistió'),
     ]
 
+    SERVICIO_CHOICES = [
+        ('general', 'Consulta General'),
+        ('cirugia', 'Cirugía'),
+        ('dentista', 'Dentista'),
+    ]
+    
     n_cita = models.AutoField(primary_key=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, null=True)
     mascota = models.ForeignKey(Mascota, on_delete=models.CASCADE, null=True)
@@ -128,6 +134,7 @@ class Cita (models.Model):
     usuario = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     fecha = models.DateTimeField()
     asistencia = models.CharField(max_length=1, choices=ASISTENCIA_CHOICES, default='P')
+    servicio = models.CharField(max_length=20, choices=SERVICIO_CHOICES, default='general')
 
      # Auditoría del check-in (sirve para registrar automáticamente quién y cuándo marcó la asistencia)
     checked_in_at = models.DateTimeField(null=True, blank=True)

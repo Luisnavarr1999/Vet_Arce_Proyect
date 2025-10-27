@@ -22,6 +22,14 @@
           <p class="lead">Por favor, revise su información...</p>
         </div>
       </div>
+      {% if servicio_nombre %}
+        <div class="card mb-2">
+          <div class="card-body">
+            <h3>Servicio seleccionado</h3>
+            <p class="mb-0">{{ servicio_nombre }}</p>
+          </div>
+        </div>
+      {% endif %}
       <div class="card mb-2">
         <div class="card-body">
           <h3>Detalles del Cliente</h3>
@@ -59,11 +67,21 @@
       </div>
     {% endif %}
     <div class="card mb-2">
-      <div class="card-body">
-        {% if step != '' and step != 'final' %}<h1>{{ titulo }}</h1>{% endif %}
-        <form method="post">
-          {% csrf_token %} {{ form.as_p }}
-          <button type="submit" class="btn btn-primary w-100">Continuar</button>
+        <div class="card-body">
+          {% if step != '' and step != 'final' %}<h1>{{ titulo }}</h1>{% endif %}
+          {% if servicio_nombre %}
+            <div class="alert alert-info" role="status">
+              <strong>Servicio seleccionado:</strong> {{ servicio_nombre }}
+            </div>
+          {% endif %}
+          {% if step == 'crear_cliente' and cliente_rut %}
+            <div class="alert alert-secondary" role="status">
+              <strong>RUT registrado:</strong> {{ cliente_rut }}
+            </div>
+          {% endif %}
+          <form method="post">
+            {% csrf_token %} {{ form.as_p }}
+            <button type="submit" class="btn btn-primary w-100">Continuar</button>
         </form>
         {% if step == 'crear_mascota' %}
           <script>

@@ -6,6 +6,7 @@
       <th>N° Cita</th>
       <th>Cliente</th>
       <th>Mascota</th>
+      <th>Servicio</th>
       <th>Estado</th>
       <th>Asistencia</th>
       <th>Usuario</th>
@@ -19,6 +20,7 @@
         <td>{{ cita.n_cita }}</td>
         <td>{{ cita.cliente }}</td>
         <td>{{ cita.mascota }}</td>
+        <td>{{ cita.get_servicio_display }}</td>
 
         {# Estado con badge de color (comparando por código 0/1/2) #}
         <td>
@@ -80,7 +82,7 @@
       </tr>
     {% empty %}
       <tr>
-        <td colspan="8" class="text-center text-muted py-3">
+        <td colspan="{% if es_home == False %}9{% else %}8{% endif %}" class="text-center text-muted py-3">
           No hay citas registradas.
         </td>
       </tr>
