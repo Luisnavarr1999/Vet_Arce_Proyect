@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from .models import Cita, Cliente, Mascota, Factura, Producto
 from django.contrib.auth import get_user_model
@@ -42,10 +44,48 @@ class ClienteForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
 
+        telefono_field = self.fields['telefono']
+        telefono_field.widget.attrs.update({
+            'inputmode': 'numeric',
+            'pattern': '\\d{9}',
+            'maxlength': '9',
+            'minlength': '9',
+            'placeholder': '9XXXXXXXX',
+            'aria-describedby': 'telefonoHelp',
+        })
+        telefono_field.help_text = (
+            "Ingresa solo los 9 dígitos; el prefijo +56 se agrega automáticamente."
+        )
+
+        if not self.is_bound:
+            telefono_value = self.initial.get('telefono') or getattr(self.instance, 'telefono', '')
+            if telefono_value:
+                telefono_digits = re.sub(r'\D', '', str(telefono_value))
+                if len(telefono_digits) >= 9:
+                    telefono_field.initial = telefono_digits[-9:]
+
         # Deshabilitar la edición del campo 'rut' si ya existe el cliente
         # se asegura de que el formulario esté en modo de edición y no en modo de creación.
         if self.instance and self.instance.pk:
             self.fields['rut'].widget = forms.HiddenInput()
+
+        if self.is_bound:
+            for field_name, field in self.fields.items():
+                if self.errors.get(field_name):
+                    css_classes = field.widget.attrs.get('class', '')
+                    if 'is-invalid' not in css_classes:
+                        field.widget.attrs['class'] = (css_classes + ' is-invalid').strip()
+
+    def clean_telefono(self):
+        telefono = self.cleaned_data.get('telefono', '').strip()
+
+        if not telefono.isdigit():
+            raise ValidationError('Ingresa solo números en el teléfono.')
+
+        if len(telefono) != 9:
+            raise ValidationError('Ingresa exactamente 9 dígitos para el teléfono.')
+
+        return f"+56{telefono}"
 
 
 class CitaForm(forms.ModelForm):

@@ -1,5 +1,6 @@
 import os
 from django.db import models
+from django.core.validators import RegexValidator
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
@@ -13,13 +14,21 @@ class Cliente(models.Model):
         rut (PositiveIntegerField): ID único del cliente.
         nombre_cliente (CharField): Nombre del cliente.
         direccion (CharField): Dirección del cliente.
-        telefono (IntegerField): Número de teléfono del cliente.
+        telefono (CharField): Número de teléfono del cliente en formato +56XXXXXXXXX.
         email (EmailField): Dirección de correo electrónico del cliente.
     """
     rut = models.PositiveIntegerField(primary_key=True)
     nombre_cliente = models.CharField(max_length=150)
     direccion = models.CharField(max_length=65)
-    telefono = models.IntegerField()
+    telefono = models.CharField(
+        max_length=12,
+        validators=[
+            RegexValidator(
+                regex=r"^\+56\d{9}$",
+                message="El teléfono debe tener el formato +56 seguido de 9 dígitos.",
+            )
+        ],
+    )
     email = models.EmailField(max_length=254)
 
     # Devuelve una representación de cadena del objeto Cliente, útil para la visualización en la interfaz de administración de Django.
