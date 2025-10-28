@@ -242,6 +242,9 @@ def consulta_mascota(request):
                 rut_display = form.cleaned_data.get('rut_display', rut)
                 messages.error(request, 'Mascota con ID {} no encontrada para el cliente con Rut {}.'.format(id_mascota, rut_display))
                 return redirect('ambpublico_consulta')
+
+        # Si el formulario no es válido, se vuelve a renderizar el formulario con los errores.
+        return render(request, 'ambpublica/consulta_mascota/form.html', {'form': form})
     else:
         # Obtener el formulario y mostrarlo.
         form = BuscarMascotaForm()
@@ -487,7 +490,6 @@ def reserva_hora(request):
                                 <p style="margin:0 0 8px 0;"><strong>Veterinario(a):</strong> {veterinario_nombre}</p>
                                 <p style="margin:0 0 8px 0;"><strong>Mascota:</strong> {mascota.nombre}</p>
                                 <p style="margin:0;"><strong>Servicio:</strong> {servicio_str}</p>
-                                <p style="margin:0;"><strong>Mascota:</strong> {mascota.nombre}</p>
                             </div>
                             <p>Te esperamos en nuestra clínica. Si no puedes asistir, avísanos con anticipación para reagendar tu hora.</p>
                             <hr style="margin:20px 0; border:none; border-top:1px solid #ddd;">

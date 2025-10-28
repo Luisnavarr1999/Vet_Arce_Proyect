@@ -58,5 +58,26 @@ def normalize_rut(value: str) -> Tuple[int, str]:
       - el número entero (para guardar en BD)
       - el RUT formateado con puntos y guion (para mostrar)
     """
-    number, dv = parse_and_validate_rut(value)
+    cleaned = re.sub(r"[^0-9kK]", "", str(value)).upper()
+
+    if not cleaned:
+        raise ValidationError(_("Debe ingresar un RUT."))
+
+    # Si el usuario ingresa solo el cuerpo numérico (sin DV), calculamos el DV.
+    if cleaned.isdigit():
+        # Para compatibilidad, si viene más largo que el cuerpo típico asumimos que
+        # el último dígito corresponde al DV y validamos.
+        if len(cleaned) > 8:
+            body, dv = cleaned[:-1], cleaned[-1]
+            if not body.isdigit():
+                raise ValidationError(_("El RUT solo puede contener números antes del dígito verificador."))
+            number = int(body)
+            if compute_dv(number) != dv:
+                raise ValidationError(_("El dígito verificador no es válido."))
+        else:
+            number = int(cleaned)
+            dv = compute_dv(number)
+    else:
+        number, dv = parse_and_validate_rut(cleaned)
+
     return number, format_rut(number, dv)

@@ -15,6 +15,30 @@ from urllib.parse import urljoin
 from paneltrabajador.forms import MascotaDocumentoForm, MascotaForm
 from paneltrabajador.models import Mascota, MascotaDocumento
 
+
+# para poder usarlo en los correo o si queremos listar
+def _formatear_rut_con_dv(rut):
+    """Devuelve el RUT con guion y dígito verificador calculado."""
+
+    rut_str = str(rut)
+    factores = [2, 3, 4, 5, 6, 7]
+    total = 0
+
+    for indice, digito in enumerate(reversed(rut_str)):
+        total += int(digito) * factores[indice % len(factores)]
+
+    resto = total % 11
+    dv = 11 - resto
+
+    if dv == 11:
+        dv_str = "0"
+    elif dv == 10:
+        dv_str = "K"
+    else:
+        dv_str = str(dv)
+
+    return f"{rut_str}-{dv_str}"
+
 def mascota_listar(request):
     """
     Lista todas las mascotas si el usuario está autenticado y tiene los permisos necesarios.
@@ -210,6 +234,7 @@ def mascota_enviar_recordatorio(request, id_mascota):
         'logo_url': 'https://i.postimg.cc/x1RJ1G0t/Logovetarce.png',
         'primary_color': '#1a73e8',
         'website_url': 'https://www.veterinariadearce.cl',
+        'cliente_rut_formateado': _formatear_rut_con_dv(mascota.cliente.rut),
     }
 
     asunto = "Ficha clínica actualizada de {}".format(mascota.nombre)
