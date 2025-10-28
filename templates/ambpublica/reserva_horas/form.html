@@ -9,7 +9,13 @@
         <h1 class="display-4 text-light">Reserva de horas</h1>
         <hr class="sep-short" />
         <p class="lead">Desde la comodidad de su casa solicite nuestra atención médica en un par de clics.</p>
+        <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-outline-light mt-3">Cancelar cita</a>
       </div>
+    </div>
+  {% endif %}
+  {% if step != '' and step != 'nohours' %}
+    <div class="text-end mb-3">
+      <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-outline-secondary">Cancelar cita</a>
     </div>
   {% endif %}
   {% if step == 'nohours' %}

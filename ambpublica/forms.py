@@ -42,7 +42,23 @@ class RutForm(forms.Form):
         # Agrega clases de Bootstrap a los campos
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
-    
+
+    def clean_rut(self):
+        rut = self.cleaned_data['rut']
+        numero, rut_formateado = normalize_rut(rut)
+        self.cleaned_data['rut_display'] = rut_formateado
+        return numero
+
+
+class CancelarCitaForm(forms.Form):
+    rut = forms.CharField(label='RUT')
+    n_cita = forms.IntegerField(label='Número de Cita', min_value=1)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault('class', 'form-control')
+
     def clean_rut(self):
         rut = self.cleaned_data['rut']
         numero, rut_formateado = normalize_rut(rut)

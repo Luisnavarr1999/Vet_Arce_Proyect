@@ -1,0 +1,63 @@
+{% extends "../master.html" %}
+{% block title %}
+  Arce Vet - Cancelar cita
+{% endblock title %}
+{% block content %}
+  <div class="p-5 my-2 border-0 rounded ficat-green text-light">
+    <div class="text-center py-4">
+      <h1 class="display-4 text-light mb-3">Cancelar cita</h1>
+      <p class="lead mb-0">
+        Si no puedes asistir o surgió algún problema, no te preocupes ❤️. Solo ingresa tu RUT y el Número de Cita que te enviamos por correo para cancelar tu hora.
+      </p>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      {% if success_message %}
+        <div class="alert alert-success" role="alert">
+          {{ success_message }}
+        </div>
+      {% endif %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+          {{ form.rut.label_tag }}
+          {{ form.rut }}
+          {% if form.rut.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.rut.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        <div class="mb-3">
+          {{ form.n_cita.label_tag }}
+          {{ form.n_cita }}
+          {% if form.n_cita.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.n_cita.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-danger w-100">Cancelar cita</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="text-center">
+    <a href="{% url 'ambpublico_reserva' %}" class="btn btn-outline-secondary">Volver a Reserva de horas</a>
+  </div>
+{% endblock content %}

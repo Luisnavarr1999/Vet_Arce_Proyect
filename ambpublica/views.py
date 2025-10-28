@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 from django.template import loader
 from django import forms
 from django.contrib import messages
-from ambpublica.forms import ContactForm, BuscarMascotaForm, CitaForm, MascotaSelectForm, RutForm, ServicioForm
+from ambpublica.forms import ContactForm, BuscarMascotaForm, CancelarCitaForm, CitaForm, MascotaSelectForm, RutForm, ServicioForm
 from paneltrabajador.forms import ClienteForm, MascotaForm
 from paneltrabajador.models import Cita, Cliente, Mascota
 
@@ -469,6 +469,7 @@ def reserva_hora(request):
                             f"Hola {cliente.nombre_cliente},\n\n"
                             f"Tu reserva fue agendada para el {cita_fecha_str} con el/la veterinario(a) {veterinario_nombre}.\n"
                             f"Mascota: {mascota.nombre}.\n\n"
+                            f"N° de Cita: {cita.n_cita}.\n"
                             f"Servicio: {servicio_str}.\n\n"
                             "Te esperamos en Veterinaria de Arce.\n\n"
                             "Si no puedes asistir, avísanos con anticipación.\n\n"
@@ -489,6 +490,7 @@ def reserva_hora(request):
                                 <p style="margin:0 0 8px 0;"><strong>Fecha y hora:</strong> {cita_fecha_str}</p>
                                 <p style="margin:0 0 8px 0;"><strong>Veterinario(a):</strong> {veterinario_nombre}</p>
                                 <p style="margin:0 0 8px 0;"><strong>Mascota:</strong> {mascota.nombre}</p>
+                                <p style="margin:0 0 8px 0;"><strong>N° de Cita:</strong> {cita.n_cita}</p>
                                 <p style="margin:0;"><strong>Servicio:</strong> {servicio_str}</p>
                             </div>
                             <p>Te esperamos en nuestra clínica. Si no puedes asistir, avísanos con anticipación para reagendar tu hora.</p>
@@ -624,3 +626,39 @@ def reserva_hora_cancelar(request):
             pass
     messages.success(request, "El proceso de reserva ha sido cancelado.")
     return redirect('ambpublico_reserva')
+
+
+def cancelar_cita(request):
+    """Permite que un cliente cancele su cita reservada."""
+
+    success_message = None
+    if request.method == 'POST':
+        form = CancelarCitaForm(request.POST)
+        if form.is_valid():
+            rut = form.cleaned_data['rut']
+            n_cita = form.cleaned_data['n_cita']
+
+            try:
+                cita = Cita.objects.select_related('cliente').get(n_cita=n_cita)
+            except Cita.DoesNotExist:
+                form.add_error(None, 'No se encontró una cita registrada con los datos ingresados.')
+            else:
+                if not cita.cliente or cita.cliente.rut != rut:
+                    form.add_error(None, 'No se encontró una cita registrada con los datos ingresados.')
+                elif cita.estado == '2':
+                    form.add_error(None, 'La cita ingresada ya fue cancelada anteriormente.')
+                elif cita.estado == '0':
+                    form.add_error(None, 'La cita ingresada aún no se encuentra reservada.')
+                else:
+                    cita.estado = '2'
+                    cita.save(update_fields=['estado'])
+                    success_message = 'Tu cita ha sido cancelada exitosamente.'
+                    form = CancelarCitaForm()
+    else:
+        form = CancelarCitaForm()
+
+    context = {
+        'form': form,
+        'success_message': success_message,
+    }
+    return render(request, 'ambpublica/reserva_horas/cancelar_cita.html', context)

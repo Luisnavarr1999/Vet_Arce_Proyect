@@ -77,6 +77,7 @@ urlpatterns = [
     path('chatbot/message/', vistas_publica.chatbot_message, name="ambpublico_chatbot_message"),
     path('reservahora/', vistas_publica.reserva_hora, name="ambpublico_reserva"),
     path('reservahora/cancelar/', vistas_publica.reserva_hora_cancelar, name="ambpublico_reserva_cancelar"),
+    path('reservahora/cancelar-cita/', vistas_publica.cancelar_cita, name='ambpublico_cancelar_cita'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
