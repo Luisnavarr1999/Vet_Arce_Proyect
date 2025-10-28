@@ -1,4 +1,4 @@
-{% extends "../master.html" %}
+{% extends "../master.html" %} 
 {% block title %}
   Arce Vet - Reserva de horas
 {% endblock title %}
@@ -8,26 +8,26 @@
       <div class="text-center py-5">
         <h1 class="display-4 text-light">Reserva de horas</h1>
         <hr class="sep-short" />
-        <p class="lead">Desde la comodidad de su casa solicite nuestra atención médica en un par de clics.</p>
-        <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-outline-light mt-3">Cancelar cita</a>
+        <p class="lead">
+          Desde la comodidad de su casa solicite nuestra atención médica en un par de clics.
+        </p>
       </div>
     </div>
   {% endif %}
-  {% if step != '' and step != 'nohours' %}
-    <div class="text-end mb-3">
-      <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-outline-secondary">Cancelar cita</a>
-    </div>
-  {% endif %}
+
   {% if step == 'nohours' %}
-    <div class="alert alert-secondary">Lo sentimos, no tenemos más horas disponibles. Vuelva más tarde porfavor...</div>
+    <div class="alert alert-secondary">
+      Lo sentimos, no tenemos más horas disponibles. Vuelva más tarde por favor...
+    </div>
   {% else %}
     {% if step == 'final' %}
       <div class="p-5 my-2 border-0 rounded ficat-green text-light">
         <div class="text-center py-5">
-          <h1 class="display-4 text-light">¡Está apunto de reservar su hora!</h1>
+          <h1 class="display-4 text-light">¡Está a punto de reservar su hora!</h1>
           <p class="lead">Por favor, revise su información...</p>
         </div>
       </div>
+
       {% if servicio_nombre %}
         <div class="card mb-2">
           <div class="card-body">
@@ -36,106 +36,73 @@
           </div>
         </div>
       {% endif %}
+
       <div class="card mb-2">
         <div class="card-body">
           <h3>Detalles del Cliente</h3>
           <ul>
-            <li>
-              <strong>Rut:</strong> {{ cliente.rut }}
-            </li>
-            <li>
-              <strong>Nombre:</strong> {{ cliente.nombre_cliente }}
-            </li>
-            <li>
-              <strong>Dirección:</strong> {{ cliente.direccion }}
-            </li>
-            <li>
-              <strong>Teléfono:</strong> {{ cliente.telefono }}
-            </li>
-            <li>
-              <strong>Email:</strong> {{ cliente.email }}
-            </li>
+            <li><strong>Rut:</strong> {{ cliente.rut }}</li>
+            <li><strong>Nombre:</strong> {{ cliente.nombre_cliente }}</li>
+            <li><strong>Dirección:</strong> {{ cliente.direccion }}</li>
+            <li><strong>Teléfono:</strong> {{ cliente.telefono }}</li>
+            <li><strong>Email:</strong> {{ cliente.email }}</li>
           </ul>
         </div>
       </div>
+
       <div class="card mb-2">
         <div class="card-body">
           <h3>Detalles de la Mascota</h3>
           <ul>
-            <li>
-              <strong>Nombre:</strong> {{ mascota.nombre }}
-            </li>
-            <li>
-              <strong>Número de Chip:</strong> {{ mascota.numero_chip }}
-            </li>
+            <li><strong>Nombre:</strong> {{ mascota.nombre }}</li>
+            <li><strong>Número de Chip:</strong> {{ mascota.numero_chip }}</li>
           </ul>
         </div>
       </div>
     {% endif %}
+
     <div class="card mb-2">
-        <div class="card-body">
-          {% if step != '' and step != 'final' %}<h1>{{ titulo }}</h1>{% endif %}
-          {% if servicio_nombre %}
-            <div class="alert alert-info" role="status">
-              <strong>Servicio seleccionado:</strong> {{ servicio_nombre }}
-            </div>
+      <div class="card-body">
+        {% if step != '' and step != 'final' %}
+          <h1>{{ titulo }}</h1>
+        {% endif %}
+
+        {% if servicio_nombre %}
+          <div class="alert alert-info" role="status">
+            <strong>Servicio seleccionado:</strong> {{ servicio_nombre }}
+          </div>
+        {% endif %}
+
+        {% if step == 'crear_cliente' and cliente_rut %}
+          <div class="alert alert-secondary" role="status">
+            <strong>RUT registrado:</strong> {{ cliente_rut }}
+          </div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+
+          {% if step != 'nohours' %}
+            <button type="submit" class="btn btn-primary w-100 mb-2">Continuar</button>
+            <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">
+              Cancelar cita
+            </a>
           {% endif %}
-          {% if step == 'crear_cliente' and cliente_rut %}
-            <div class="alert alert-secondary" role="status">
-              <strong>RUT registrado:</strong> {{ cliente_rut }}
-            </div>
-          {% endif %}
-          <form method="post">
-            {% csrf_token %} {{ form.as_p }}
-            <button type="submit" class="btn btn-primary w-100">Continuar</button>
         </form>
+
         {% if step == 'crear_mascota' %}
           <script>
             document.addEventListener('DOMContentLoaded', function () {
               const speciesField = document.getElementById('id_especie');
               const breedField = document.getElementById('id_raza');
 
-              if (!speciesField || !breedField) {
-                return;
-              }
+              if (!speciesField || !breedField) return;
 
               const breedOptions = {
-                'Perro': [
-                  'Mestizo',
-                  'Labrador Retriever',
-                  'Pastor Alemán',
-                  'Poodle',
-                  'Bulldog',
-                  'Beagle',
-                  'Golden Retriever',
-                  'Chihuahua',
-                  'Pug',
-                  'Schnauzer'
-                ],
-                'Gato': [
-                  'Mestizo',
-                  'Siamés',
-                  'Persa',
-                  'Maine Coon',
-                  'Bengalí',
-                  'Sphynx',
-                  'British Shorthair',
-                  'Abisinio',
-                  'Angora Turco',
-                  'Ragdoll'
-                ],
-                'Otros': [
-                  'Erizo',
-                  'Hámster',
-                  'Ratón',
-                  'Cobaya',
-                  'Conejo',
-                  'Hurón',
-                  'Tortuga',
-                  'Iguana',
-                  'Ave Exótica',
-                  'Pez'
-                ]
+                'Perro': ['Mestizo', 'Labrador Retriever', 'Pastor Alemán', 'Poodle', 'Bulldog', 'Beagle', 'Golden Retriever', 'Chihuahua', 'Pug', 'Schnauzer'],
+                'Gato': ['Mestizo', 'Siamés', 'Persa', 'Maine Coon', 'Bengalí', 'Sphynx', 'British Shorthair', 'Abisinio', 'Angora Turco', 'Ragdoll'],
+                'Otros': ['Erizo', 'Hámster', 'Ratón', 'Cobaya', 'Conejo', 'Hurón', 'Tortuga', 'Iguana', 'Ave Exótica', 'Pez']
               };
 
               const createPlaceholder = () => {
@@ -149,16 +116,13 @@
               const populateBreeds = (species, preserveSelection = false) => {
                 const previousValue = preserveSelection ? breedField.value : '';
                 const options = breedOptions[species] ? [...breedOptions[species]] : [];
-
-                if (previousValue && !options.includes(previousValue)) {
-                  options.push(previousValue);
-                }
+                if (previousValue && !options.includes(previousValue)) options.push(previousValue);
 
                 breedField.innerHTML = '';
                 const placeholder = createPlaceholder();
                 breedField.appendChild(placeholder);
 
-                options.forEach((breed) => {
+                options.forEach(breed => {
                   const option = document.createElement('option');
                   option.value = breed;
                   option.textContent = breed;
@@ -175,19 +139,12 @@
                 breedField.disabled = options.length === 0;
               };
 
-              speciesField.addEventListener('change', function (event) {
-                populateBreeds(event.target.value, false);
-              });
-
+              speciesField.addEventListener('change', event => populateBreeds(event.target.value, false));
               populateBreeds(speciesField.value, true);
             });
           </script>
         {% endif %}
       </div>
     </div>
-    {% if step != '' %}
-      <a href="{% url 'ambpublico_reserva_cancelar' %}"
-         class="btn btn-danger w-100">Cancelar</a>
-    {% endif %}
   {% endif %}
 {% endblock content %}

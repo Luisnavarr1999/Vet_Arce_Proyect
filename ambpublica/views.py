@@ -493,7 +493,7 @@ def reserva_hora(request):
                                 <p style="margin:0 0 8px 0;"><strong>N° de Cita:</strong> {cita.n_cita}</p>
                                 <p style="margin:0;"><strong>Servicio:</strong> {servicio_str}</p>
                             </div>
-                            <p>Te esperamos en nuestra clínica. Si no puedes asistir, avísanos con anticipación para reagendar tu hora.</p>
+                            <p>Te esperamos en nuestra clínica. Si no puedes asistir, avísanos con anticipación para reagendar tu hora o cancélala en la sección reserva de horas.</p>
                             <hr style="margin:20px 0; border:none; border-top:1px solid #ddd;">
                             <p style="text-align:center; font-size:14px; color:#555;">
                                 — Equipo de <strong>Veterinaria de Arce 🐾</strong><br>
@@ -670,6 +670,41 @@ def cancelar_cita(request):
                 cita.estado = '2'
                 cita.save(update_fields=['estado'])
                 success_message = 'Tu cita ha sido cancelada exitosamente.'
+
+                cliente = cita.cliente
+                mascota = cita.mascota
+                fecha_local = timezone.localtime(cita.fecha)
+                fecha_formateada = fecha_local.strftime('%d-%m-%Y')
+                hora_formateada = fecha_local.strftime('%H:%M')
+                servicio_nombre = cita.get_servicio_display()
+                rut_formateado = rut_display or str(cliente.rut)
+
+                mensaje_correo = (
+                    "Se ha cancelado una cita desde el portal público.\n\n"
+                    f"Número de cita: {cita.n_cita}\n"
+                    f"Cliente: {cliente.nombre_cliente}\n"
+                    f"RUT: {rut_formateado}\n"
+                    f"Mascota: {mascota.nombre if mascota else 'Sin información'}\n"
+                    f"Servicio: {servicio_nombre}\n"
+                    f"Fecha: {fecha_formateada}\n"
+                    f"Hora: {hora_formateada}"
+                )
+
+                try:
+                    send_mail(
+                        f"Cita cancelada #{cita.n_cita}",
+                        mensaje_correo,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [getattr(settings, 'CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)],
+                        fail_silently=False,
+                    )
+                except Exception as email_error:
+                    logger.warning(
+                        "No se pudo enviar el correo de cancelación para la cita %s: %s",
+                        cita.n_cita,
+                        email_error,
+                    )
+
                 form = CancelarCitaForm()
     else:
         form = CancelarCitaForm()
