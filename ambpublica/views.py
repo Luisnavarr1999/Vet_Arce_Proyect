@@ -636,24 +636,41 @@ def cancelar_cita(request):
         form = CancelarCitaForm(request.POST)
         if form.is_valid():
             rut = form.cleaned_data['rut']
+            rut_display = form.cleaned_data.get('rut_display', '')
             n_cita = form.cleaned_data['n_cita']
 
-            try:
-                cita = Cita.objects.select_related('cliente').get(n_cita=n_cita)
-            except Cita.DoesNotExist:
+            rut_variants = {rut}
+            if rut_display:
+                parts = rut_display.rsplit('-', 1)
+                if len(parts) == 2:
+                    dv = parts[1].strip()
+                    if dv.isdigit():
+                        try:
+                            rut_variants.add(int(f"{rut}{dv}"))
+                        except ValueError:
+                            pass
+
+            cita = (
+                Cita.objects.select_related('cliente')
+                .filter(
+                    n_cita=n_cita,
+                    cliente__isnull=False,
+                    cliente__rut__in=list(rut_variants),
+                )
+                .first()
+            )
+
+            if not cita:
                 form.add_error(None, 'No se encontró una cita registrada con los datos ingresados.')
+            elif cita.estado == '2':
+                form.add_error(None, 'La cita ingresada ya fue cancelada anteriormente.')
+            elif cita.estado == '0':
+                form.add_error(None, 'La cita ingresada aún no se encuentra reservada.')
             else:
-                if not cita.cliente or cita.cliente.rut != rut:
-                    form.add_error(None, 'No se encontró una cita registrada con los datos ingresados.')
-                elif cita.estado == '2':
-                    form.add_error(None, 'La cita ingresada ya fue cancelada anteriormente.')
-                elif cita.estado == '0':
-                    form.add_error(None, 'La cita ingresada aún no se encuentra reservada.')
-                else:
-                    cita.estado = '2'
-                    cita.save(update_fields=['estado'])
-                    success_message = 'Tu cita ha sido cancelada exitosamente.'
-                    form = CancelarCitaForm()
+                cita.estado = '2'
+                cita.save(update_fields=['estado'])
+                success_message = 'Tu cita ha sido cancelada exitosamente.'
+                form = CancelarCitaForm()
     else:
         form = CancelarCitaForm()
 
