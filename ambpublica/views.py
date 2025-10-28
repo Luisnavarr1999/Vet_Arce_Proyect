@@ -235,10 +235,12 @@ def consulta_mascota(request):
                 return render(request, 'ambpublica/consulta_mascota/ficha.html', contexto)
                 
             except Cliente.DoesNotExist:
-                messages.error(request, 'Cliente con Rut {} no encontrado.'.format(rut))
+                rut_display = form.cleaned_data.get('rut_display', rut)
+                messages.error(request, 'Cliente con Rut {} no encontrado.'.format(rut_display))
                 return redirect('ambpublico_consulta')
             except Mascota.DoesNotExist:
-                messages.error(request, 'Mascota con ID {} no encontrada para el cliente con Rut {}.'.format(id_mascota, rut))
+                rut_display = form.cleaned_data.get('rut_display', rut)
+                messages.error(request, 'Mascota con ID {} no encontrada para el cliente con Rut {}.'.format(id_mascota, rut_display))
                 return redirect('ambpublico_consulta')
     else:
         # Obtener el formulario y mostrarlo.
@@ -263,7 +265,7 @@ def reserva_hora(request):
     titulo = "Seleccione el servicio que necesita."
     servicio_codigo = request.session.get('reserva_servicio')
     servicio_nombre = dict(Cita.SERVICIO_CHOICES).get(servicio_codigo)
-    cliente_rut = request.session.get('reserva_c_rut')
+    cliente_rut = request.session.get('reserva_c_rut_display') or request.session.get('reserva_c_rut')
 
     # Verificamos si el usuario ya está en algún paso y lo asignamos a la variable
     if request.session.has_key('reserva_step'):
@@ -273,7 +275,7 @@ def reserva_hora(request):
 
     if step == '':
         cleared = False
-        for key in ('reserva_servicio', 'reserva_c_rut', 'reserva_m_id'):
+        for key in ('reserva_servicio', 'reserva_c_rut', 'reserva_c_rut_display', 'reserva_m_id'):
             if key in request.session:
                 del request.session[key]
                 cleared = True
@@ -518,7 +520,7 @@ def reserva_hora(request):
                     del request.session['reserva_step']
                 except:
                     pass
-                for key in ('reserva_servicio', 'reserva_c_rut', 'reserva_m_id'):
+                for key in ('reserva_servicio', 'reserva_c_rut', 'reserva_c_rut_display', 'reserva_m_id'):
                     try:
                         del request.session[key]
                     except:
@@ -556,9 +558,11 @@ def reserva_hora(request):
             form = RutForm(request.POST)
             if form.is_valid():
                 rut = form.cleaned_data['rut']
+                rut_display = form.cleaned_data.get('rut_display', str(rut))
                 cliente = Cliente.objects.filter(rut=rut).first()
 
                 request.session['reserva_c_rut'] = rut
+                request.session['reserva_c_rut_display'] = rut_display
 
                 if cliente:
                     request.session['reserva_step'] = "select_mascota"
@@ -611,7 +615,7 @@ def reserva_hora_cancelar(request):
     Returns:
         HttpResponse: La respuesta HTTP que redirige a la vista de reserva.
     """
-    for key in ('reserva_step', 'reserva_servicio', 'reserva_c_rut', 'reserva_m_id'):
+    for key in ('reserva_step', 'reserva_servicio', 'reserva_c_rut', 'reserva_c_rut_display', 'reserva_m_id'):
         try:
             del request.session[key]
         except:

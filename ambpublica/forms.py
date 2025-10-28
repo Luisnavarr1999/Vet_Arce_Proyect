@@ -5,6 +5,7 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.utils.timezone import localtime
 
 from paneltrabajador.models import Cita
+from .validators import normalize_rut
 
 class ContactForm(forms.Form):
     nombre = forms.CharField(label='Nombre', max_length=150)
@@ -18,7 +19,7 @@ class ContactForm(forms.Form):
             field.widget.attrs.setdefault('id', field_name)
 
 class BuscarMascotaForm(forms.Form):
-    rut = forms.IntegerField()
+    rut = forms.CharField(label='RUT')
     id_mascota = forms.IntegerField()
 
     def __init__(self, *args, queryset=None, **kwargs):
@@ -26,15 +27,27 @@ class BuscarMascotaForm(forms.Form):
         # Agrega clases de Bootstrap a los campos
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+    
+    def clean_rut(self):
+        rut = self.cleaned_data['rut']
+        numero, rut_formateado = normalize_rut(rut)
+        self.cleaned_data['rut_display'] = rut_formateado
+        return numero
 
 class RutForm(forms.Form):
-    rut = forms.IntegerField(label='Ingrese su RUT')
+    rut = forms.CharField(label='Ingrese su RUT')
 
     def __init__(self, *args, queryset=None, **kwargs):
         super().__init__(*args, **kwargs)
         # Agrega clases de Bootstrap a los campos
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+    
+    def clean_rut(self):
+        rut = self.cleaned_data['rut']
+        numero, rut_formateado = normalize_rut(rut)
+        self.cleaned_data['rut_display'] = rut_formateado
+        return numero
 
 class MascotaSelectForm(forms.Form):
     mascota = forms.ChoiceField(
