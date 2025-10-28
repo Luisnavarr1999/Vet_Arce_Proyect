@@ -19,6 +19,9 @@
     <div class="alert alert-secondary">
       Lo sentimos, no tenemos más horas disponibles. Vuelva más tarde por favor...
     </div>
+    <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">
+      Cancelar cita
+    </a>
   {% else %}
     {% if step == 'final' %}
       <div class="p-5 my-2 border-0 rounded ficat-green text-light">
@@ -83,13 +86,12 @@
           {% csrf_token %}
           {{ form.as_p }}
 
-          {% if step != 'nohours' %}
-            <button type="submit" class="btn btn-primary w-100 mb-2">Continuar</button>
-            <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">
-              Cancelar cita
-            </a>
-          {% endif %}
+          <button type="submit" class="btn btn-primary w-100 mb-2">Continuar</button>
         </form>
+
+        <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">
+          Cancelar cita
+        </a>
 
         {% if step == 'crear_mascota' %}
           <script>

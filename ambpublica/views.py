@@ -468,7 +468,8 @@ def reserva_hora(request):
                         text_body = (
                             f"Hola {cliente.nombre_cliente},\n\n"
                             f"Tu reserva fue agendada para el {cita_fecha_str} con el/la veterinario(a) {veterinario_nombre}.\n"
-                            f"Mascota: {mascota.nombre}.\n\n"
+                            f"RUT: {cliente.rut}.\n\n"
+                            f"Mascota: {mascota.nombre}.\n"
                             f"N° de Cita: {cita.n_cita}.\n"
                             f"Servicio: {servicio_str}.\n\n"
                             "Te esperamos en Veterinaria de Arce.\n\n"
@@ -487,6 +488,7 @@ def reserva_hora(request):
                             <p>Hola <strong>{cliente.nombre_cliente}</strong>,</p>
                             <p>Hemos agendado tu cita en <strong>Veterinaria de Arce</strong>.</p>
                             <div style="background:#f7fbff; border:1px solid #d1e7ff; border-radius:8px; padding:16px; margin:18px 0;">
+                                <p style="margin:0 0 8px 0;"><strong>RUT:</strong> {cliente.rut}</p>
                                 <p style="margin:0 0 8px 0;"><strong>Fecha y hora:</strong> {cita_fecha_str}</p>
                                 <p style="margin:0 0 8px 0;"><strong>Veterinario(a):</strong> {veterinario_nombre}</p>
                                 <p style="margin:0 0 8px 0;"><strong>Mascota:</strong> {mascota.nombre}</p>
