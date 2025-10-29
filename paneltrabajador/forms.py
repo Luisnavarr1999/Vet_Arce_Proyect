@@ -124,6 +124,14 @@ class CitaForm(forms.ModelForm):
         else:
             # Valor inicial cuando EDITAS: respeta lo que tenga el modelo (default 'P')
             self.fields['asistencia'].initial = self.instance.asistencia or 'P'
+
+        # Impedir la selección manual de "No tomada"
+        estado_choices = [choice for choice in Cita.ESTADO_CHOICES if choice[0] != '3']
+        if self.instance and self.instance.pk and self.instance.estado == '3':
+            self.fields['estado'].choices = [(self.instance.estado, self.instance.get_estado_display())]
+            self.fields['estado'].disabled = True
+        else:
+            self.fields['estado'].choices = estado_choices
         
     def clean(self):
         cleaned = super().clean()

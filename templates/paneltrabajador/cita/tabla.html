@@ -30,6 +30,8 @@
             <span class="badge bg-warning text-dark">{{ cita.get_estado_display }}</span>
           {% elif cita.estado == '2' %}
             <span class="badge bg-danger">{{ cita.get_estado_display }}</span>
+          {% elif cita.estado == '3' %}
+            <span class="badge bg-secondary">{{ cita.get_estado_display }}</span>
           {% else %}
             {{ cita.get_estado_display }}
           {% endif %}

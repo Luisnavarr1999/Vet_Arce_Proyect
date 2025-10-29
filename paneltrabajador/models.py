@@ -103,6 +103,24 @@ class MascotaDocumento(models.Model):
         if name and storage.exists(name):
             storage.delete(name)
 
+
+class CitaQuerySet(models.QuerySet):
+    """QuerySet personalizado para refrescar citas disponibles expiradas."""
+
+    def actualizar_no_tomadas(self):
+        now = timezone.now()
+        self.filter(estado='0', fecha__lt=now).update(estado='3')
+        return self
+
+
+class CitaManager(models.Manager.from_queryset(CitaQuerySet)):
+    """Manager que marca automáticamente las citas vencidas como no tomadas."""
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs.filter(estado='0', fecha__lt=timezone.now()).update(estado='3')
+        return qs
+
 class Cita (models.Model):
     """
     Representa una cita en el sistema.
@@ -122,6 +140,7 @@ class Cita (models.Model):
         ('0', 'Disponible'),
         ('1', 'Reservada'),
         ('2', 'Cancelada'),
+        ('3', 'No tomada'),
     ]
 
     ASISTENCIA_CHOICES = [
@@ -151,6 +170,8 @@ class Cita (models.Model):
         get_user_model(), null=True, blank=True,
         on_delete=models.SET_NULL, related_name='checkins'
     )
+
+    objects = CitaManager()
 
     @property
     def puede_confirmar_asistencia(self):
