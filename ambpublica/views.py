@@ -262,11 +262,25 @@ def chatbot_message(request):
 
   conversation = _ensure_conversation(session.get(ACTIVE_CONVERSATION_KEY))
   if conversation and conversation.state != ChatConversation.STATE_CLOSED:
-    ChatMessage.objects.create(
+    client_message_obj = ChatMessage.objects.create(
         conversation=conversation,
         author=ChatMessage.AUTHOR_CLIENT,
         content=message,
     )
+
+    staff_has_replied = conversation.messages.filter(author=ChatMessage.AUTHOR_STAFF).exists()
+
+    if staff_has_replied:
+        return JsonResponse(
+            {
+                "reply": None,
+                "handoff": True,
+                "conversation_id": conversation.pk,
+                "pending_confirmation": False,
+                "last_message_id": client_message_obj.id,
+            }
+        )
+
     reply_text = (
         "Nuestro equipo de recepción ya está al tanto de tu consulta. Mantén esta ventana abierta y te escribirán a la brevedad."
     )
@@ -415,7 +429,7 @@ def chatbot_conversation_messages(request):
             "author": message.author,
             "content": message.content,
             "created_at": timezone.localtime(message.created_at).isoformat(),
-            "staff_user": message.staff_user.get_full_name() if message.staff_user else None,
+            "staff_user": message.staff_user.username if message.staff_user else None,
         }
     )
 

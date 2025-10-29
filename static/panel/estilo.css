@@ -198,6 +198,33 @@
   color: rgba(226, 232, 240, 0.85);
 }
 
+#alerts {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: min(360px, calc(100% - 3rem));
+  pointer-events: none;
+}
+
+#alerts .alert {
+  pointer-events: auto;
+  border-radius: 0.75rem;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 576px) {
+  #alerts {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100% - 3rem);
+  }
+}
+
 @media (max-width: 991.98px) {
   .sidebar {
     padding-top: 64px;

@@ -27,7 +27,7 @@
                 <div class="chat-bubble {{ message.author }}">
                   <div class="chat-bubble-header">
                     {% if message.author == message.AUTHOR_STAFF %}
-                      Recepción{% if message.staff_user %} • {{ message.staff_user.get_full_name|default:message.staff_user.username }}{% endif %}
+                      Recepción{% if message.staff_user %} • {{ message.staff_user.username }}{% endif %}
                     {% elif message.author == message.AUTHOR_BOT %}
                       Asistente
                     {% else %}

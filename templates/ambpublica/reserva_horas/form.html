@@ -89,9 +89,15 @@
           <button type="submit" class="btn btn-primary w-100 mb-2">Continuar</button>
         </form>
 
-        <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">
-          Cancelar cita
-        </a>
+        {% if step == '' %}
+          <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">
+            Cancelar cita
+          </a>
+        {% else %}
+          <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">
+            Cancelar
+          </a>
+        {% endif %}
 
         {% if step == 'crear_mascota' %}
           <script>

@@ -107,7 +107,7 @@ def chat_conversation_messages(request, conversation_id):
                 'author': message.author,
                 'content': message.content,
                 'created_at': message.created_at.isoformat(),
-                'staff_user': message.staff_user.get_full_name() if message.staff_user else None,
+                'staff_user': message.staff_user.username if message.staff_user else None,
             }
         )
 
