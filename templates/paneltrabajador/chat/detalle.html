@@ -1,0 +1,177 @@
+{% extends "./master.html" %}
+{% load static %}
+{% block title %}
+  Chat en vivo - Conversación #{{ conversation.id }}
+{% endblock title %}
+{% block content %}
+  <div class="mb-4">
+    <a class="btn btn-link px-0" href="{% url 'panel_chat_list' %}">← Volver al listado</a>
+  </div>
+
+  <section class="row g-4 align-items-stretch">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="h4 mb-0">Conversación #{{ conversation.id }}</h1>
+            <p class="text-muted mb-0">Iniciada el {{ conversation.created_at|date:"d/m/Y H:i" }}</p>
+          </div>
+          <span class="badge bg-primary-subtle text-primary-emphasis text-uppercase">{{ conversation.get_state_display }}</span>
+        </div>
+        <div class="card-body">
+          <div id="chat-message-list"
+               class="chat-message-list"
+               data-poll-url="{% url 'panel_chat_messages' conversation.id %}">
+            {% if messages %}
+              {% for message in messages %}
+                <div class="chat-bubble {{ message.author }}">
+                  <div class="chat-bubble-header">
+                    {% if message.author == message.AUTHOR_STAFF %}
+                      Recepción{% if message.staff_user %} • {{ message.staff_user.get_full_name|default:message.staff_user.username }}{% endif %}
+                    {% elif message.author == message.AUTHOR_BOT %}
+                      Asistente
+                    {% else %}
+                      Cliente
+                    {% endif %}
+                  </div>
+                  <div class="chat-bubble-content">{{ message.content }}</div>
+                  <div class="chat-bubble-time">{{ message.created_at|date:"d/m/Y H:i" }}</div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="text-muted text-center mb-0">Todavía no hay mensajes en esta conversación.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-transparent border-0">
+          <h2 class="h5 mb-0">Acciones</h2>
+        </div>
+        <div class="card-body d-flex flex-column gap-3">
+          {% if conversation.state == conversation.STATE_CLOSED %}
+            <div class="alert alert-soft" role="status">
+              Esta conversación está cerrada. No se pueden enviar nuevos mensajes.
+            </div>
+          {% endif %}
+          <form method="post" class="d-flex flex-column gap-2">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="send" />
+            <label class="form-label fw-semibold" for="chat-reply">Enviar respuesta</label>
+            <textarea class="form-control" id="chat-reply" name="message" rows="4" placeholder="Escribe tu mensaje…" {% if conversation.state == conversation.STATE_CLOSED %}disabled{% endif %} required></textarea>
+            <button class="btn btn-primary" type="submit" {% if conversation.state == conversation.STATE_CLOSED %}disabled{% endif %}>Enviar mensaje</button>
+          </form>
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="close" />
+            <button class="btn btn-outline-secondary w-100" type="submit" {% if conversation.state == conversation.STATE_CLOSED %}disabled{% endif %}>
+              Marcar como cerrada
+            </button>
+          </form>
+          <div class="small text-muted">
+            {% if conversation.assigned_to %}
+              Atendida por <strong>{{ conversation.assigned_to.get_full_name|default:conversation.assigned_to.username }}</strong>.
+            {% else %}
+              Aún no asignada. Serás el encargado al responder.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  (function () {
+    "use strict";
+
+    const container = document.getElementById("chat-message-list");
+    if (!container) return;
+
+    const pollUrl = container.dataset.pollUrl;
+    let lastRenderedId = null;
+
+    const templates = {
+      bot: {
+        title: "Asistente",
+        css: "chat-bubble bot"
+      },
+      client: {
+        title: "Cliente",
+        css: "chat-bubble client"
+      },
+      staff: {
+        title: "Recepción",
+        css: "chat-bubble staff"
+      }
+    };
+
+    const formatDateTime = (value) => {
+      try {
+        return new Date(value).toLocaleString();
+      } catch (err) {
+        return value;
+      }
+    };
+
+    const renderMessages = (messages) => {
+      if (!messages.length) {
+        container.innerHTML = '<p class="text-muted text-center mb-0">Todavía no hay mensajes en esta conversación.</p>';
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+
+      messages.forEach((message) => {
+        const meta = templates[message.author] || templates.client;
+        const wrapper = document.createElement("div");
+        wrapper.className = meta.css;
+
+        const header = document.createElement("div");
+        header.className = "chat-bubble-header";
+        header.textContent = `${meta.title}${message.staff_user ? " • " + message.staff_user : ""}`;
+
+        const content = document.createElement("div");
+        content.className = "chat-bubble-content";
+        content.textContent = message.content;
+
+        const timestamp = document.createElement("div");
+        timestamp.className = "chat-bubble-time";
+        timestamp.textContent = formatDateTime(message.created_at);
+
+        wrapper.appendChild(header);
+        wrapper.appendChild(content);
+        wrapper.appendChild(timestamp);
+
+        fragment.appendChild(wrapper);
+      });
+
+      container.innerHTML = "";
+      container.appendChild(fragment);
+      container.scrollTop = container.scrollHeight;
+    };
+
+    const pollMessages = async () => {
+      if (!pollUrl) return;
+
+      try {
+        const response = await fetch(pollUrl, { headers: { "Accept": "application/json" }, credentials: "same-origin" });
+        if (!response.ok) throw new Error("Network error");
+        const data = await response.json();
+        if (!data.messages) return;
+        if (lastRenderedId !== data.last_id) {
+          renderMessages(data.messages);
+          lastRenderedId = data.last_id;
+        }
+      } catch (err) {
+        console.error("Error actualizando el chat", err);
+      } finally {
+        window.setTimeout(pollMessages, 4000);
+      }
+    };
+
+    pollMessages();
+  })();
+  </script>
+{% endblock content %}

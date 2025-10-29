@@ -30,6 +30,9 @@
                   {% else %}
                     <p class="mb-0 text-muted fst-italic">Sin mensaje inicial registrado.</p>
                   {% endif %}
+                  <div class="mt-2">
+                    <a class="btn btn-sm btn-primary" href="{% url 'panel_chat_detail' conversation.id %}">Abrir conversación</a>
+                  </div>
                 </article>
               {% endfor %}
             </div>
@@ -56,6 +59,12 @@
                   {% else %}
                     <p class="mb-0 text-muted fst-italic">Sin mensajes recientes.</p>
                   {% endif %}
+                  <div class="mt-2 d-flex flex-wrap gap-2">
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'panel_chat_detail' conversation.id %}">Continuar conversación</a>
+                    {% if conversation.assigned_to %}
+                      <span class="badge bg-light text-muted">Asignada a {{ conversation.assigned_to.get_full_name|default:conversation.assigned_to.username }}</span>
+                    {% endif %}
+                  </div>
                 </article>
               {% endfor %}
             </div>

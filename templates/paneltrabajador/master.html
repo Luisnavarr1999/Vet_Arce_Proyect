@@ -80,6 +80,12 @@
                      href="{% url 'panel_cita_listar' %}">Citas</a>
                 </li>
               {% endif %}
+              {% if perms.paneltrabajador.view_chatconversation %}
+                <li class="nav-item">
+                  <a class="nav-link{% if '/panel/chat/' in request.path_info %} active{% endif %}"
+                     href="{% url 'panel_chat_list' %}">Chat en vivo</a>
+                </li>
+              {% endif %}
               {% if perms.paneltrabajador.view_producto %}
                 <li class="nav-item">
                   <a class="nav-link{% if '/panel/productos/' in request.path_info %} active{% endif %}"

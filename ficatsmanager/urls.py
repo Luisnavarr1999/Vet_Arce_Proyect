@@ -72,6 +72,8 @@ urlpatterns = [
     path('panel/usuarios/eliminar/<int:id_usuario>/', vistas_panel.usuario_eliminar, name='panel_usuario_eliminar'),
     path('panel/usuarios/newpassword/<int:id_usuario>/', vistas_panel.usuario_newpassword, name='panel_usuario_newpassword'),
     path('panel/chat/', vistas_panel.chat_conversation_list, name='panel_chat_list'),
+    path('panel/chat/<int:conversation_id>/', vistas_panel.chat_conversation_detail, name='panel_chat_detail'),
+    path('panel/chat/<int:conversation_id>/messages/', vistas_panel.chat_conversation_messages, name='panel_chat_messages'),
 
     path('', vistas_publica.main, name="ambpublico_index"),
     path('consulta_mascota/', vistas_publica.consulta_mascota, name="ambpublico_consulta"),
