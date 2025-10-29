@@ -1,12 +1,22 @@
 from ast import And
 from urllib import request
+from typing import Optional
 from django.shortcuts import redirect, render
 from django.template import loader
 from django import forms
 from django.contrib import messages
-from ambpublica.forms import ContactForm, BuscarMascotaForm, CancelarCitaForm, CitaForm, MascotaSelectForm, RutForm, ServicioForm
+from ambpublica.forms import (
+    ContactForm,
+    BuscarMascotaForm,
+    CancelarCitaForm,
+    CitaForm,
+    MascotaSelectForm,
+    RutForm,
+    ServicioForm,
+)
+
 from paneltrabajador.forms import ClienteForm, MascotaForm
-from paneltrabajador.models import Cita, Cliente, Mascota
+from paneltrabajador.models import Cita, Cliente, Mascota, ChatConversation, ChatMessage
 
 import json
 from django.http import HttpResponse, JsonResponse
@@ -144,7 +154,10 @@ def _rule_based_answer(message: str) -> tuple[str, bool]:
         if pattern.search(q):
             return reply, False
     # fallback
-    return ("No estoy seguro de cómo ayudarte con eso. ¿Quieres que avise a recepción para que te contacten?", True)
+    return (
+        "No estoy seguro de cómo ayudarte con eso. ¿Quieres que te contacte una recepcionista humana? Responde “sí” o “no”.",
+        True,
+    )
 
 def _find_chatbot_answer(message: str):
     return _rule_based_answer(message)
@@ -154,6 +167,58 @@ logger = logging.getLogger(__name__)
 MAX_MSG_LEN = 500          # Máximo ancho de mensaje aceptado
 RATE_LIMIT_WINDOW = 30     # Ventana en segundos
 RATE_LIMIT_MAX = 15        # Máximo de mensajes por ventana e IP
+
+HANDOFF_PENDING_KEY = "chatbot_pending_handoff"
+HANDOFF_MESSAGE_KEY = "chatbot_pending_message"
+ACTIVE_CONVERSATION_KEY = "chatbot_conversation_id"
+
+YES_KEYWORDS = {
+    "si",
+    "claro",
+    "afirmativo",
+    "ok",
+    "okay",
+    "dale",
+    "porfavor",
+    "porfa",
+}
+YES_PHRASES = (
+    "quiero hablar",
+    "quiero comunicarme",
+    "hablar con la recepcion",
+    "hablar con recepcion",
+    "hablar con una recepcionista",
+)
+NO_KEYWORDS = {"no", "nop", "negativo"}
+NO_PHRASES = ("no gracias", "prefiero seguir", "mejor no")
+
+
+def _tokenize(text: str) -> set[str]:
+    return set(re.findall(r"\b\w+\b", text))
+
+
+def _should_escalate(normalized_message: str) -> Optional[bool]:
+    tokens = _tokenize(normalized_message)
+    if tokens & YES_KEYWORDS:
+        return True
+    for phrase in YES_PHRASES:
+        if phrase in normalized_message:
+            return True
+    if tokens & NO_KEYWORDS:
+        return False
+    for phrase in NO_PHRASES:
+        if phrase in normalized_message:
+            return False
+    return None
+
+
+def _ensure_conversation(conversation_id: Optional[int]) -> Optional[ChatConversation]:
+    if not conversation_id:
+        return None
+    try:
+        return ChatConversation.objects.get(pk=conversation_id)
+    except ChatConversation.DoesNotExist:
+        return None
 
 def _rate_key(request):
   ip = request.META.get("REMOTE_ADDR", "anon")
@@ -191,9 +256,114 @@ def chatbot_message(request):
     return JsonResponse({"error": "Mensaje demasiado largo."}, status=400)
 
   # 5) Lógica de respuesta (tu función existente)
+  session = request.session
+  normalized_message = _normalize(message)
+
+  conversation = _ensure_conversation(session.get(ACTIVE_CONVERSATION_KEY))
+  if conversation and conversation.state != ChatConversation.STATE_CLOSED:
+    ChatMessage.objects.create(
+        conversation=conversation,
+        author=ChatMessage.AUTHOR_CLIENT,
+        content=message,
+    )
+    reply_text = (
+        "Nuestro equipo de recepción ya está al tanto de tu consulta. Mantén esta ventana abierta y te escribirán a la brevedad."
+    )
+    ChatMessage.objects.create(
+        conversation=conversation,
+        author=ChatMessage.AUTHOR_BOT,
+        content=reply_text,
+    )
+    return JsonResponse(
+        {
+            "reply": reply_text,
+            "handoff": True,
+            "conversation_id": conversation.pk,
+            "pending_confirmation": False,
+        }
+    )
+
+  if conversation and conversation.state == ChatConversation.STATE_CLOSED:
+    session.pop(ACTIVE_CONVERSATION_KEY, None)
+    session.modified = True
+
+  pending_confirmation = session.get(HANDOFF_PENDING_KEY)
+  if pending_confirmation:
+    decision = _should_escalate(normalized_message)
+    if decision is True:
+      previous_question = session.pop(HANDOFF_MESSAGE_KEY, None)
+      initial_prompt = previous_question or message
+      conversation = ChatConversation.objects.create(
+          source="web",
+          initial_question=initial_prompt,
+      )
+      if previous_question:
+          ChatMessage.objects.create(
+              conversation=conversation,
+              author=ChatMessage.AUTHOR_CLIENT,
+              content=previous_question,
+          )
+      ChatMessage.objects.create(
+          conversation=conversation,
+          author=ChatMessage.AUTHOR_CLIENT,
+          content=message,
+      )
+      reply_text = (
+          "Perfecto, avisaremos a nuestra recepción para que continúe la conversación. Te contactarán en este chat."
+      )
+      ChatMessage.objects.create(
+          conversation=conversation,
+          author=ChatMessage.AUTHOR_BOT,
+          content=reply_text,
+      )
+      session[ACTIVE_CONVERSATION_KEY] = conversation.pk
+      session[HANDOFF_PENDING_KEY] = False
+      session.modified = True
+      return JsonResponse(
+          {
+              "reply": reply_text,
+              "handoff": True,
+              "conversation_id": conversation.pk,
+              "pending_confirmation": False,
+          }
+      )
+    if decision is False:
+      session[HANDOFF_PENDING_KEY] = False
+      session.pop(HANDOFF_MESSAGE_KEY, None)
+      session.modified = True
+      reply_text = "¡Claro! Sigamos conversando por aquí. ¿En qué más te puedo orientar?"
+      return JsonResponse(
+          {
+              "reply": reply_text,
+              "handoff": False,
+              "pending_confirmation": False,
+          }
+      )
+    return JsonResponse(
+        {
+            "reply": "Solo necesito un “sí” o “no” para saber si quieres que te contacte recepción.",
+            "handoff": False,
+            "pending_confirmation": True,
+        }
+    )
+
   try:
     answer, handoff = _find_chatbot_answer(message)
-    return JsonResponse({"reply": answer, "handoff": handoff})
+    if handoff:
+      session[HANDOFF_PENDING_KEY] = True
+      session[HANDOFF_MESSAGE_KEY] = message
+      session.modified = True
+      return JsonResponse(
+          {
+              "reply": answer,
+              "handoff": False,
+              "pending_confirmation": True,
+          }
+      )
+    session[HANDOFF_PENDING_KEY] = False
+    session.pop(HANDOFF_MESSAGE_KEY, None)
+    session.modified = True
+    return JsonResponse({"reply": answer, "handoff": False, "pending_confirmation": False})
   except Exception as e:
     logger.exception("Error chatbot_message: %s", e)
     return JsonResponse({"error": "Error interno."}, status=500)

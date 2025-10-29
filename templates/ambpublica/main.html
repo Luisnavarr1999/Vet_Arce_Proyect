@@ -84,6 +84,29 @@
     flex: 1 1 auto;
   }
 
+  .chatbot-quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+
+  .chatbot-quick-reply {
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: #e9ecef;
+    color: #212529;
+    padding: .25rem .85rem;
+    font-size: .875rem;
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease;
+  }
+
+  .chatbot-quick-reply:hover,
+  .chatbot-quick-reply:focus {
+    background: #d1e7dd;
+    color: #0f5132;
+  }
+
   .service-icon {
     max-width: 80px;
     height: auto;
@@ -311,12 +334,13 @@
             ¡Hola! Soy el asistente virtual de la Veterinaria de Arce. Pregúntame por horarios, reservas o pagos.
           </div>
         </div>
+        <div id="chatbot-quick-replies" class="chatbot-quick-replies d-none" aria-live="polite"></div>
         <form id="chatbot-form" class="d-flex gap-2" autocomplete="off">
           <input type="text" class="form-control" id="chatbot-input" placeholder="Escribe tu pregunta..." required />
           <button class="btn btn-success" type="submit">Enviar</button>
         </form>
         <small id="chatbot-handoff" class="text-muted mt-2 d-none">
-          Hemos avisado a recepción. Un miembro del equipo se conectará contigo en breve.
+          Hemos avisado a recepción. Mantén el chat abierto y te responderán a la brevedad.
         </small>
       </div>
     </div>
@@ -337,6 +361,9 @@
   const form          = document.getElementById("chatbot-form");
   const input         = document.getElementById("chatbot-input");
   const handoffNotice = document.getElementById("chatbot-handoff");
+  const quickReplies  = document.getElementById("chatbot-quick-replies");
+
+  let conversationId = null;
 
   const togglePanel = (show) => {
     const shouldShow = typeof show === "boolean" ? show : panel.classList.contains("d-none");
@@ -359,20 +386,49 @@
     messageList.scrollTop = messageList.scrollHeight;
   };
 
+  const clearQuickReplies = () => {
+    if (!quickReplies) return;
+    quickReplies.innerHTML = "";
+    quickReplies.classList.add("d-none");
+  };
+
+  const showConfirmationOptions = () => {
+    if (!quickReplies) return;
+    quickReplies.innerHTML = "";
+
+    const yesOption = document.createElement("button");
+    yesOption.type = "button";
+    yesOption.className = "chatbot-quick-reply";
+    yesOption.textContent = "Sí, hablar con recepción";
+    yesOption.addEventListener("click", () => {
+      clearQuickReplies();
+      submitMessage("Sí quiero hablar con la recepción");
+    });
+
+    const noOption = document.createElement("button");
+    noOption.type = "button";
+    noOption.className = "chatbot-quick-reply";
+    noOption.textContent = "No, gracias";
+    noOption.addEventListener("click", () => {
+      clearQuickReplies();
+      submitMessage("No, gracias");
+    });
+
+    quickReplies.appendChild(yesOption);
+    quickReplies.appendChild(noOption);
+    quickReplies.classList.remove("d-none");
+  };
+
   const handleError = () => {
+    clearQuickReplies();
     appendMessage("No pude conectar con el asistente en este momento. Intenta nuevamente más tarde.", "bot");
   };
 
   toggleButton.addEventListener("click", () => togglePanel());
   closeButton.addEventListener("click", () => togglePanel(false));
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const message = input.value.trim();
-    if (!message) return;
-
+  const submitMessage = async (message) => {
     appendMessage(message, "user");
-    input.value = "";
     handoffNotice.classList.add("d-none");
 
     try {
@@ -383,18 +439,46 @@
           "X-CSRFToken": getCookie("csrftoken"),
         },
         body: JSON.stringify({ message }),
-        // explícito: incluye cookies de mismo origen
         credentials: "same-origin",
       });
 
       if (!response.ok) return handleError();
 
       const data = await response.json();
-      if (data.reply)   appendMessage(data.reply, "bot");
-      if (data.handoff) handoffNotice.classList.remove("d-none");
+      if (data.error) {
+        appendMessage(data.error, "bot");
+        return;
+      }
+
+      if (data.reply) {
+        appendMessage(data.reply, "bot");
+      }
+
+      if (data.handoff) {
+        conversationId = data.conversation_id || conversationId;
+        handoffNotice.classList.remove("d-none");
+      } else if (!data.pending_confirmation) {
+        handoffNotice.classList.add("d-none");
+      }
+
+      if (data.pending_confirmation) {
+        showConfirmationOptions();
+      } else {
+        clearQuickReplies();
+      }
     } catch (err) {
       handleError();
     }
+  };
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const message = input.value.trim();
+    if (!message) return;
+
+    input.value = "";
+    clearQuickReplies();
+    submitMessage(message);
   });
 
 })(); 

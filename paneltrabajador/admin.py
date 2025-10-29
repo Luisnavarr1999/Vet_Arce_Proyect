@@ -1,5 +1,14 @@
 from django.contrib import admin
-from paneltrabajador.models import (Cita, Cliente, Factura, Mascota, MascotaDocumento, Producto,)
+from paneltrabajador.models import (
+    Cita,
+    ChatConversation,
+    ChatMessage,
+    Cliente,
+    Factura,
+    Mascota,
+    MascotaDocumento,
+    Producto,
+)
 
 @admin.register(Cita)
 class CitaAdmin(admin.ModelAdmin):
@@ -21,3 +30,5 @@ class MascotaAdmin(admin.ModelAdmin):
 admin.site.register(Cliente)
 admin.site.register(Producto)
 admin.site.register(Factura)
+admin.site.register(ChatConversation)
+admin.site.register(ChatMessage)

@@ -1,0 +1,105 @@
+{% extends "./master.html" %}
+{% block title %}
+  Chat en vivo
+{% endblock title %}
+{% block content %}
+  <section class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h1 class="h3 fw-semibold mb-1">Chat en vivo</h1>
+        <p class="text-muted mb-0">Conversa con los clientes que solicitaron hablar con recepción.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-transparent border-0 py-3">
+          <h2 class="h5 mb-0">Conversaciones pendientes</h2>
+        </div>
+        <div class="card-body">
+          {% if pending %}
+            <div class="list-group list-group-flush">
+              {% for conversation in pending %}
+                <article class="list-group-item px-0">
+                  <h3 class="h6 mb-1">Conversación #{{ conversation.id }}</h3>
+                  <p class="mb-1 small text-muted">Creada el {{ conversation.created_at|date:"d/m/Y H:i" }}</p>
+                  {% if conversation.initial_question %}
+                    <p class="mb-0">{{ conversation.initial_question }}</p>
+                  {% else %}
+                    <p class="mb-0 text-muted fst-italic">Sin mensaje inicial registrado.</p>
+                  {% endif %}
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No hay conversaciones esperando a ser atendidas.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-transparent border-0 py-3">
+          <h2 class="h5 mb-0">Conversaciones activas</h2>
+        </div>
+        <div class="card-body">
+          {% if active %}
+            <div class="list-group list-group-flush">
+              {% for conversation in active %}
+                <article class="list-group-item px-0">
+                  <h3 class="h6 mb-1">Conversación #{{ conversation.id }}</h3>
+                  <p class="mb-1 small text-muted">Último mensaje {{ conversation.last_message_at|timesince }} atrás</p>
+                  {% if conversation.last_message_preview %}
+                    <p class="mb-0">{{ conversation.last_message_preview }}</p>
+                  {% else %}
+                    <p class="mb-0 text-muted fst-italic">Sin mensajes recientes.</p>
+                  {% endif %}
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No hay conversaciones activas en este momento.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="mt-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-transparent border-0 py-3">
+        <h2 class="h5 mb-0">Últimas conversaciones cerradas</h2>
+      </div>
+      <div class="card-body">
+        {% if recent_closed %}
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Creada</th>
+                  <th scope="col">Cerrada</th>
+                  <th scope="col">Resumen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for conversation in recent_closed %}
+                  <tr>
+                    <td>#{{ conversation.id }}</td>
+                    <td>{{ conversation.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>{{ conversation.updated_at|date:"d/m/Y H:i" }}</td>
+                    <td>{{ conversation.last_message_preview|default:"Sin resumen" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">Todavía no se han cerrado conversaciones.</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endblock content %}

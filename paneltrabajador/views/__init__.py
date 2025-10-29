@@ -6,6 +6,7 @@ from .factura import factura_agregar, factura_editar, factura_eliminar, factura_
 from .mascota import mascota_agregar, mascota_editar, mascota_eliminar, mascota_enviar_recordatorio, mascota_listar, mascota_doc_eliminar
 from .producto import producto_agregar, producto_editar, producto_eliminar, producto_listar
 from .usuarios import usuario_agregar, usuario_editar, usuario_eliminar, usuario_listar, usuario_newpassword
+from .chat import chat_conversation_list
 
 # Este archivo importará todas las vistas en esta carpeta
 # Recordar importar aqui en el caso de crear una nueva vista

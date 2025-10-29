@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth import get_user_model
@@ -221,3 +222,88 @@ class Factura(models.Model):
     total_pagar = models.IntegerField()
     detalle = models.TextField()
     estado_pago = models.CharField(max_length=1)
+
+class ChatConversation(models.Model):
+    """Conversación iniciada desde el chatbot público."""
+
+    STATE_PENDING = "pending"
+    STATE_ACTIVE = "active"
+    STATE_CLOSED = "closed"
+    STATE_CHOICES = [
+        (STATE_PENDING, "Pendiente"),
+        (STATE_ACTIVE, "Activa"),
+        (STATE_CLOSED, "Cerrada"),
+    ]
+
+    source = models.CharField(max_length=30, default="web")
+    initial_question = models.TextField(blank=True)
+    assigned_to = models.ForeignKey(
+        get_user_model(),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="chat_conversations",
+    )
+    state = models.CharField(max_length=20, choices=STATE_CHOICES, default=STATE_PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_message_at = models.DateTimeField(auto_now_add=True)
+    last_message_preview = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-last_message_at"]
+        verbose_name = "Conversación de Chat"
+        verbose_name_plural = "Conversaciones de Chat"
+
+    def __str__(self):
+        return f"Conversación #{self.pk} ({self.get_state_display()})"
+
+    def touch(self, summary: Optional[str] = None):
+        now = timezone.now()
+        self.last_message_at = now
+        if summary is not None:
+            self.last_message_preview = summary[:255]
+        self.save(update_fields=["last_message_at", "last_message_preview", "updated_at"])
+
+
+class ChatMessage(models.Model):
+    """Mensaje dentro de una conversación del chat."""
+
+    AUTHOR_BOT = "bot"
+    AUTHOR_CLIENT = "client"
+    AUTHOR_STAFF = "staff"
+    AUTHOR_CHOICES = [
+        (AUTHOR_BOT, "Bot"),
+        (AUTHOR_CLIENT, "Cliente"),
+        (AUTHOR_STAFF, "Recepcionista"),
+    ]
+
+    conversation = models.ForeignKey(
+        ChatConversation,
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+    author = models.CharField(max_length=20, choices=AUTHOR_CHOICES)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    staff_user = models.ForeignKey(
+        get_user_model(),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="chat_messages",
+    )
+
+    class Meta:
+        ordering = ["created_at"]
+        verbose_name = "Mensaje de Chat"
+        verbose_name_plural = "Mensajes de Chat"
+
+    def __str__(self):
+        return f"Mensaje de {self.get_author_display()} en conversación #{self.conversation_id}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            self.conversation.touch(summary=self.content)
