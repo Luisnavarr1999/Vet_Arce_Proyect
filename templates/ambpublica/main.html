@@ -43,6 +43,12 @@
       border: 1px solid #dee2e6;
     }
 
+    .chatbot-bubble.staff {
+      background: #e7f1ff;
+      border: 1px solid #cfe2ff;
+      color: #052c65;
+    }
+
     .chatbot-bubble.user {
       background: #198754;
       color: #ffffff;
@@ -316,7 +322,7 @@
     </div>
   </section>
   {# Todavia no estará listo el formulario contacto #}
-  <div id="chatbot-widget" class="chatbot-widget">
+  <div id="chatbot-widget" class="chatbot-widget" data-conversation="{{ chatbot_conversation_id|default:'' }}">
     <div class="chatbot-avatar text-center mb-1">
       <img src="{% static 'Imagenes/chatdog.png' %}" alt="Asistente Arce" class="chatbot-dog">
     </div>
@@ -362,8 +368,15 @@
   const input         = document.getElementById("chatbot-input");
   const handoffNotice = document.getElementById("chatbot-handoff");
   const quickReplies  = document.getElementById("chatbot-quick-replies");
+  const pollUrl       = "{% url 'ambpublico_chatbot_messages' %}";
 
-  let conversationId = null;
+  const existingConversation = widget.dataset.conversation;
+  let conversationId = existingConversation ? parseInt(existingConversation, 10) : null;
+  if (Number.isNaN(conversationId)) {
+    conversationId = null;
+  }
+  let pollTimer = null;
+  let lastMessageId = null;
 
   const togglePanel = (show) => {
     const shouldShow = typeof show === "boolean" ? show : panel.classList.contains("d-none");
@@ -378,10 +391,10 @@
     return null;
   };
 
-  const appendMessage = (text, author) => {
+  const appendMessage = (text, author, prefix) => {
     const bubble = document.createElement("div");
     bubble.className = `chatbot-bubble ${author}`;
-    bubble.textContent = text;
+    bubble.textContent = prefix ? `${prefix}: ${text}` : text;
     messageList.appendChild(bubble);
     messageList.scrollTop = messageList.scrollHeight;
   };
@@ -424,8 +437,119 @@
     appendMessage("No pude conectar con el asistente en este momento. Intenta nuevamente más tarde.", "bot");
   };
 
+  const stopPolling = () => {
+    if (pollTimer) {
+      window.clearTimeout(pollTimer);
+      pollTimer = null;
+    }
+  };
+
+  const schedulePoll = (delay = 4000) => {
+    stopPolling();
+    pollTimer = window.setTimeout(() => {
+      pollTimer = null;
+      pollConversation();
+    }, delay);
+  };
+
+  async function pollConversation() {
+    if (!conversationId) {
+      return;
+    }
+
+    const isInitialLoad = lastMessageId === null;
+
+    try {
+      let url = pollUrl;
+      if (!isInitialLoad && lastMessageId !== null) {
+        url = `${pollUrl}?after=${encodeURIComponent(lastMessageId)}`;
+      }
+
+      const response = await fetch(url, {
+        headers: { "Accept": "application/json" },
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        throw new Error("Network error");
+      }
+
+      const data = await response.json();
+
+      if (!conversationId && data.conversation_id) {
+        const parsedId = parseInt(data.conversation_id, 10);
+        conversationId = Number.isNaN(parsedId) ? null : parsedId;
+      }
+
+      if (Array.isArray(data.messages) && data.messages.length) {
+        if (isInitialLoad) {
+          messageList.innerHTML = "";
+        }
+
+        data.messages.forEach((message) => {
+          const messageId = typeof message.id === "number" ? message.id : null;
+          if (messageId !== null && (lastMessageId === null || messageId > lastMessageId)) {
+            lastMessageId = messageId;
+          }
+
+          if (message.author === "client") {
+            if (isInitialLoad) {
+              appendMessage(message.content, "user");
+            }
+            return;
+          }
+
+          if (message.author === "staff") {
+            appendMessage(message.content, "staff", message.staff_user || "Recepción");
+            return;
+          }
+
+          appendMessage(message.content, "bot");
+        });
+      } else if (typeof data.last_id === "number" && (lastMessageId === null || data.last_id > lastMessageId)) {
+        lastMessageId = data.last_id;
+      }
+
+      if (data.state === "closed") {
+        appendMessage("La conversación se cerró. Gracias por escribirnos.", "bot");
+        handoffNotice.classList.add("d-none");
+        conversationId = null;
+        stopPolling();
+        return;
+      }
+
+      if (conversationId) {
+        handoffNotice.classList.remove("d-none");
+      }
+    } catch (err) {
+      console.error("Error actualizando el chat", err);
+    } finally {
+      if (conversationId) {
+        schedulePoll();
+      }
+    }
+  }
+
+  const startPolling = (immediate = false) => {
+    if (!conversationId) {
+      return;
+    }
+
+    if (immediate) {
+      stopPolling();
+      pollConversation();
+    } else {
+      schedulePoll();
+    }
+  };
+
   toggleButton.addEventListener("click", () => togglePanel());
   closeButton.addEventListener("click", () => togglePanel(false));
+
+  if (conversationId) {
+    handoffNotice.classList.remove("d-none");
+    startPolling(true);
+  }
 
   const submitMessage = async (message) => {
     appendMessage(message, "user");
@@ -454,9 +578,14 @@
         appendMessage(data.reply, "bot");
       }
 
+      if (typeof data.last_message_id === "number") {
+        lastMessageId = data.last_message_id;
+      }
+
       if (data.handoff) {
         conversationId = data.conversation_id || conversationId;
         handoffNotice.classList.remove("d-none");
+        startPolling(true);
       } else if (!data.pending_confirmation) {
         handoffNotice.classList.add("d-none");
       }
@@ -482,5 +611,3 @@
   });
 
 })(); 
-</script>
-{% endblock content %}

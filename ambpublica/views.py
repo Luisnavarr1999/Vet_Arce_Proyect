@@ -29,7 +29,7 @@ from django.utils.formats import date_format
 from django.core.mail import EmailMultiAlternatives
 
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 import re, unicodedata
 
 # Create your views here.
@@ -79,6 +79,7 @@ def main(request):
         'contact_form': contact_form,
         'contact_success': contact_success,
         'contact_error': contact_error,
+        'chatbot_conversation_id': request.session.get(ACTIVE_CONVERSATION_KEY),
     }
 
     return render(request, 'ambpublica/main.html', context)
@@ -269,7 +270,7 @@ def chatbot_message(request):
     reply_text = (
         "Nuestro equipo de recepción ya está al tanto de tu consulta. Mantén esta ventana abierta y te escribirán a la brevedad."
     )
-    ChatMessage.objects.create(
+    bot_message = ChatMessage.objects.create(
         conversation=conversation,
         author=ChatMessage.AUTHOR_BOT,
         content=reply_text,
@@ -280,6 +281,7 @@ def chatbot_message(request):
             "handoff": True,
             "conversation_id": conversation.pk,
             "pending_confirmation": False,
+            "last_message_id": bot_message.id,
         }
     )
 
@@ -311,7 +313,7 @@ def chatbot_message(request):
       reply_text = (
           "Perfecto, avisaremos a nuestra recepción para que continúe la conversación. Te contactarán en este chat."
       )
-      ChatMessage.objects.create(
+      bot_message = ChatMessage.objects.create(
           conversation=conversation,
           author=ChatMessage.AUTHOR_BOT,
           content=reply_text,
@@ -325,6 +327,7 @@ def chatbot_message(request):
               "handoff": True,
               "conversation_id": conversation.pk,
               "pending_confirmation": False,
+              "last_message_id": bot_message.id,
           }
       )
     if decision is False:
@@ -368,6 +371,62 @@ def chatbot_message(request):
     logger.exception("Error chatbot_message: %s", e)
     return JsonResponse({"error": "Error interno."}, status=500)
 
+@require_GET
+def chatbot_conversation_messages(request):
+  conversation_id = request.session.get(ACTIVE_CONVERSATION_KEY)
+  if not conversation_id:
+    return JsonResponse({
+        "messages": [],
+        "state": None,
+        "last_id": None,
+        "conversation_id": None,
+    })
+
+  try:
+    conversation = ChatConversation.objects.select_related("assigned_to").get(pk=conversation_id)
+  except ChatConversation.DoesNotExist:
+    request.session.pop(ACTIVE_CONVERSATION_KEY, None)
+    request.session.modified = True
+    return JsonResponse({
+        "messages": [],
+        "state": None,
+        "last_id": None,
+        "conversation_id": None,
+    })
+
+  after_param = request.GET.get("after")
+  try:
+    last_seen_id = int(after_param) if after_param else None
+  except (TypeError, ValueError):
+    return JsonResponse({"error": "Parámetro 'after' inválido."}, status=400)
+
+  messages_qs = conversation.messages.select_related("staff_user")
+  if last_seen_id:
+    messages_qs = messages_qs.filter(id__gt=last_seen_id)
+
+  payload = []
+  last_id = last_seen_id
+
+  for message in messages_qs:
+    last_id = message.id
+    payload.append(
+        {
+            "id": message.id,
+            "author": message.author,
+            "content": message.content,
+            "created_at": timezone.localtime(message.created_at).isoformat(),
+            "staff_user": message.staff_user.get_full_name() if message.staff_user else None,
+        }
+    )
+
+  return JsonResponse(
+      {
+          "messages": payload,
+          "state": conversation.state,
+          "last_id": last_id,
+          "conversation_id": conversation.id,
+      }
+  )
 
 def consulta_mascota(request):
     """

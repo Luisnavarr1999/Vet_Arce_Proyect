@@ -9,8 +9,28 @@ class Command(BaseCommand):
                         "delete_factura", "view_factura", "add_mascota", "change_mascota", "delete_mascota", "view_mascota", "add_producto", "change_producto", "delete_producto", "view_producto"]
 
     PERMISOS_VET = ["view_user", "change_cita", "view_cita", "view_cliente", "change_mascota", "view_mascota", "view_producto"]
-    PERMISOS_RECEP = ["view_user", "add_cita", "change_cita", "delete_cita", "view_cita", "add_cliente", "change_cliente", "view_cliente", "add_factura", "change_factura",
-                      "view_factura", "add_mascota", "change_mascota", "delete_mascota", "view_mascota", "change_producto", "view_producto"]
+    PERMISOS_RECEP = [
+        "view_user",
+        "add_cita",
+        "change_cita",
+        "delete_cita",
+        "view_cita",
+        "add_cliente",
+        "change_cliente",
+        "view_cliente",
+        "add_factura",
+        "change_factura",
+        "view_factura",
+        "add_mascota",
+        "change_mascota",
+        "delete_mascota",
+        "view_mascota",
+        "change_producto",
+        "view_producto",
+        "view_chatconversation",
+        "view_chatmessage",
+        "add_chatmessage",
+    ]
 
     def handle(self, **options):
 
