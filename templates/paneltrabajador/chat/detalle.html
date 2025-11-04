@@ -22,8 +22,8 @@
           <div id="chat-message-list"
                class="chat-message-list"
                data-poll-url="{% url 'panel_chat_messages' conversation.id %}">
-            {% if messages %}
-              {% for message in messages %}
+            {% if chat_messages %}
+              {% for message in chat_messages %}
                 <div class="chat-bubble {{ message.author }}">
                   <div class="chat-bubble-header">
                     {% if message.author == message.AUTHOR_STAFF %}

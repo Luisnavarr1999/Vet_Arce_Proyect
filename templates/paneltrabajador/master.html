@@ -161,7 +161,9 @@
         container.setAttribute("aria-live", "polite");
         container.setAttribute("aria-atomic", "true");
 
-        const alerts = container.querySelectorAll(".alert");
+        const alerts = container.querySelectorAll(
+          ".alert:not([data-chat-alert])"
+        );
         alerts.forEach((alert, index) => {
           const timeout = 5000 + index * 200;
           window.setTimeout(() => {

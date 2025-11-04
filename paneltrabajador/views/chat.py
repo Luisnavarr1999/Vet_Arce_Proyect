@@ -82,7 +82,7 @@ def chat_conversation_detail(request, conversation_id):
 
     context = {
         'conversation': conversation,
-        'messages': messages_qs,
+        'chat_messages': messages_qs,
     }
     return render(request, 'paneltrabajador/chat/detalle.html', context)
 

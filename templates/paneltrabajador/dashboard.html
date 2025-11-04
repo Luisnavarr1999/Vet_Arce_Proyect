@@ -71,14 +71,72 @@
     </div>
   </div>
 
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <h4 class="mb-0 fw-semibold text-primary">Visualizaciones interactivas</h4>
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        Mostrar / ocultar
+      </button>
+      <div class="dropdown-menu dropdown-menu-end p-3 shadow-sm"
+           style="min-width: 260px;">
+        <p class="text-muted small mb-2">Selecciona las gráficas visibles en el panel.</p>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input chart-visibility-toggle"
+                 type="checkbox"
+                 role="switch"
+                 id="toggle-resumen"
+                 data-chart-target="#chart-resumen-card"
+                 checked />
+          <label class="form-check-label" for="toggle-resumen">Resumen mensual</label>
+        </div>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input chart-visibility-toggle"
+                 type="checkbox"
+                 role="switch"
+                 id="toggle-tendencias"
+                 data-chart-target="#chart-tendencias-card"
+                 checked />
+          <label class="form-check-label" for="toggle-tendencias">Tendencias mensuales</label>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input chart-visibility-toggle"
+                 type="checkbox"
+                 role="switch"
+                 id="toggle-servicios"
+                 data-chart-target="#chart-servicios-card"
+                 checked />
+          <label class="form-check-label" for="toggle-servicios">Servicios más reservados</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card dashboard-card shadow-sm border-0 mb-4" id="chart-resumen-card">
+    <div class="card-header border-0 bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <h5 class="mb-0 fw-semibold text-primary">Resumen gráfico del mes</h5>
+      <span class="badge text-bg-light text-muted">{{ mes_actual_label|title }}</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-area" style="height: 320px;">
+        <canvas id="chart-resumen"></canvas>
+      </div>
+    </div>
+  </div>
+
   <div class="row g-4">
-    <div class="col-lg-7">
+    <div class="col-lg-7" id="chart-tendencias-card">
       <div class="card dashboard-card shadow-sm border-0 h-100">
         <div class="card-header border-0 bg-transparent py-3">
           <h5 class="mb-0 fw-semibold text-primary">Tendencias mensuales</h5>
         </div>
         <div class="card-body">
           {% if tendencias_mensuales %}
+            <div class="chart-area mb-4" style="height: 320px;">
+              <canvas id="chart-tendencias"></canvas>
+            </div>
             <div class="table-responsive">
               <table class="table align-middle mb-0">
                 <thead>
@@ -123,12 +181,15 @@
           </ul>
         </div>
       </div>
-      <div class="card dashboard-card shadow-sm border-0">
+      <div class="card dashboard-card shadow-sm border-0" id="chart-servicios-card">
         <div class="card-header border-0 bg-transparent py-3">
           <h5 class="mb-0 fw-semibold text-primary">Servicios más reservados</h5>
         </div>
         <div class="card-body">
           {% if servicios_reservas %}
+            <div class="chart-area mb-4" style="height: 280px;">
+              <canvas id="chart-servicios"></canvas>
+            </div>
             <ul class="list-group list-group-flush">
               {% for servicio in servicios_reservas %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -178,4 +239,179 @@
       {% endif %}
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script>
+    (function () {
+      const toggles = document.querySelectorAll('.chart-visibility-toggle');
+      toggles.forEach((toggle) => {
+        const targetSelector = toggle.getAttribute('data-chart-target');
+        if (!targetSelector) return;
+        const target = document.querySelector(targetSelector);
+        if (!target) return;
+
+        const updateVisibility = () => {
+          target.classList.toggle('d-none', !toggle.checked);
+        };
+
+        toggle.addEventListener('change', updateVisibility);
+        updateVisibility();
+      });
+
+      if (!window.Chart) {
+        return;
+      }
+
+      const chartPalette = {
+        primary: '#0d6efd',
+        secondary: '#6c757d',
+        success: '#198754',
+        danger: '#dc3545',
+        warning: '#ffc107'
+      };
+
+      const resumenCanvas = document.getElementById('chart-resumen');
+      if (resumenCanvas) {
+        const resumenChart = new Chart(resumenCanvas, {
+          type: 'bar',
+          data: {
+            labels: ['Reservadas', 'Canceladas', 'No tomadas'],
+            datasets: [
+              {
+                label: 'Citas',
+                data: [
+                  {{ total_reservadas_mes|default:0 }},
+                  {{ total_canceladas_mes|default:0 }},
+                  {{ total_no_tomadas_mes|default:0 }}
+                ],
+                backgroundColor: [
+                  chartPalette.primary,
+                  chartPalette.danger,
+                  chartPalette.secondary
+                ],
+                borderRadius: 6,
+                maxBarThickness: 60
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (context) => `${context.formattedValue} citas`
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0
+                }
+              }
+            }
+          }
+        });
+      }
+
+      const tendenciasCanvas = document.getElementById('chart-tendencias');
+      if (tendenciasCanvas) {
+        const tendenciasLabels = [{% for item in tendencias_mensuales %}'{{ item.periodo|escapejs }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+        const tendenciasReservadas = [{% for item in tendencias_mensuales %}{{ item.reservadas|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+        const tendenciasCanceladas = [{% for item in tendencias_mensuales %}{{ item.canceladas|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+        if (tendenciasLabels.length) {
+          const tendenciasChart = new Chart(tendenciasCanvas, {
+            type: 'line',
+            data: {
+              labels: tendenciasLabels,
+              datasets: [
+                {
+                  label: 'Reservadas',
+                  data: tendenciasReservadas,
+                  borderColor: chartPalette.primary,
+                  backgroundColor: 'rgba(13, 110, 253, 0.15)',
+                  tension: 0.3,
+                  fill: true,
+                  pointRadius: 4,
+                  pointHoverRadius: 6
+                },
+                {
+                  label: 'Canceladas',
+                  data: tendenciasCanceladas,
+                  borderColor: chartPalette.danger,
+                  backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                  tension: 0.3,
+                  fill: true,
+                  pointRadius: 4,
+                  pointHoverRadius: 6
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    precision: 0
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      const serviciosCanvas = document.getElementById('chart-servicios');
+      if (serviciosCanvas) {
+        const serviciosLabels = [{% for servicio in servicios_reservas %}'{{ servicio.servicio|escapejs }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+        const serviciosTotales = [{% for servicio in servicios_reservas %}{{ servicio.total|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+        if (serviciosLabels.length) {
+          const serviciosChart = new Chart(serviciosCanvas, {
+            type: 'doughnut',
+            data: {
+              labels: serviciosLabels,
+              datasets: [
+                {
+                  label: 'Reservas',
+                  data: serviciosTotales,
+                  backgroundColor: serviciosLabels.map((_, index) => {
+                    const palette = [
+                      chartPalette.primary,
+                      chartPalette.success,
+                      chartPalette.warning,
+                      chartPalette.danger,
+                      chartPalette.secondary
+                    ];
+                    return palette[index % palette.length];
+                  }),
+                  borderWidth: 1
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
+              }
+            }
+          });
+        }
+      }
+    })();
+  </script>
+
 {% endblock content %}
