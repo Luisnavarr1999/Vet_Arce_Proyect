@@ -114,6 +114,26 @@
           </div>
         </nav>
         <main class="ms-sm-auto col-lg-10 px-md-4 my-3 dashboard-main">
+          <div id="alerts" class="dj-b-alerts mb-3">
+            {% with pending_count=chat_pending_count %}
+              {% if pending_count %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                  <strong>Chat en vivo:</strong>
+                  Hay {{ pending_count }} conversación{% if pending_count != 1 %}es{% endif %}
+                  esperando respuesta. <a class="alert-link" href="{% url 'panel_chat_list' %}">Ir al chat</a>.
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+              {% endif %}
+            {% endwith %}
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          </div>
           <div class="dj-b-content">
             {% block content %}
             {% endblock content %}
