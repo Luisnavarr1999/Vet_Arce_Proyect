@@ -62,6 +62,12 @@
                 <a class="nav-link{% if request.path_info == '/panel/' %} active{% endif %}"
                    href="{% url 'panel_home' %}">Inicio</a>
               </li>
+              {% if perms.paneltrabajador.view_cita %}
+                <li class="nav-item">
+                  <a class="nav-link{% if '/panel/dashboard/' in request.path_info %} active{% endif %}"
+                     href="{% url 'panel_dashboard' %}">Dashboard</a>
+                </li>
+              {% endif %}
               {% if perms.paneltrabajador.view_cliente %}
                 <li class="nav-item">
                   <a class="nav-link{% if '/panel/clientes/' in request.path_info %} active{% endif %}"

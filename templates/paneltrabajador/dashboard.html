@@ -1,0 +1,181 @@
+{% extends "./master.html" %}
+{% block title %}
+  Dashboard
+{% endblock title %}
+{% block content %}
+  <section class="dashboard-hero card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h2 class="fw-semibold mb-2">Indicadores operativos</h2>
+      <p class="mb-0 text-muted">
+        Vista basada en {{ alcance_global|yesno:"toda la veterinaria,sus citas asignadas" }}.
+      </p>
+    </div>
+  </section>
+
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label small text-uppercase text-muted">Año</label>
+      <select name="year" class="form-select">
+        {% for year in year_options %}
+          <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label small text-uppercase text-muted">Mes</label>
+      <select name="month" class="form-select">
+        {% for item in month_options %}
+          <option value="{{ item.value }}" {% if item.value == selected_month %}selected{% endif %}>{{ item.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-auto d-flex gap-2 flex-wrap">
+      <button type="submit" class="btn btn-primary">Actualizar</button>
+      <a class="btn btn-outline-secondary" href="{{ export_mes_url }}">Descargar CSV (Mes)</a>
+      <a class="btn btn-outline-secondary" href="{{ export_anio_url }}">Descargar CSV (Año)</a>
+    </div>
+  </form>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <span class="text-muted d-block">Reservadas ({{ mes_actual_label|title }})</span>
+          <h3 class="fw-semibold mb-0">{{ total_reservadas_mes }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <span class="text-muted d-block">Canceladas ({{ mes_actual_label|title }})</span>
+          <h3 class="fw-semibold mb-0">{{ total_canceladas_mes }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <span class="text-muted d-block">No tomadas ({{ mes_actual_label|title }})</span>
+          <h3 class="fw-semibold mb-0">{{ total_no_tomadas_mes }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <span class="text-muted d-block">Tasa de cancelación</span>
+          <h3 class="fw-semibold mb-0">{{ tasa_cancelacion_mes }}%</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header border-0 bg-transparent py-3">
+          <h5 class="mb-0 fw-semibold text-primary">Tendencias mensuales</h5>
+        </div>
+        <div class="card-body">
+          {% if tendencias_mensuales %}
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th class="text-center">Reservadas</th>
+                    <th class="text-center">Canceladas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in tendencias_mensuales %}
+                    <tr>
+                      <td>{{ item.periodo }}</td>
+                      <td class="text-center">{{ item.reservadas }}</td>
+                      <td class="text-center">{{ item.canceladas }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="alert alert-soft mb-0">No se encontraron datos suficientes para calcular tendencias.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card dashboard-card shadow-sm border-0 mb-4">
+        <div class="card-header border-0 bg-transparent py-3">
+          <h5 class="mb-0 fw-semibold text-primary">Asistencias del mes</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Confirmadas
+              <span class="badge text-bg-success rounded-pill">{{ total_asistencias_mes }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Pendientes
+              <span class="badge text-bg-warning rounded-pill">{{ total_pendientes_asistencia_mes }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="card dashboard-card shadow-sm border-0">
+        <div class="card-header border-0 bg-transparent py-3">
+          <h5 class="mb-0 fw-semibold text-primary">Servicios más reservados</h5>
+        </div>
+        <div class="card-body">
+          {% if servicios_reservas %}
+            <ul class="list-group list-group-flush">
+              {% for servicio in servicios_reservas %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  {{ servicio.servicio }}
+                  <span class="badge text-bg-primary rounded-pill">{{ servicio.total }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="alert alert-soft mb-0">Aún no hay reservas en el mes actual.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card dashboard-card shadow-sm border-0 mt-4">
+    <div class="card-header border-0 bg-transparent py-3">
+      <h5 class="mb-0 fw-semibold text-primary">Agenda próxima (7 días)</h5>
+    </div>
+    <div class="card-body">
+      {% if proximas_citas %}
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Mascota</th>
+                <th>Servicio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cita in proximas_citas %}
+                <tr>
+                  <td>{{ cita.fecha|date:"d/m/Y H:i" }}</td>
+                  <td>{{ cita.cliente.nombre_cliente|default:"-" }}</td>
+                  <td>{{ cita.mascota.nombre|default:"-" }}</td>
+                  <td>{{ cita.get_servicio_display }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert alert-soft mb-0">No hay citas reservadas para los próximos días.</div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock content %}
