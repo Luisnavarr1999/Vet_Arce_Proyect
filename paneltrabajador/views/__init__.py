@@ -11,6 +11,7 @@ from .chat import (
     chat_conversation_list,
     chat_conversation_detail,
     chat_conversation_messages,
+    chat_pending_count,
 )
 
 # Este archivo importará todas las vistas en esta carpeta

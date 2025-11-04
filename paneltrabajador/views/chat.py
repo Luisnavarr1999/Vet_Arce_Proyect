@@ -123,3 +123,14 @@ def chat_conversation_messages(request, conversation_id):
             'last_id': last_id,
         }
     )
+
+@require_http_methods(["GET"])
+def chat_pending_count(request):
+    """Entrega la cantidad de conversaciones pendientes en formato JSON."""
+
+    if not request.user.is_authenticated or not request.user.has_perm('paneltrabajador.view_chatconversation'):
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+
+    pending_count = ChatConversation.objects.filter(state=ChatConversation.STATE_PENDING).count()
+
+    return JsonResponse({'pending_count': pending_count, 'has_pending': pending_count > 0})

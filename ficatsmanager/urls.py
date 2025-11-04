@@ -75,6 +75,7 @@ urlpatterns = [
     path('panel/chat/', vistas_panel.chat_conversation_list, name='panel_chat_list'),
     path('panel/chat/<int:conversation_id>/', vistas_panel.chat_conversation_detail, name='panel_chat_detail'),
     path('panel/chat/<int:conversation_id>/messages/', vistas_panel.chat_conversation_messages, name='panel_chat_messages'),
+    path('panel/chat/pending-count/', vistas_panel.chat_pending_count, name='panel_chat_pending_count'),
 
     path('', vistas_publica.main, name="ambpublico_index"),
     path('consulta_mascota/', vistas_publica.consulta_mascota, name="ambpublico_consulta"),

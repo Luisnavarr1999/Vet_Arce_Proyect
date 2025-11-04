@@ -115,16 +115,23 @@
         </nav>
         <main class="ms-sm-auto col-lg-10 px-md-4 my-3 dashboard-main">
           <div id="alerts" class="dj-b-alerts mb-3">
-            {% with pending_count=chat_pending_count %}
-              {% if pending_count %}
-                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {% if perms.paneltrabajador.view_chatconversation %}
+              {% with pending_count=chat_pending_count %}
+                <div id="chat-pending-alert"
+                     class="alert alert-warning alert-dismissible fade{% if pending_count %} show{% endif %}{% if not pending_count %} d-none{% endif %}"
+                     role="alert"
+                     data-chat-alert
+                     data-chat-endpoint="{% url 'panel_chat_pending_count' %}"
+                     data-chat-initial-count="{{ pending_count }}"
+                     aria-hidden="{% if pending_count %}false{% else %}true{% endif %}">
                   <strong>Chat en vivo:</strong>
-                  Hay {{ pending_count }} conversación{% if pending_count != 1 %}es{% endif %}
+                  Hay <span data-chat-count>{{ pending_count }}</span>
+                  conversación<span data-chat-plural>{% if pending_count != 1 %}es{% endif %}</span>
                   esperando respuesta. <a class="alert-link" href="{% url 'panel_chat_list' %}">Ir al chat</a>.
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                  <button type="button" class="btn-close" data-chat-dismiss aria-label="Cerrar"></button>
                 </div>
-              {% endif %}
-            {% endwith %}
+              {% endwith %}
+            {% endif %}
             {% if messages %}
               {% for message in messages %}
                 <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
@@ -164,5 +171,120 @@
         });
       })();
     </script>
+    {% if perms.paneltrabajador.view_chatconversation %}
+      <script>
+        (function () {
+          const alertElement = document.querySelector('[data-chat-alert]');
+          if (!alertElement) {
+            return;
+          }
+
+          const endpoint = alertElement.getAttribute('data-chat-endpoint');
+          if (!endpoint) {
+            return;
+          }
+
+          const countElement = alertElement.querySelector('[data-chat-count]');
+          const pluralElement = alertElement.querySelector('[data-chat-plural]');
+          const closeButton = alertElement.querySelector('[data-chat-dismiss]');
+          const initialCount = Number.parseInt(alertElement.getAttribute('data-chat-initial-count'), 10) || 0;
+          const pollIntervalMs = 15000;
+          let pollTimeoutId = null;
+          let dismissedManually = false;
+          let lastCount = initialCount;
+
+          const updateView = (count) => {
+            if (countElement) {
+              countElement.textContent = count;
+            }
+
+            if (pluralElement) {
+              pluralElement.textContent = count === 1 ? '' : 'es';
+            }
+
+            if (count > 0 && !dismissedManually) {
+              alertElement.classList.add('show');
+              alertElement.classList.remove('d-none');
+              alertElement.setAttribute('aria-hidden', 'false');
+            } else if (count === 0) {
+              alertElement.classList.remove('show');
+              alertElement.classList.add('d-none');
+              alertElement.setAttribute('aria-hidden', 'true');
+            }
+          };
+
+          if (closeButton) {
+            closeButton.addEventListener('click', function () {
+              dismissedManually = true;
+              alertElement.classList.remove('show');
+              alertElement.classList.add('d-none');
+              alertElement.setAttribute('aria-hidden', 'true');
+            });
+          }
+
+          const schedulePoll = () => {
+            pollTimeoutId = window.setTimeout(poll, pollIntervalMs);
+          };
+
+          const stopPolling = () => {
+            if (pollTimeoutId !== null) {
+              window.clearTimeout(pollTimeoutId);
+              pollTimeoutId = null;
+            }
+          };
+
+          const poll = () => {
+            fetch(endpoint, {
+              method: 'GET',
+              credentials: 'same-origin',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+              },
+              cache: 'no-store',
+            })
+              .then((response) => {
+                if (response.status === 403) {
+                  stopPolling();
+                  return null;
+                }
+
+                if (!response.ok) {
+                  throw new Error('Solicitud inválida');
+                }
+
+                return response.json();
+              })
+              .then((data) => {
+                if (!data) {
+                  return;
+                }
+
+                const count = Number.parseInt(data.pending_count, 10);
+                if (!Number.isNaN(count)) {
+                  if (dismissedManually && count > lastCount) {
+                    dismissedManually = false;
+                  }
+
+                  if (count === 0) {
+                    dismissedManually = false;
+                  }
+
+                  lastCount = count;
+                  updateView(count);
+                }
+
+                schedulePoll();
+              })
+              .catch((error) => {
+                console.error('No se pudo actualizar el estado del chat en vivo.', error);
+                schedulePoll();
+              });
+          };
+
+          updateView(initialCount);
+          poll();
+        })();
+      </script>
+    {% endif %}
   </body>
 </html>
