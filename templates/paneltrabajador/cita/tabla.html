@@ -43,8 +43,10 @@
             <span class="badge bg-success">Asistió</span>
           {% elif cita.asistencia == "N" %}
             <span class="badge bg-danger">No asistió</span>
-          {% else %}
+          {% elif cita.asistencia == "P" %}
             <span class="badge bg-secondary">Pendiente</span>
+          {% else %}
+            <span class="badge bg-light text-muted">Sin registro</span>
           {% endif %}
         </td>
 

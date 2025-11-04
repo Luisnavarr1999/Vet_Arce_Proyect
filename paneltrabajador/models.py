@@ -110,7 +110,7 @@ class CitaQuerySet(models.QuerySet):
 
     def actualizar_no_tomadas(self):
         now = timezone.now()
-        self.filter(estado='0', fecha__lt=now).update(estado='3')
+        self.filter(estado='0', fecha__lt=now).update(estado='3', asistencia=None)
         return self
 
 
@@ -119,7 +119,7 @@ class CitaManager(models.Manager.from_queryset(CitaQuerySet)):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs.filter(estado='0', fecha__lt=timezone.now()).update(estado='3')
+        qs.filter(estado='0', fecha__lt=timezone.now()).update(estado='3', asistencia=None)
         return qs
 
 class Cita (models.Model):
@@ -162,7 +162,13 @@ class Cita (models.Model):
     estado = models.CharField(max_length=1, choices=ESTADO_CHOICES)
     usuario = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     fecha = models.DateTimeField()
-    asistencia = models.CharField(max_length=1, choices=ASISTENCIA_CHOICES, default='P')
+    asistencia = models.CharField(
+        max_length=1,
+        choices=ASISTENCIA_CHOICES,
+        default='P',
+        null=True,
+        blank=True,
+    )
     servicio = models.CharField(max_length=20, choices=SERVICIO_CHOICES, default='general')
 
      # Auditoría del check-in (sirve para registrar automáticamente quién y cuándo marcó la asistencia)
@@ -190,6 +196,25 @@ class Cita (models.Model):
     @staticmethod
     def get_for_listado(**args):
         return Cita.objects.filter(**args)
+    
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None:
+            update_fields = set(update_fields)
+
+        if self.estado in ('2', '3'):
+            self.asistencia = None
+            if update_fields is not None:
+                update_fields.add('asistencia')
+        elif self.estado == '1' and self.asistencia is None:
+            self.asistencia = 'P'
+            if update_fields is not None:
+                update_fields.add('asistencia')
+
+        if update_fields is not None:
+            kwargs['update_fields'] = update_fields
+
+        super().save(*args, **kwargs)
 
 
 class Producto (models.Model):

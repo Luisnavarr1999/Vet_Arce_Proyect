@@ -116,14 +116,24 @@ class CitaForm(forms.ModelForm):
         # Reglas de requerido
         self.fields['cliente'].required = False
         self.fields['mascota'].required = False
+        self.fields['asistencia'].required = False
 
          # Ocultar cliente/mascota al crear (como ya hacías)
         if not (self.instance and self.instance.pk):
             self.fields['cliente'].widget = forms.HiddenInput()
             self.fields['mascota'].widget = forms.HiddenInput()
         else:
-            # Valor inicial cuando EDITAS: respeta lo que tenga el modelo (default 'P')
-            self.fields['asistencia'].initial = self.instance.asistencia or 'P'
+            # Valor inicial cuando EDITAS: respeta lo que tenga el modelo
+            if self.instance.asistencia is not None:
+                self.fields['asistencia'].initial = self.instance.asistencia
+            elif self.instance.estado == '1':
+                self.fields['asistencia'].initial = 'P'
+            else:
+                self.fields['asistencia'].initial = ''
+
+        # Opción vacía explícita para asistencia
+        asistencia_choices = [('', 'Sin registro')] + list(Cita.ASISTENCIA_CHOICES)
+        self.fields['asistencia'].choices = asistencia_choices
 
         # Impedir la selección manual de "No tomada"
         estado_choices = [choice for choice in Cita.ESTADO_CHOICES if choice[0] != '3']
@@ -139,6 +149,10 @@ class CitaForm(forms.ModelForm):
         fecha = cleaned.get('fecha')
         asistencia = cleaned.get('asistencia')    # 'P','A','N'
         now = timezone.now()
+
+        if asistencia in ('', None):
+            asistencia = None
+            cleaned['asistencia'] = None
 
         # Solo permite A/N si estaba RESERVADA y ya ocurrió
         if asistencia in ('A', 'N'):

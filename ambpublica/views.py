@@ -913,7 +913,8 @@ def cancelar_cita(request):
                 form.add_error(None, 'La cita ingresada aún no se encuentra reservada.')
             else:
                 cita.estado = '2'
-                cita.save(update_fields=['estado'])
+                cita.asistencia = None
+                cita.save(update_fields=['estado', 'asistencia'])
                 success_message = 'Tu cita ha sido cancelada exitosamente.'
 
                 cliente = cita.cliente
