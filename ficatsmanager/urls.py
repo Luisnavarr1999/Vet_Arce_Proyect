@@ -78,6 +78,7 @@ urlpatterns = [
     path('panel/chat/pending-count/', vistas_panel.chat_pending_count, name='panel_chat_pending_count'),
 
     path('', vistas_publica.main, name="ambpublico_index"),
+    path('servicios/<slug:slug>/', vistas_publica.servicio_detalle, name='ambpublico_servicio_detalle'),
     path('consulta_mascota/', vistas_publica.consulta_mascota, name="ambpublico_consulta"),
     path('chatbot/message/', vistas_publica.chatbot_message, name="ambpublico_chatbot_message"),
     path('chatbot/conversation/', vistas_publica.chatbot_conversation_messages, name="ambpublico_chatbot_messages"),

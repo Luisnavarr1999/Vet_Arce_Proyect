@@ -174,24 +174,33 @@
       <hr class="w-25 mx-auto" />
       <div class="row">
         <div class="col-12 col-md-4 mb-3">
-          <article class="service-card text-center">
+          <article class="service-card text-center position-relative h-100">
             <img src="{% static 'Imagenes/service-consulta.jpg' %}" alt="Consulta general para mascotas" class="service-icon">
             <h3>Consulta General</h3>
             <p>Exámenes de rutina, vacunas y atención médica general para mascotas.</p>
+            <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'consulta-general' %}">
+              <span class="visually-hidden">Ver más sobre consulta general</span>
+            </a>
           </article>
         </div>
         <div class="col-12 col-md-4 mb-3">
-          <article class="service-card text-center">
+          <article class="service-card text-center position-relative h-100">
             <img src="{% static 'Imagenes/service-cirugia.jpg' %}" alt="Cirugías veterinarias" class="service-icon">
             <h3>Cirugía</h3>
             <p>Realizamos cirugías con estándares médicos de alta calidad.</p>
+            <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'cirugia' %}">
+              <span class="visually-hidden">Ver más sobre cirugías veterinarias</span>
+            </a>
           </article>
         </div>
         <div class="col-12 col-md-4 mb-3">
-          <article class="service-card text-center">
+          <article class="service-card text-center position-relative h-100">
             <img src="{% static 'Imagenes/service-dentista.jpg' %}" alt="Odontología veterinaria" class="service-icon">
             <h3>Dentista</h3>
             <p>Cuidado dental especializado para mascotas.</p>
+            <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'dentista' %}">
+              <span class="visually-hidden">Ver más sobre odontología veterinaria</span>
+            </a>
           </article>
         </div>
       </div>

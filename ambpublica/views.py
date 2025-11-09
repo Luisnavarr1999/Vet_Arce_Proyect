@@ -19,7 +19,7 @@ from paneltrabajador.forms import ClienteForm, MascotaForm
 from paneltrabajador.models import Cita, Cliente, Mascota, ChatConversation, ChatMessage
 
 import json
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 import logging
 from django.core.cache import cache
 from django.conf import settings
@@ -173,6 +173,102 @@ HANDOFF_PENDING_KEY = "chatbot_pending_handoff"
 HANDOFF_MESSAGE_KEY = "chatbot_pending_message"
 ACTIVE_CONVERSATION_KEY = "chatbot_conversation_id"
 
+SERVICIOS_INFO = {
+    "consulta-general": {
+        "slug": "consulta-general",
+        "name": "Consulta General",
+        "tagline": "Salud preventiva y acompañamiento médico para cada etapa de vida.",
+        "description": (
+            "Durante la consulta general evaluamos el estado integral de tu mascota, "
+            "incluyendo antecedentes médicos, chequeos físicos completos y un plan de cuidado a medida."
+        ),
+        "services": [
+            "Evaluación clínica completa con control de signos vitales",
+            "Calendario de vacunación y desparasitación actualizado",
+            "Asesoría nutricional y de comportamiento",
+            "Exámenes preventivos según edad y especie",
+        ],
+        "benefits": [
+            "Detección temprana de enfermedades y condiciones crónicas",
+            "Planes de salud personalizados que se adaptan a tu rutina",
+            "Registro clínico digital disponible en todo momento",
+            "Recomendaciones para mejorar su calidad de vida diaria",
+        ],
+        "tips": [
+            "Trae el carnet sanitario o antecedentes médicos para una evaluación más completa.",
+            "Anota dudas o cambios recientes en su comportamiento para comentarlos durante la visita.",
+            "Mantén su calendario de vacunas al día para prevenir enfermedades comunes.",
+        ],
+        "hero_image": "Imagenes/servicios/consulta-general-hero.jpg",
+        "gallery_images": [
+            {"src": "Imagenes/servicios/consulta-general-1.jpg", "alt": "Veterinaria revisando a un perro"},
+            {"src": "Imagenes/servicios/consulta-general-2.jpg", "alt": "Chequeo de gato en consulta"},
+        ],
+    },
+    "cirugia": {
+        "slug": "cirugia",
+        "name": "Cirugía Veterinaria",
+        "tagline": "Procedimientos seguros con tecnología y monitoreo de última generación.",
+        "description": (
+            "Nuestro equipo quirúrgico combina experiencia, protocolos estrictos de bioseguridad y equipos "
+            "de monitoreo avanzados para ofrecer cirugías seguras y una recuperación tranquila."
+        ),
+        "services": [
+            "Cirugías programadas y de urgencia para tejidos blandos",
+            "Esterilizaciones y castraciones con protocolos modernos",
+            "Monitoreo anestésico continuo por personal especializado",
+            "Hospitalización postoperatoria con controles periódicos",
+        ],
+        "benefits": [
+            "Evaluación preoperatoria integral para minimizar riesgos",
+            "Acompañamiento cercano durante todo el proceso de recuperación",
+            "Planes de manejo del dolor adaptados a cada paciente",
+            "Comunicación constante y reportes de evolución a la familia",
+        ],
+        "tips": [
+            "Sigue las indicaciones de ayuno y medicamentos antes de la cirugía.",
+            "Prepara un espacio tranquilo en casa para el reposo postoperatorio.",
+            "Acude a los controles programados para asegurar una recuperación óptima.",
+        ],
+        "hero_image": "Imagenes/servicios/cirugia-hero.jpg",
+        "gallery_images": [
+            {"src": "Imagenes/servicios/cirugia-1.jpg", "alt": "Equipo veterinario en pabellón"},
+            {"src": "Imagenes/servicios/cirugia-2.jpg", "alt": "Mascota descansando tras cirugía"},
+        ],
+    },
+    "dentista": {
+        "slug": "dentista",
+        "name": "Odontología Veterinaria",
+        "tagline": "Sonrisas sanas para mejorar la salud general de tu compañero.",
+        "description": (
+            "El cuidado dental es esencial para prevenir infecciones y molestias. En nuestra área odontológica "
+            "trabajamos con equipos especializados y técnicas delicadas para proteger la salud bucal."
+        ),
+        "services": [
+            "Limpieza dental con ultrasonido y pulido profesional",
+            "Extracciones seguras y tratamientos periodontales",
+            "Diagnóstico por imagen para evaluar raíces y maxilares",
+            "Plan de cuidado dental domiciliario con productos recomendados",
+        ],
+        "benefits": [
+            "Prevención de halitosis y enfermedades periodontales",
+            "Mayor bienestar general y apetito equilibrado",
+            "Seguimiento personalizado según especie y edad",
+            "Educación al tutor para mantener una higiene diaria efectiva",
+        ],
+        "tips": [
+            "Introduce el cepillado dental de manera gradual y positiva.",
+            "Utiliza snacks y juguetes dentales aprobados por el veterinario.",
+            "Programa limpiezas profesionales regulares para evitar acumulación de placa.",
+        ],
+        "hero_image": "Imagenes/servicios/dentista-hero.jpg",
+        "gallery_images": [
+            {"src": "Imagenes/servicios/dentista-1.jpg", "alt": "Dentista veterinario limpiando dientes a un perro"},
+            {"src": "Imagenes/servicios/dentista-2.jpg", "alt": "Gato mostrando dientes sanos"},
+        ],
+    },
+}
+
 YES_KEYWORDS = {
     "si",
     "claro",
@@ -196,6 +292,17 @@ NO_PHRASES = ("no gracias", "prefiero seguir", "mejor no")
 
 def _tokenize(text: str) -> set[str]:
     return set(re.findall(r"\b\w+\b", text))
+
+def servicio_detalle(request, slug: str):
+    servicio = SERVICIOS_INFO.get(slug)
+    if not servicio:
+        raise Http404("Servicio no encontrado")
+
+    context = {
+        "servicio": servicio,
+    }
+
+    return render(request, "ambpublica/servicio_detalle.html", context)
 
 
 def _should_escalate(normalized_message: str) -> Optional[bool]:

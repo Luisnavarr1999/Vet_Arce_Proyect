@@ -1,0 +1,186 @@
+{% extends "./master.html" %}
+{% load static %}
+
+{% block title %}
+  {{ servicio.name }} | Arce Vet
+{% endblock title %}
+
+{% block content %}
+<section class="service-hero text-white position-relative overflow-hidden">
+  <div class="service-hero__background" style="background-image:
+      linear-gradient(135deg, rgba(168, 93, 26, 0.88), rgba(242, 129, 35, 0.88)),
+      url('{% static servicio.hero_image %}');"></div>
+
+  <div class="container py-5 position-relative">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a class="text-white-50" href="{% url 'ambpublico_index' %}">Inicio</a></li>
+        <li class="breadcrumb-item active text-white" aria-current="page">{{ servicio.name }}</li>
+      </ol>
+    </nav>
+
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <span class="badge badge-maple-soft rounded-pill text-uppercase fw-semibold mb-3">Servicio destacado</span>
+        <h1 class="display-5 fw-bold mb-3 text-white">{{ servicio.name }}</h1>
+        <p class="lead mb-4">{{ servicio.tagline }}</p>
+        <a class="btn btn-maple btn-lg shadow" href="{% url 'ambpublico_reserva' %}">Tomar hora</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 bg-cream">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body p-4 p-md-5">
+            <h2 class="h3 fw-bold text-maple-900 mb-3">¿En qué consiste?</h2>
+            <p class="text-muted mb-4">{{ servicio.description }}</p>
+
+            <div class="row g-4">
+              <div class="col-md-6">
+                <h3 class="h5 text-maple-700 fw-semibold">Servicios incluidos</h3>
+                <ul class="list-unstyled mt-3">
+                  {% for item in servicio.services %}
+                    <li class="d-flex align-items-start mb-2">
+                      <i class="bi bi-check-circle-fill text-amber me-2"></i>
+                      <span>{{ item }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h3 class="h5 text-maple-700 fw-semibold">Beneficios para tu mascota</h3>
+                <ul class="list-unstyled mt-3">
+                  {% for item in servicio.benefits %}
+                    <li class="d-flex align-items-start mb-2">
+                      <i class="bi bi-heart-fill text-coral me-2"></i>
+                      <span>{{ item }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body p-4 p-md-5">
+            <h3 class="h5 fw-semibold text-maple-700">Recomendaciones</h3>
+            <p class="text-muted">Consejos prácticos para que la experiencia sea cómoda y segura.</p>
+            <ul class="list-unstyled mt-3">
+              {% for tip in servicio.tips %}
+                <li class="d-flex align-items-start mb-3">
+                  <i class="bi bi-lightbulb-fill text-amber me-2"></i>
+                  <span>{{ tip }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-5">
+        <h2 class="h3 fw-bold text-maple-900 mb-3">Momentos que inspiran confianza</h2>
+        <p class="text-muted mb-4">
+          Acompañamos cada atención con cariño y profesionalismo. Reemplaza estas imágenes por las fotografías de tu equipo para mostrar cómo trabajan día a día.
+        </p>
+        <a class="btn btn-outline-maple" href="{% url 'ambpublico_reserva' %}">Tomar hora</a>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="row g-3">
+          {% for image in servicio.gallery_images %}
+            <div class="col-6">
+              <div class="ratio ratio-4x3 rounded shadow-sm overflow-hidden service-gallery__item">
+                <img src="{% static image.src %}" alt="{{ image.alt }}" class="w-100 h-100 object-fit-cover">
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ===== Paleta Arce Otoño =====
+     Puedes ajustar estos tonos a tu branding exacto */
+  :root{
+    --maple-900:#6B3A1A;   /* café profundo */
+    --maple-800:#8A4B22;
+    --maple-700:#A85D1A;   /* maple */
+    --maple-600:#C7702E;   /* canela */
+    --amber:#F2994A;       /* ámbar/mostaza */
+    --honey:#F2B36E;       /* miel suave */
+    --coral:#B23A48;       /* toque cálido para icono corazón */
+    --cream:#FBF7F2;       /* fondo crema */
+  }
+
+  /* ===== Hero ===== */
+  .service-hero { min-height: 360px; }
+  .service-hero__background{
+    position:absolute; inset:0; background-size:cover; background-position:center;
+    filter:brightness(0.95); z-index:0;
+  }
+  .service-hero::before{
+    content:""; position:absolute; inset:0;
+    background: linear-gradient(135deg, rgba(107,58,26,0.35), rgba(242,179,110,0.25));
+    z-index:1;
+  }
+  .service-hero > .container,
+  .service-hero nav,
+  .service-hero h1,
+  .service-hero p,
+  .service-hero a,
+  .service-hero .badge { position:relative; z-index:2; }
+
+  /* ===== Utilidades de color ===== */
+  .text-maple-900{ color: var(--maple-900) !important; }
+  .text-maple-700{ color: var(--maple-700) !important; }
+  .text-amber{ color: var(--amber) !important; }
+  .text-coral{ color: var(--coral) !important; }
+  .bg-cream{ background-color: var(--cream) !important; }
+
+  .badge-maple-soft{
+    background: rgba(242, 179, 110, 0.95);
+    color: #7c4b20;
+    letter-spacing:.02em;
+  }
+
+  .btn-maple{
+    background: var(--maple-600);
+    border-color: var(--maple-600);
+    color:#fff;
+  }
+  .btn-maple:hover{ background: var(--maple-700); border-color: var(--maple-700); color:#fff; }
+
+  .btn-outline-maple{
+    color: var(--maple-700);
+    border-color: var(--maple-700);
+    background: transparent;
+  }
+  .btn-outline-maple:hover{
+    color:#fff;
+    background: var(--maple-700);
+    border-color: var(--maple-700);
+  }
+
+  /* ===== Galería ===== */
+  .service-gallery__item img{ transition: transform .4s ease; }
+  .service-gallery__item:hover img{ transform: scale(1.05); }
+</style>
+{% endblock content %}
