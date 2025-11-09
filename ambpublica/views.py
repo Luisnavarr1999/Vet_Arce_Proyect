@@ -2,6 +2,7 @@ from ast import And
 from urllib import request
 from typing import Optional
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.template import loader
 from django import forms
 from django.contrib import messages
@@ -211,20 +212,55 @@ def _get_progress_state(step):
     """Construye el estado visual del progreso del flujo de reserva."""
 
     current_index = 0
+    success_mode = False
     for idx, stage in enumerate(RESERVA_PROGRESS):
         if step in stage['steps']:
             current_index = idx
             break
+    else:
+        if step == 'success':
+            current_index = len(RESERVA_PROGRESS)
+            success_mode = True
 
     progress = []
     for idx, stage in enumerate(RESERVA_PROGRESS):
         progress.append({
             'label': stage['label'],
             'icon': stage['icon'],
-            'is_current': idx == current_index,
-            'is_completed': idx < current_index,
+            'is_current': idx == current_index and not success_mode,
+            'is_completed': idx < current_index if not success_mode else True,
         })
     return progress
+
+
+def _build_confirmation_payload(cita, *, cliente=None, mascota=None):
+    """Crea la información necesaria para renderizar la página de confirmación."""
+
+    cliente = cliente or cita.cliente
+    mascota = mascota or cita.mascota
+
+    fecha_local = timezone.localtime(cita.fecha)
+    servicio_str = dict(Cita.SERVICIO_CHOICES).get(cita.servicio, cita.servicio)
+    veterinario_nombre = cita.usuario.get_full_name().strip() or cita.usuario.get_username()
+
+    return {
+        'cliente': {
+            'nombre': getattr(cliente, 'nombre_cliente', ''),
+            'rut': getattr(cliente, 'rut', ''),
+            'telefono': getattr(cliente, 'telefono', ''),
+            'email': getattr(cliente, 'email', ''),
+            'direccion': getattr(cliente, 'direccion', ''),
+        },
+        'mascota': {
+            'nombre': getattr(mascota, 'nombre', ''),
+            'numero_chip': getattr(mascota, 'numero_chip', ''),
+        },
+        'fecha': fecha_local.strftime('%d-%m-%Y'),
+        'hora': fecha_local.strftime('%H:%M'),
+        'veterinario': veterinario_nombre,
+        'servicio': servicio_str,
+        'numero_cita': cita.n_cita,
+    }
 
 MAX_MSG_LEN = 500          # Máximo ancho de mensaje aceptado
 RATE_LIMIT_WINDOW = 30     # Ventana en segundos
@@ -935,20 +971,21 @@ def reserva_hora(request):
                     messages.error(request, 'Ha ocurrido un error. Intente nuevamente...')
                     return redirect('ambpublico_reserva_cancelar')
 
-                # Eliminamos el paso para que se devuelva al inicio
-                try:
-                    del request.session['reserva_step']
-                except:
-                    pass
-                for key in ('reserva_servicio', 'reserva_c_rut', 'reserva_c_rut_display', 'reserva_m_id'):
-                    try:
-                        del request.session[key]
-                    except:
-                        pass
+                # Construir payload y limpiar sesión
+                confirmation_payload = _build_confirmation_payload(
+                    cita,
+                    cliente=cliente,
+                    mascota=mascota,
+                )
+                request.session['reserva_confirmacion'] = confirmation_payload
 
-                # Todo OK, nos devolvemos
-                messages.success(request, '¡Se ha reservado su hora exitosamente!')
-                return redirect('ambpublico_reserva')
+                request.session.pop('reserva_step', None)
+                for key in ('reserva_servicio', 'reserva_c_rut', 'reserva_c_rut_display', 'reserva_m_id'):
+                    request.session.pop(key, None)
+
+                # Redirigir a comprobante con parámetro GET
+                confirm_url = f"{reverse('ambpublico_reserva_confirmacion')}?cita={cita.n_cita}"
+                return redirect(confirm_url)
 
         # Definimos el formulario para ser usado más abajo en la renderizacion del template
         form = CitaForm(servicio=servicio_codigo)
@@ -1058,6 +1095,39 @@ def reserva_hora(request):
     if alternative_codes:
         context['servicios_alternativos'] = _build_service_highlights(alternative_codes)
     return render(request, 'ambpublica/reserva_horas/form.html', context)
+
+def reserva_hora_confirmacion(request):
+    """Muestra el resumen de una cita recién confirmada."""
+
+    confirmation = request.session.get('reserva_confirmacion')
+
+    if not confirmation:
+        cita_id = request.GET.get('cita')
+        if cita_id:
+            try:
+                cita = Cita.objects.select_related('cliente', 'mascota', 'usuario').get(n_cita=cita_id)
+            except (Cita.DoesNotExist, ValueError):
+                cita = None
+            else:
+                if cita.estado == '1' and cita.cliente and cita.mascota:
+                    confirmation = _build_confirmation_payload(cita)
+
+    if not confirmation:
+        messages.error(
+            request,
+            'No pudimos mostrar el comprobante de tu reserva recién confirmada. Por favor, revisa tu correo o inicia una nueva solicitud.',
+        )
+        return redirect('ambpublico_reserva')
+
+    context = {
+        'step': 'success',
+        'progress': _get_progress_state('success'),
+        'confirmation': confirmation,
+    }
+
+    request.session.pop('reserva_confirmacion', None)
+
+    return render(request, 'ambpublica/reserva_horas/confirmacion_exitosa.html', context)
 
 # Funcion simple para eliminar la variable de sesion para cancelar el proceso de reserva
 def reserva_hora_cancelar(request):

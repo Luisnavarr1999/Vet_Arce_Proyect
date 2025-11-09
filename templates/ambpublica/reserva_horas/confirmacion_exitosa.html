@@ -1,0 +1,94 @@
+{% extends "../master.html" %}
+{% block title %}
+  Arce Vet - Reserva confirmada
+{% endblock title %}
+{% block content %}
+  <div class="p-5 my-3 border-0 rounded ficat-green text-light shadow-sm">
+    <div class="text-center py-4">
+      <h1 class="display-5 text-light">Su cita ha sido confirmada exitosamente.</h1>
+      <p class="lead mb-0">Recibirá un correo electrónico con la confirmación y los detalles de su hora.</p>
+    </div>
+  </div>
+
+  {% if progress %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+          {% for stage in progress %}
+            <div class="d-flex align-items-center gap-3">
+              <span class="rounded-circle border border-2 d-flex align-items-center justify-content-center fw-semibold {% if stage.is_completed %}border-success text-success{% elif stage.is_current %}border-primary text-primary{% else %}text-muted{% endif %}"
+                    style="width: 3rem; height: 3rem;">
+                {{ forloop.counter }}
+              </span>
+              <div>
+                <div class="fw-semibold {% if stage.is_completed %}text-success{% elif stage.is_current %}text-primary{% else %}text-muted{% endif %}">
+                  <i class="bi {{ stage.icon }} me-1"></i>{{ stage.label }}
+                </div>
+                {% if stage.is_completed %}
+                  <small class="text-success">Completado</small>
+                {% elif stage.is_current %}
+                  <small class="text-primary">Paso actual</small>
+                {% else %}
+                  <small class="text-muted">Pendiente</small>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h4 mb-4">Resumen de la cita</h2>
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <h3 class="h6 text-uppercase text-muted">Cliente</h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Nombre:</strong> {{ confirmation.cliente.nombre }}</li>
+                <li><strong>RUT:</strong> {{ confirmation.cliente.rut }}</li>
+                <li><strong>Teléfono:</strong> {{ confirmation.cliente.telefono|default:"-" }}</li>
+                <li><strong>Email:</strong> {{ confirmation.cliente.email }}</li>
+                <li><strong>Dirección:</strong> {{ confirmation.cliente.direccion|default:"-" }}</li>
+              </ul>
+            </div>
+            <div class="col-12 col-md-6">
+              <h3 class="h6 text-uppercase text-muted">Mascota</h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Nombre:</strong> {{ confirmation.mascota.nombre }}</li>
+                <li><strong>Número de chip:</strong> {{ confirmation.mascota.numero_chip|default:"-" }}</li>
+              </ul>
+            </div>
+            <div class="col-12 col-md-6">
+              <h3 class="h6 text-uppercase text-muted">Fecha y hora de su cita</h3>
+              <p class="mb-0"><strong>Fecha:</strong> {{ confirmation.fecha }}</p>
+              <p class="mb-0"><strong>Hora:</strong> {{ confirmation.hora }}</p>
+            </div>
+            <div class="col-12 col-md-6">
+              <h3 class="h6 text-uppercase text-muted">Atención</h3>
+              <p class="mb-0"><strong>Servicio:</strong> {{ confirmation.servicio }}</p>
+              <p class="mb-0"><strong>Veterinario(a):</strong> {{ confirmation.veterinario }}</p>
+              <p class="mb-0"><strong>N° de cita:</strong> {{ confirmation.numero_cita }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm h-100 border-success-subtle">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div>
+            <h2 class="h5">¿Necesitas otra gestión?</h2>
+            <p class="text-muted">Puedes volver al inicio de la reserva para solicitar una nueva hora o revisar otras opciones disponibles.</p>
+          </div>
+          <a href="{% url 'ambpublico_reserva' %}" class="btn btn-success w-100 mt-3">
+            Volver a la reserva de horas
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

@@ -83,6 +83,7 @@ urlpatterns = [
     path('chatbot/message/', vistas_publica.chatbot_message, name="ambpublico_chatbot_message"),
     path('chatbot/conversation/', vistas_publica.chatbot_conversation_messages, name="ambpublico_chatbot_messages"),
     path('reservahora/', vistas_publica.reserva_hora, name="ambpublico_reserva"),
+    path('reservahora/confirmacion/', vistas_publica.reserva_hora_confirmacion, name='ambpublico_reserva_confirmacion'),
     path('reservahora/cancelar/', vistas_publica.reserva_hora_cancelar, name="ambpublico_reserva_cancelar"),
     path('reservahora/cancelar-cita/', vistas_publica.cancelar_cita, name='ambpublico_cancelar_cita'),
 ]
