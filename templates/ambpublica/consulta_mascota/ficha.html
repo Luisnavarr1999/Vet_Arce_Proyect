@@ -3,40 +3,198 @@
     Arce Vet - Consulta de mascotas
 {% endblock title %}
 {% block content %}
-  <h1>{{ mascota.nombre }}</h1>
-  <hr />
-  <h3>Datos personales</h3>
-  {# Listado usando componente Bootstrap #}
-  <ul class="list-group">
-    <li class="list-group-item">
-      <strong>Número de Chip:</strong> {{ mascota.numero_chip }}
-    </li>
-    <li class="list-group-item">
-      <strong>Especie:</strong> {{ mascota.especie }}
-    </li>
-    <li class="list-group-item">
-      <strong>Raza:</strong> {{ mascota.raza }}
-    </li>
-    <li class="list-group-item">
-      <strong>Fecha de Nacimiento:</strong> {{ mascota.fecha_nacimiento }}
-    </li>
-  </ul>
-  <h3>Historial Médico</h3>
-  <div>{{ mascota.historial_medico|linebreaksbr }}</div>
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item">
+        <a href="{% url 'ambpublico_index' %}">Inicio</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'ambpublico_consulta' %}">Consulta de mascotas</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">{{ mascota.nombre }}</li>
+    </ol>
+  </nav>
 
-  <h3 class="mt-4">Documentos adjuntos</h3>
-  {% if documentos %}
-    <ul class="list-group">
-      {% for documento in documentos %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <a href="{{ documento.archivo.url }}" target="_blank" rel="noopener">
-            {{ documento.nombre_archivo }}
-          </a>
-          <small class="text-muted">{{ documento.subido_en|date:"d/m/Y H:i" }}</small>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-muted">Esta mascota aún no tiene documentos adjuntos.</p>
-  {% endif %}
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="display-5 fw-bold mb-1">{{ mascota.nombre }}</h1>
+      <p class="text-muted mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-tag"></i>
+        <span>{{ mascota.especie }} · {{ mascota.raza }}</span>
+      </p>
+    </div>
+    <div class="bg-primary-subtle text-primary-emphasis rounded-4 px-4 py-3 shadow-sm">
+      <p class="small text-uppercase fw-semibold mb-1">Número de chip</p>
+      <p class="fs-5 fw-bold mb-0">{{ mascota.numero_chip }}</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+              <i class="bi bi-person-badge"></i>
+            </div>
+            <div>
+              <h2 class="h5 mb-0">Resumen de la mascota</h2>
+              <p class="text-muted small mb-0">Información clave y datos de identificación</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="border rounded-4 p-3 h-100 bg-light">
+                <p class="text-uppercase small text-muted mb-1">Especie</p>
+                <p class="fs-5 fw-semibold mb-0">{{ mascota.especie }}</p>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="border rounded-4 p-3 h-100 bg-light">
+                <p class="text-uppercase small text-muted mb-1">Raza</p>
+                <p class="fs-5 fw-semibold mb-0">{{ mascota.raza }}</p>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="border rounded-4 p-3 h-100 bg-light">
+                <p class="text-uppercase small text-muted mb-1">Fecha de nacimiento</p>
+                <p class="fs-5 fw-semibold mb-0">{{ mascota.fecha_nacimiento|date:"d \d\e F \d\e Y" }}</p>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="border rounded-4 p-3 h-100 bg-light">
+                <p class="text-uppercase small text-muted mb-1">Edad aproximada</p>
+                <p class="fs-5 fw-semibold mb-0">
+                  {% if edad_mascota is not None %}
+                    {{ edad_mascota }}
+                    {% if edad_mascota == 1 %}año{% else %}años{% endif %}
+                  {% else %}
+                    No disponible
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+              <i class="bi bi-clipboard-pulse"></i>
+            </div>
+            <div>
+              <h2 class="h5 mb-0">Historial médico</h2>
+              <p class="text-muted small mb-0">Resumen de atenciones y notas clínicas</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if historial_items %}
+            <ul class="list-unstyled mb-0">
+              {% for entrada in historial_items %}
+                <li class="d-flex align-items-start gap-3 pb-3 {% if not forloop.last %}mb-3 border-bottom{% endif %}">
+                  <span class="badge rounded-pill bg-success-subtle text-success-emphasis fs-6">
+                    <i class="bi bi-heart-pulse"></i>
+                  </span>
+                  <div>
+                    <p class="fw-semibold mb-1">Atención {{ forloop.counter }}</p>
+                    <p class="text-muted mb-0">{{ entrada }}</p>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-journal-medical text-success fs-1 mb-3"></i>
+              <p class="text-muted mb-0">Aún no se registran antecedentes médicos para esta mascota.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+              <i class="bi bi-person-heart"></i>
+            </div>
+            <div>
+              <h2 class="h6 mb-0">Responsable</h2>
+              <p class="text-muted small mb-0">Datos de contacto del tutor</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="fw-semibold h5 mb-1">{{ mascota.cliente.nombre_cliente }}</p>
+          <p class="text-muted small mb-3">RUT {{ mascota.cliente.rut }}</p>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-telephone text-info"></i>
+            <span class="text-muted">{{ mascota.cliente.telefono }}</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-envelope text-info"></i>
+            <span class="text-muted">{{ mascota.cliente.email }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+              <i class="bi bi-folder2-open"></i>
+            </div>
+            <div>
+              <h2 class="h6 mb-0">Documentos adjuntos</h2>
+              <p class="text-muted small mb-0">Resultados, recetas y material adicional</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if documentos %}
+            <div class="list-group list-group-flush">
+              {% for documento in documentos %}
+                <a class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
+                   href="{{ documento.archivo.url }}"
+                   target="_blank"
+                   rel="noopener">
+                  <span class="fs-4">
+                    {% with nombre=documento.nombre_archivo|lower %}
+                      {% if '.pdf' in nombre %}
+                        <i class="bi bi-file-earmark-pdf text-danger"></i>
+                      {% elif '.jpg' in nombre or '.jpeg' in nombre or '.png' in nombre or '.gif' in nombre %}
+                        <i class="bi bi-file-earmark-image text-primary"></i>
+                      {% elif '.doc' in nombre or '.docx' in nombre %}
+                        <i class="bi bi-file-earmark-word text-info"></i>
+                      {% elif '.xls' in nombre or '.xlsx' in nombre %}
+                        <i class="bi bi-file-earmark-spreadsheet text-success"></i>
+                      {% else %}
+                        <i class="bi bi-file-earmark text-warning"></i>
+                      {% endif %}
+                    {% endwith %}
+                  </span>
+                  <div class="flex-grow-1">
+                    <p class="fw-semibold mb-0">{{ documento.nombre_archivo }}</p>
+                    <p class="text-muted small mb-0">Actualizado el {{ documento.subido_en|date:"d/m/Y H:i" }}</p>
+                  </div>
+                  <i class="bi bi-box-arrow-up-right text-muted"></i>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-archive text-warning fs-1 mb-3"></i>
+              <p class="text-muted mb-0">No se han cargado documentos para esta mascota aún.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock content %}

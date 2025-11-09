@@ -675,9 +675,29 @@ def consulta_mascota(request):
                 cliente = Cliente.objects.get(rut=rut)
                 mascota = Mascota.objects.prefetch_related('documentos').get(
                 cliente=cliente, id_mascota=id_mascota)
+                documentos = list(mascota.documentos.all())
+
+                today = timezone.localdate()
+                edad_anios = None
+                if mascota.fecha_nacimiento:
+                    edad_anios = today.year - mascota.fecha_nacimiento.year - (
+                        (today.month, today.day) < (
+                            mascota.fecha_nacimiento.month,
+                            mascota.fecha_nacimiento.day,
+                        )
+                    )
+
+                historial_items = [
+                    entrada.strip()
+                    for entrada in mascota.historial_medico.splitlines()
+                    if entrada.strip()
+                ]
+
                 contexto = {
                     'mascota': mascota,
-                    'documentos': mascota.documentos.all(),
+                    'documentos': documentos,
+                    'edad_mascota': edad_anios,
+                    'historial_items': historial_items,
                 }
                 return render(request, 'ambpublica/consulta_mascota/ficha.html', contexto)
                 
