@@ -685,6 +685,7 @@ def consulta_mascota(request):
                 evoluciones = list(
                     mascota.evoluciones.select_related('cita', 'cita__usuario')
                     .prefetch_related('documentos')
+                    .order_by('-creado_en')
                 )
 
                 today = timezone.localdate()
@@ -697,18 +698,12 @@ def consulta_mascota(request):
                         )
                     )
 
-                historial_items = [
-                    entrada.strip()
-                    for entrada in mascota.historial_medico.splitlines()
-                    if entrada.strip()
-                ]
-
                 contexto = {
                     'mascota': mascota,
                     'documentos': documentos,
                     'edad_mascota': edad_anios,
-                    'historial_items': historial_items,
                     'evoluciones': evoluciones,
+                    'ultima_evolucion': evoluciones[0] if evoluciones else None,
                 }
                 return render(request, 'ambpublica/consulta_mascota/ficha.html', contexto)
                 

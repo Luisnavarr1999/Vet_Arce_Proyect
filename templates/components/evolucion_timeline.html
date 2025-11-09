@@ -1,0 +1,66 @@
+{% load i18n %}
+{% with accent=accent|default:'success' %}
+<div class="timeline position-relative ps-3">
+  <div class="position-absolute top-0 bottom-0 start-0 border-start border-2 border-{{ accent }}-subtle"></div>
+  <div class="d-flex flex-column gap-4">
+    {% for evolucion in evoluciones %}
+      <div class="ps-3">
+        <div class="d-flex align-items-start gap-3 mb-2">
+          <span class="badge rounded-circle bg-{{ accent }} d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+            <i class="bi bi-heart-pulse-fill"></i>
+          </span>
+          <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+              <span class="badge rounded-pill bg-{{ accent }}-subtle text-{{ accent }}-emphasis">
+                {{ evolucion.get_servicio_display }}
+              </span>
+              {% if evolucion.cita %}
+                <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis">
+                  {% blocktrans with numero=evolucion.cita.n_cita %}Cita #{{ numero }}{% endblocktrans %}
+                </span>
+              {% endif %}
+              <span class="text-muted small">
+                {{ evolucion.fecha_evento|date:"d \d\e F \d\e Y H:i" }}
+              </span>
+            </div>
+            <h3 class="h6 fw-semibold mb-2">{{ evolucion.resumen }}</h3>
+            <p class="text-muted mb-3">{{ evolucion.detalle|linebreaksbr }}</p>
+            {% if evolucion.recomendaciones %}
+              <div class="bg-{{ accent }}-subtle bg-opacity-25 border border-{{ accent }}-subtle rounded-4 p-3 mb-3">
+                <p class="text-{{ accent }}-emphasis fw-semibold mb-1">{% trans "Recomendaciones" %}</p>
+                <p class="text-muted mb-0">{{ evolucion.recomendaciones|linebreaksbr }}</p>
+              </div>
+            {% endif %}
+            {% with docs=evolucion.documentos.all %}
+              {% if docs %}
+                <div class="d-flex flex-column gap-2">
+                  {% for documento in docs %}
+                    <a class="d-flex align-items-center justify-content-between border rounded-4 px-3 py-2 text-decoration-none"
+                       href="{{ documento.archivo.url }}"
+                       target="_blank"
+                       rel="noopener">
+                      <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-paperclip text-{{ accent }}"></i>
+                        <div>
+                          <p class="fw-semibold mb-0">{{ documento.nombre_archivo }}</p>
+                          <p class="text-muted small mb-0">{% blocktrans with fecha=documento.subido_en|date:"d/m/Y H:i" %}Actualizado el {{ fecha }}{% endblocktrans %}</p>
+                        </div>
+                      </div>
+                      <i class="bi bi-box-arrow-up-right text-muted"></i>
+                    </a>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="text-center py-4">
+        <i class="bi bi-journal-medical text-{{ accent }} fs-1 mb-3"></i>
+        <p class="text-muted mb-0">{% trans "Aún no se registran evoluciones clínicas." %}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endwith %}
