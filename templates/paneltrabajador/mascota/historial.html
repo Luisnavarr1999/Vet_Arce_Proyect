@@ -1,0 +1,129 @@
+{% extends "paneltrabajador/master.html" %}
+{% block title %}Historial clínico - {{ mascota.nombre }}{% endblock title %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h1 class="h3 mb-1">Historial clínico de {{ mascota.nombre }}</h1>
+      <p class="text-muted mb-0">Tutor: {{ mascota.cliente.nombre_cliente }} · RUT {{ mascota.cliente.rut }}</p>
+    </div>
+    <div class="btn-group">
+      <a class="btn btn-outline-secondary" href="{% url 'panel_mascota_listar' %}">
+        <i class="bi bi-arrow-left"></i> Volver al listado
+      </a>
+      <a class="btn btn-outline-primary" href="{% url 'panel_mascota_editar' mascota.id_mascota %}">
+        <i class="bi bi-pencil-square"></i> Editar ficha
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white py-3 d-flex align-items-center gap-2">
+          <span class="badge bg-success-subtle text-success-emphasis rounded-pill p-2">
+            <i class="bi bi-activity"></i>
+          </span>
+          <div>
+            <h2 class="h5 mb-0">Evoluciones registradas</h2>
+            <p class="text-muted small mb-0">Notas clínicas agrupadas por cita o servicio</p>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if evoluciones %}
+            <div class="list-group list-group-flush">
+              {% for evolucion in evoluciones %}
+                <div class="list-group-item py-4">
+                  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                    <div>
+                      <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis me-2">
+                        {{ evolucion.get_servicio_display }}
+                      </span>
+                      {% if evolucion.cita %}
+                        <span class="badge rounded-pill bg-info-subtle text-info-emphasis">
+                          Cita #{{ evolucion.cita.n_cita }}
+                        </span>
+                      {% endif %}
+                    </div>
+                    <div class="text-muted small">
+                      {{ evolucion.fecha_evento|date:"d/m/Y H:i" }}
+                    </div>
+                  </div>
+                  <h3 class="h6 fw-semibold mb-2">{{ evolucion.resumen }}</h3>
+                  <p class="mb-3">{{ evolucion.detalle|linebreaksbr }}</p>
+                  {% if evolucion.recomendaciones %}
+                    <div class="bg-light rounded-3 p-3 mb-3">
+                      <p class="text-muted small mb-2 fw-semibold">Indicaciones / Recomendaciones</p>
+                      <p class="mb-0">{{ evolucion.recomendaciones|linebreaksbr }}</p>
+                    </div>
+                  {% endif %}
+                  {% if evolucion.documentos.all %}
+                    {% with docs=evolucion.documentos.all %}
+                      {% if docs %}
+                        <div class="d-flex flex-column gap-2">
+                          {% for documento in docs %}
+                            <a class="d-flex align-items-center justify-content-between bg-body-secondary bg-opacity-25 rounded-3 px-3 py-2 text-decoration-none"
+                               href="{{ documento.archivo.url }}" target="_blank" rel="noopener">
+                              <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-paperclip text-secondary"></i>
+                                <div>
+                                  <p class="mb-0 fw-semibold">{{ documento.nombre_archivo }}</p>
+                                  <small class="text-muted">Subido el {{ documento.subido_en|date:"d/m/Y H:i" }}</small>
+                                </div>
+                              </div>
+                              <i class="bi bi-box-arrow-up-right text-muted"></i>
+                            </a>
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="bi bi-journal-medical text-success fs-1 mb-3"></i>
+              <p class="text-muted mb-1">Aún no se registran evoluciones clínicas.</p>
+              <p class="text-muted small mb-0">Utiliza el formulario para añadir la primera nota.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+          <h2 class="h5 mb-0">Registrar nueva evolución</h2>
+          <p class="text-muted small mb-0">La información aparecerá inmediatamente en la ficha pública.</p>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% for field in form %}
+              <div class="mb-3">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                  <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-plus-circle"></i> Guardar evolución
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

@@ -1,10 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.conf import settings
 from django.contrib import messages
-from paneltrabajador.forms import MascotaForm
-from paneltrabajador.models import Mascota
-from paneltrabajador.forms import MascotaDocumentoForm
-from paneltrabajador.models import MascotaDocumento
 from django.views.decorators.http import require_POST
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -12,8 +8,8 @@ from django.urls import reverse
 from django.utils.html import strip_tags
 from urllib.parse import urljoin
 
-from paneltrabajador.forms import MascotaDocumentoForm, MascotaForm
-from paneltrabajador.models import Mascota, MascotaDocumento
+from paneltrabajador.forms import EvolucionClinicaForm, MascotaDocumentoForm, MascotaForm
+from paneltrabajador.models import EvolucionClinica, Mascota, MascotaDocumento
 
 
 # para poder usarlo en los correo o si queremos listar
@@ -91,8 +87,13 @@ def mascota_agregar(request):
             mascota = form.save()
 
             # Guardar cada archivo adjunto
+            evolucion = doc_form.cleaned_data.get('evolucion')
             for archivo in doc_form.cleaned_data['archivos']:
-                MascotaDocumento.objects.create(mascota=mascota, archivo=archivo)
+                MascotaDocumento.objects.create(
+                    mascota=mascota,
+                    archivo=archivo,
+                    evolucion=evolucion,
+                )
 
             messages.success(request, "Se ha agregado la mascota correctamente.")
             return redirect('panel_mascota_listar')
@@ -132,27 +133,32 @@ def mascota_editar(request, id_mascota):
     mascota = get_object_or_404(Mascota, id_mascota=id_mascota)
 
     # Para listar en el template los documentos ya existentes
-    documentos = mascota.documentos.all()
+    documentos = mascota.documentos.filter(evolucion__isnull=True)
 
     if request.method == 'POST':
         # Form principal + form de archivos
         form = MascotaForm(request.POST, instance=mascota)
-        doc_form = MascotaDocumentoForm(request.POST, request.FILES)
+        doc_form = MascotaDocumentoForm(request.POST, request.FILES, mascota=mascota)
 
         if form.is_valid() and doc_form.is_valid():
             # Guardar cambios de la mascota
             mascota = form.save()
 
             # Guardar cada archivo adjunto nuevo (si hay)
+            evolucion = doc_form.cleaned_data.get('evolucion')
             for archivo in doc_form.cleaned_data['archivos']:
-                MascotaDocumento.objects.create(mascota=mascota, archivo=archivo)
+                MascotaDocumento.objects.create(
+                    mascota=mascota,
+                    archivo=archivo,
+                    evolucion=evolucion,
+                )
 
             messages.success(request, "Se ha editado la mascota correctamente.")
             return redirect('panel_mascota_listar')
 
     else:
         form = MascotaForm(instance=mascota)
-        doc_form = MascotaDocumentoForm()
+        doc_form = MascotaDocumentoForm(mascota=mascota)
 
     # Render con ambos formularios y lista de documentos existentes
     return render(request, 'paneltrabajador/form_generico.html', {
@@ -161,6 +167,53 @@ def mascota_editar(request, id_mascota):
         'mascota': mascota,
         'documentos': documentos,
     })
+
+def mascota_historial(request, id_mascota):
+    """Permite registrar y revisar las evoluciones clínicas de una mascota."""
+
+    if not request.user.is_authenticated:
+        return redirect('panel_home')
+
+    if not request.user.has_perm('paneltrabajador.change_mascota'):
+        messages.error(request, "No tiene los permisos para realizar esto.")
+        return redirect('panel_home')
+
+    mascota = get_object_or_404(Mascota, id_mascota=id_mascota)
+    evoluciones = (
+        mascota.evoluciones.select_related('cita', 'cita__usuario')
+        .prefetch_related('documentos')
+    )
+
+    if request.method == 'POST':
+        form = EvolucionClinicaForm(request.POST, request.FILES, mascota=mascota)
+        if form.is_valid():
+            evolucion = form.save(commit=False)
+            evolucion.mascota = mascota
+            if evolucion.cita and not evolucion.servicio:
+                evolucion.servicio = evolucion.cita.servicio
+            evolucion.save()
+
+            for archivo in form.cleaned_data['archivos']:
+                MascotaDocumento.objects.create(
+                    mascota=mascota,
+                    archivo=archivo,
+                    evolucion=evolucion,
+                )
+
+            messages.success(request, "Se registró una nueva evolución clínica.")
+            return redirect('panel_mascota_historial', id_mascota=mascota.id_mascota)
+    else:
+        form = EvolucionClinicaForm(mascota=mascota)
+
+    return render(
+        request,
+        'paneltrabajador/mascota/historial.html',
+        {
+            'mascota': mascota,
+            'evoluciones': evoluciones,
+            'form': form,
+        },
+    )
 
 
 def mascota_eliminar(request, id_mascota):
@@ -275,9 +328,13 @@ def mascota_doc_eliminar(request, id_mascota, doc_id):
 
     mascota = get_object_or_404(Mascota, id_mascota=id_mascota)
     documento = get_object_or_404(MascotaDocumento, pk=doc_id, mascota=mascota)
+    pertenece_a_evolucion = documento.evolucion_id is not None
 
     # Borra (esto también elimina el archivo físico por el método delete() del modelo)
     documento.delete()
     messages.success(request, "Documento eliminado correctamente.")
+
+    if pertenece_a_evolucion:
+        return redirect('panel_mascota_historial', id_mascota=mascota.id_mascota)
 
     return redirect('panel_mascota_editar', id_mascota=mascota.id_mascota)

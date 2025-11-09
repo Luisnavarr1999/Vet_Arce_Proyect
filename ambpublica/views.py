@@ -673,9 +673,19 @@ def consulta_mascota(request):
             # Si el cliente o la mascota no existen, redirecciona a la página de consulta con un mensaje de error.
             try:
                 cliente = Cliente.objects.get(rut=rut)
-                mascota = Mascota.objects.prefetch_related('documentos').get(
-                cliente=cliente, id_mascota=id_mascota)
-                documentos = list(mascota.documentos.all())
+                mascota = Mascota.objects.prefetch_related(
+                    'documentos',
+                    'evoluciones__documentos',
+                    'evoluciones__cita',
+                ).get(
+                    cliente=cliente,
+                    id_mascota=id_mascota,
+                )
+                documentos = list(mascota.documentos.filter(evolucion__isnull=True))
+                evoluciones = list(
+                    mascota.evoluciones.select_related('cita', 'cita__usuario')
+                    .prefetch_related('documentos')
+                )
 
                 today = timezone.localdate()
                 edad_anios = None
@@ -698,6 +708,7 @@ def consulta_mascota(request):
                     'documentos': documentos,
                     'edad_mascota': edad_anios,
                     'historial_items': historial_items,
+                    'evoluciones': evoluciones,
                 }
                 return render(request, 'ambpublica/consulta_mascota/ficha.html', contexto)
                 

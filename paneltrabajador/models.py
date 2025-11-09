@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 from django.db import models
+from django.db import OperationalError, ProgrammingError
 from django.core.validators import RegexValidator
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -63,7 +64,7 @@ class Mascota(models.Model):
     raza = models.CharField(max_length=50)
     fecha_nacimiento = models.DateField()
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    historial_medico = models.TextField()
+    historial_medico = models.TextField(blank=True, default="")
 
     # Devuelve una representación de cadena del objeto Mascota, útil para la visualización en la interfaz de administración de Django.
     # En este caso, también usable en nuestra interfaz personalizada
@@ -79,6 +80,13 @@ class MascotaDocumento(models.Model):
     mascota = models.ForeignKey(
         Mascota,
         on_delete=models.CASCADE,
+        related_name='documentos',
+    )
+    evolucion = models.ForeignKey(
+        'EvolucionClinica',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         related_name='documentos',
     )
     archivo = models.FileField(upload_to='mascotas/documentos/')
@@ -119,7 +127,11 @@ class CitaManager(models.Manager.from_queryset(CitaQuerySet)):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs.filter(estado='0', fecha__lt=timezone.now()).update(estado='3', asistencia=None)
+        try:
+            qs.filter(estado='0', fecha__lt=timezone.now()).update(estado='3', asistencia=None)
+        except (OperationalError, ProgrammingError):
+            # La base de datos no está disponible (por ejemplo en migraciones iniciales).
+            pass
         return qs
 
 class Cita (models.Model):
@@ -214,6 +226,47 @@ class Cita (models.Model):
         if update_fields is not None:
             kwargs['update_fields'] = update_fields
 
+        super().save(*args, **kwargs)
+
+
+class EvolucionClinica(models.Model):
+    """Entrada cronológica que describe una atención o seguimiento de la mascota."""
+
+    mascota = models.ForeignKey(
+        Mascota,
+        on_delete=models.CASCADE,
+        related_name='evoluciones',
+    )
+    cita = models.ForeignKey(
+        'Cita',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='evoluciones',
+    )
+    servicio = models.CharField(max_length=20, choices=Cita.SERVICIO_CHOICES, default='general')
+    resumen = models.CharField(max_length=255)
+    detalle = models.TextField()
+    recomendaciones = models.TextField(blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado_en']
+
+    def __str__(self):
+        return f"Evolución de {self.mascota.nombre} ({self.get_servicio_display()})"
+
+    @property
+    def fecha_evento(self):
+        """Devuelve la fecha relevante para mostrar en la ficha pública."""
+
+        if self.cita and self.cita.fecha:
+            return self.cita.fecha
+        return self.creado_en
+
+    def save(self, *args, **kwargs):
+        if self.cita and not self.servicio:
+            self.servicio = self.cita.servicio
         super().save(*args, **kwargs)
 
 

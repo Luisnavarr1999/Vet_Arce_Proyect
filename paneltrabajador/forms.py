@@ -1,7 +1,7 @@
 import re
 
 from django import forms
-from .models import Cita, Cliente, Mascota, Factura, Producto
+from .models import Cita, Cliente, Mascota, Factura, Producto, EvolucionClinica
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordResetForm 
 from django.contrib.auth.forms import SetPasswordForm
@@ -251,6 +251,9 @@ class MascotaForm(forms.ModelForm):
             else:
                 field.widget.attrs['class'] = 'form-control'
 
+        self.fields['historial_medico'].required = False
+        self.fields['historial_medico'].widget.attrs.setdefault('rows', 4)
+
         # Asegura que la raza actual esté presente en la lista de opciones (edición)
         if self.instance and self.instance.pk:
             raza_actual = self.instance.raza
@@ -299,10 +302,89 @@ class MascotaDocumentoForm(forms.Form):
         widget=MultipleFileInput(attrs={'multiple': True}),
         help_text='Puedes adjuntar uno o varios archivos (PDF, imágenes, etc.).',
     )
+    evolucion = forms.ModelChoiceField(
+        label='Asociar a una evolución (opcional)',
+        queryset=EvolucionClinica.objects.none(),
+        required=False,
+        widget=forms.Select,
+    )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, mascota=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.mascota = mascota
         self.fields['archivos'].widget.attrs.setdefault('class', 'form-control')
+        self.fields['evolucion'].widget.attrs.setdefault('class', 'form-select')
+
+        if mascota is not None:
+            self.fields['evolucion'].queryset = mascota.evoluciones.all()
+            self.fields['evolucion'].empty_label = 'Sin asociación'
+        else:
+            self.fields['evolucion'].widget = forms.HiddenInput()
+
+    def clean_archivos(self):
+        archivos = self.cleaned_data.get('archivos')
+        return archivos or []
+
+    def clean_evolucion(self):
+        evolucion = self.cleaned_data.get('evolucion')
+        if evolucion and self.mascota and evolucion.mascota_id != self.mascota.id_mascota:
+            raise ValidationError('La evolución seleccionada no pertenece a esta mascota.')
+        return evolucion
+
+
+class EvolucionClinicaForm(forms.ModelForm):
+    archivos = MultipleFileField(
+        label='Adjuntar archivos',
+        required=False,
+        widget=MultipleFileInput(attrs={'multiple': True}),
+        help_text='Puedes anexar documentos que quedarán ligados a esta evolución.',
+    )
+
+    class Meta:
+        model = EvolucionClinica
+        fields = ['cita', 'servicio', 'resumen', 'detalle', 'recomendaciones']
+        widgets = {
+            'servicio': forms.Select(attrs={'class': 'form-select'}),
+            'resumen': forms.TextInput(attrs={'class': 'form-control'}),
+            'detalle': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'recomendaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, mascota=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mascota = mascota
+
+        self.fields['archivos'].widget.attrs.setdefault('class', 'form-control')
+
+        self.fields['cita'].required = False
+        self.fields['cita'].widget.attrs.setdefault('class', 'form-select')
+        self.fields['servicio'].required = False
+
+        if mascota is not None:
+            citas_qs = (
+                Cita.objects.filter(mascota=mascota)
+                .order_by('-fecha')
+            )
+            self.fields['cita'].queryset = citas_qs
+            self.fields['cita'].empty_label = 'Sin cita asociada'
+        else:
+            self.fields['cita'].queryset = Cita.objects.none()
+            self.fields['cita'].empty_label = 'Sin cita asociada'
+
+        for name, field in self.fields.items():
+            if name not in ('servicio', 'cita', 'detalle', 'recomendaciones', 'archivos', 'resumen'):
+                continue
+            if name not in ('servicio', 'cita'):
+                field.widget.attrs.setdefault('class', 'form-control')
+
+    def clean_servicio(self):
+        servicio = self.cleaned_data.get('servicio')
+        cita = self.cleaned_data.get('cita')
+        if servicio:
+            return servicio
+        if cita:
+            return cita.servicio
+        raise ValidationError('Debe seleccionar el servicio asociado a la evolución.')
 
     def clean_archivos(self):
         archivos = self.cleaned_data.get('archivos')

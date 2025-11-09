@@ -93,7 +93,66 @@
           </div>
         </div>
         <div class="card-body">
-          {% if historial_items %}
+          {% if evoluciones %}
+            <div class="timeline position-relative ps-3">
+              <div class="position-absolute top-0 bottom-0 start-0 border-start border-2 border-success-subtle"></div>
+              <div class="d-flex flex-column gap-4">
+                {% for evolucion in evoluciones %}
+                  <div class="ps-3">
+                    <div class="d-flex align-items-start gap-3 mb-2">
+                      <span class="badge rounded-circle bg-success d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-heart-pulse-fill"></i>
+                      </span>
+                      <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                          <span class="badge rounded-pill bg-success-subtle text-success-emphasis">
+                            {{ evolucion.get_servicio_display }}
+                          </span>
+                          {% if evolucion.cita %}
+                            <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis">
+                              Cita #{{ evolucion.cita.n_cita }}
+                            </span>
+                          {% endif %}
+                          <span class="text-muted small">
+                            {{ evolucion.fecha_evento|date:"d \d\e F \d\e Y H:i" }}
+                          </span>
+                        </div>
+                        <h3 class="h6 fw-semibold mb-2">{{ evolucion.resumen }}</h3>
+                        <p class="text-muted mb-3">{{ evolucion.detalle|linebreaksbr }}</p>
+                        {% if evolucion.recomendaciones %}
+                          <div class="bg-success-subtle bg-opacity-10 border border-success-subtle rounded-4 p-3 mb-3">
+                            <p class="text-success-emphasis fw-semibold mb-1">Recomendaciones</p>
+                            <p class="text-muted mb-0">{{ evolucion.recomendaciones|linebreaksbr }}</p>
+                          </div>
+                        {% endif %}
+                        {% with docs=evolucion.documentos.all %}
+                          {% if docs %}
+                            <div class="d-flex flex-column gap-2">
+                              {% for documento in docs %}
+                                <a class="d-flex align-items-center justify-content-between border rounded-4 px-3 py-2 text-decoration-none"
+                                   href="{{ documento.archivo.url }}"
+                                   target="_blank"
+                                   rel="noopener">
+                                  <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-paperclip text-success"></i>
+                                    <div>
+                                      <p class="fw-semibold mb-0">{{ documento.nombre_archivo }}</p>
+                                      <p class="text-muted small mb-0">Actualizado el {{ documento.subido_en|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                  </div>
+                                  <i class="bi bi-box-arrow-up-right text-muted"></i>
+                                </a>
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                        {% endwith %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% elif historial_items %}
             <ul class="list-unstyled mb-0">
               {% for entrada in historial_items %}
                 <li class="d-flex align-items-start gap-3 pb-3 {% if not forloop.last %}mb-3 border-bottom{% endif %}">
@@ -151,8 +210,8 @@
               <i class="bi bi-folder2-open"></i>
             </div>
             <div>
-              <h2 class="h6 mb-0">Documentos adjuntos</h2>
-              <p class="text-muted small mb-0">Resultados, recetas y material adicional</p>
+              <h2 class="h6 mb-0">Documentos generales</h2>
+              <p class="text-muted small mb-0">Archivos no asociados a una evolución específica</p>
             </div>
           </div>
         </div>
