@@ -165,6 +165,67 @@ def _find_chatbot_answer(message: str):
 
 logger = logging.getLogger(__name__)
 
+SERVICE_HIGHLIGHTS = {
+    'general': {
+        'icon': 'bi-heart-pulse',
+        'description': 'Controles, chequeos preventivos y orientación integral para la salud de tu mascota.',
+    },
+    'cirugia': {
+        'icon': 'bi-hospital',
+        'description': 'Procedimientos quirúrgicos programados con seguimiento posoperatorio especializado.',
+    },
+    'dentista': {
+        'icon': 'bi-tooth',
+        'description': 'Limpiezas dentales y tratamientos para mantener la salud bucal de tu compañero.',
+    },
+}
+
+RESERVA_PROGRESS = [
+    {'label': 'Servicio', 'icon': 'bi-list-check', 'steps': {'', 'nohours'}},
+    {'label': 'Datos del tutor', 'icon': 'bi-person-badge', 'steps': {'ingresar_rut', 'crear_cliente'}},
+    {'label': 'Mascota', 'icon': 'bi-bag-heart', 'steps': {'select_mascota', 'crear_mascota'}},
+    {'label': 'Confirmación', 'icon': 'bi-check2-circle', 'steps': {'final'}},
+]
+
+
+def _build_service_highlights(codes=None):
+    """Regresa información enriquecida de servicios disponibles."""
+
+    choices = dict(Cita.SERVICIO_CHOICES)
+    if codes is None:
+        codes = [value for value, _ in Cita.SERVICIO_CHOICES]
+
+    highlights = []
+    for code in codes:
+        data = SERVICE_HIGHLIGHTS.get(code, {})
+        highlights.append({
+            'code': code,
+            'name': choices.get(code, code.title()),
+            'description': data.get('description', ''),
+            'icon': data.get('icon', 'bi-calendar-heart'),
+        })
+    return highlights
+
+
+def _get_progress_state(step):
+    """Construye el estado visual del progreso del flujo de reserva."""
+
+    current_index = 0
+    for idx, stage in enumerate(RESERVA_PROGRESS):
+        if step in stage['steps']:
+            current_index = idx
+            break
+
+    progress = []
+    for idx, stage in enumerate(RESERVA_PROGRESS):
+        progress.append({
+            'label': stage['label'],
+            'icon': stage['icon'],
+            'is_current': idx == current_index,
+            'is_completed': idx < current_index,
+        })
+    return progress
+
 MAX_MSG_LEN = 500          # Máximo ancho de mensaje aceptado
 RATE_LIMIT_WINDOW = 30     # Ventana en segundos
 RATE_LIMIT_MAX = 15        # Máximo de mensajes por ventana e IP
@@ -619,6 +680,8 @@ def reserva_hora(request):
     servicio_codigo = request.session.get('reserva_servicio')
     servicio_nombre = dict(Cita.SERVICIO_CHOICES).get(servicio_codigo)
     cliente_rut = request.session.get('reserva_c_rut_display') or request.session.get('reserva_c_rut')
+    servicios_disponibles_info = None
+    alternative_codes = request.session.pop('reserva_alternativas', None)
 
     # Verificamos si el usuario ya está en algún paso y lo asignamos a la variable
     if request.session.has_key('reserva_step'):
@@ -636,6 +699,7 @@ def reserva_hora(request):
             servicio_codigo = None
             servicio_nombre = None
             cliente_rut = None
+        request.session.pop('reserva_step', None)
 
     # Los pasos incluyen la creación de un cliente, una mascota, la selección de una mascota existente o la finalización del proceso.
     # Renderiza diferentes formularios y vistas según el paso actual.
@@ -907,8 +971,21 @@ def reserva_hora(request):
             return redirect('ambpublico_reserva_cancelar')
 
         if not Cita.objects.filter(estado='0', servicio=servicio_codigo).exists():
-            messages.error(request, 'Lo sentimos, ya no quedan citas disponibles para el servicio seleccionado.')
-            return redirect('ambpublico_reserva_cancelar')
+            available_services = list(
+                Cita.objects.filter(estado='0').values_list('servicio', flat=True).distinct()
+            )
+            request.session['reserva_step'] = ''
+            request.session.pop('reserva_servicio', None)
+            request.session.pop('reserva_c_rut', None)
+            request.session.pop('reserva_c_rut_display', None)
+            request.session['reserva_alternativas'] = [
+                code for code in available_services if code != servicio_codigo
+            ]
+            messages.error(
+                request,
+                'Lo sentimos, el servicio seleccionado se quedó sin horas disponibles. Revisa otras opciones.',
+            )
+            return redirect('ambpublico_reserva')
 
         if request.method == 'POST':
             form = RutForm(request.POST)
@@ -931,12 +1008,24 @@ def reserva_hora(request):
         citas = Cita.objects.filter(estado='0')
 
         if not citas.exists():
-            return render(request, 'ambpublica/reserva_horas/form.html', {'step': 'nohours'})
+            context = {
+                'step': 'nohours',
+                'progress': _get_progress_state('nohours'),
+                'service_highlights': _build_service_highlights(),
+            }
+            return render(request, 'ambpublica/reserva_horas/form.html', context)
         
         servicios_disponibles = list(citas.values_list('servicio', flat=True).distinct())
 
         if not servicios_disponibles:
-            return render(request, 'ambpublica/reserva_horas/form.html', {'step': 'nohours'})
+            context = {
+                'step': 'nohours',
+                'progress': _get_progress_state('nohours'),
+                'service_highlights': _build_service_highlights(),
+            }
+            return render(request, 'ambpublica/reserva_horas/form.html', context)
+
+        servicios_disponibles_info = _build_service_highlights(servicios_disponibles)
 
         if request.method == 'POST':
             form = ServicioForm(request.POST, available_services=servicios_disponibles)
@@ -953,11 +1042,21 @@ def reserva_hora(request):
             form = ServicioForm(available_services=servicios_disponibles)
 
     # Definimos las diferentes variables mediante el contexto Django
-    context = {'titulo': titulo, 'form': form, 'step': step}
+    context = {
+        'titulo': titulo,
+        'form': form,
+        'step': step,
+        'service_highlights': _build_service_highlights(),
+        'progress': _get_progress_state(step),
+    }
     if servicio_nombre:
         context['servicio_nombre'] = servicio_nombre
     if cliente_rut:
         context['cliente_rut'] = cliente_rut
+    if servicios_disponibles_info:
+        context['servicios_disponibles'] = servicios_disponibles_info
+    if alternative_codes:
+        context['servicios_alternativos'] = _build_service_highlights(alternative_codes)
     return render(request, 'ambpublica/reserva_horas/form.html', context)
 
 # Funcion simple para eliminar la variable de sesion para cancelar el proceso de reserva
