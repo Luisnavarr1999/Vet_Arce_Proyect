@@ -1,6 +1,7 @@
 import re
 
 from django import forms
+from django.db.models import Q
 from .models import Cita, Cliente, Mascota, Factura, Producto, EvolucionClinica
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordResetForm 
@@ -99,7 +100,7 @@ class CitaForm(forms.ModelForm):
             'usuario': forms.Select(attrs={'class': 'form-select'}),
             'mascota': forms.Select(attrs={'class': 'form-select'}),
             'asistencia': forms.Select(attrs={'class': 'form-select'}),
-            'servicio': forms.HiddenInput(),
+            'servicio': forms.Select(attrs={'class': 'form-select'}),
         }
         
 
@@ -112,6 +113,16 @@ class CitaForm(forms.ModelForm):
 
          # Input de fecha/hora local (usa tu DateTimeLocalField definido arriba)
         self.fields['fecha'] = DateTimeLocalField()
+
+        # Solo mostrar usuarios que pertenecen al grupo de veterinarios
+        User = get_user_model()
+        veterinarios_filter = Q(groups__name='veterinario', is_active=True)
+
+        if self.instance and self.instance.pk and self.instance.usuario_id:
+            veterinarios_filter |= Q(pk=self.instance.usuario_id)
+
+        self.fields['usuario'].queryset = User.objects.filter(veterinarios_filter).distinct().order_by('first_name', 'last_name', 'username')
+        self.fields['usuario'].label = 'Usuario Veterinario'
 
         # Reglas de requerido
         self.fields['cliente'].required = False
