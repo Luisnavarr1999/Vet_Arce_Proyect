@@ -59,16 +59,19 @@
 
     {% if doc_form %}
       <hr />
-      <h5>Adjuntar documentos al historial médico</h5>
+      <h5>Documentos y evoluciones clínicas</h5>
+      <p class="text-muted mb-2">
+        El historial médico general guarda los antecedentes permanentes de la mascota. Para registrar atenciones, seguimientos y adjuntar documentos recientes, utiliza las evoluciones clínicas.
+      </p>
       {% if mascota %}
         <p class="mb-2">
           <a class="btn btn-sm btn-outline-primary" href="{% url 'panel_mascota_historial' mascota.id_mascota %}">
-            <i class="bi bi-journal-medical"></i> Ver evoluciones clínicas
+            <i class="bi bi-journal-medical"></i> Ver evoluciones clínicas y registrar nuevas atenciones
           </a>
         </p>
       {% endif %}
       <p class="text-muted">
-        Los archivos se almacenarán junto al historial médico y podrán consultarse en el portal público. Puedes asociarlos a una evolución clínica específica desde el selector.
+        Los archivos cargados aquí quedarán asociados a la ficha de la mascota y visibles en el portal público. Puedes vincularlos a una evolución clínica específica desde el selector.
       </p>
       {{ doc_form.non_field_errors }}
       {{ doc_form.as_p }}

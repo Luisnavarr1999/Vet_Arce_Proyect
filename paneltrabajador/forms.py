@@ -252,6 +252,12 @@ class MascotaForm(forms.ModelForm):
                 field.widget.attrs['class'] = 'form-control'
 
         self.fields['historial_medico'].required = False
+        self.fields['historial_medico'].label = 'Historial médico general'
+        self.fields['historial_medico'].help_text = (
+            'Anota aquí los antecedentes permanentes de la mascota (diagnósticos, '
+            'alergias, tratamientos crónicos). Para registrar visitas o procedimientos '
+            'concretos utiliza las evoluciones clínicas.'
+        )
         self.fields['historial_medico'].widget.attrs.setdefault('rows', 4)
 
         # Asegura que la raza actual esté presente en la lista de opciones (edición)
