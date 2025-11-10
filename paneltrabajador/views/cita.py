@@ -1,8 +1,10 @@
-from django.shortcuts import get_object_or_404, redirect, render
+from datetime import datetime
 from django.contrib import messages
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from paneltrabajador.forms import CitaForm
 from paneltrabajador.models import Cita
-from django.utils import timezone
 
 def cita_listar(request):
     """
@@ -21,10 +23,106 @@ def cita_listar(request):
         messages.error(request, "No tiene los permisos para realizar esto.")
         return redirect('panel_home')
 
-    # Obtenemos todos los objetos del modelo
-    # Usamos la funcion personalizada del modelo
-    citas = Cita.get_for_listado()
-    return render(request, 'paneltrabajador/cita/listado.html', {'citas': citas, 'es_home': False,})
+    # Parámetros de filtros (solo se aplican si son válidos)
+    estado = request.GET.get('estado', '').strip()
+    servicio = request.GET.get('servicio', '').strip()
+    asistencia = request.GET.get('asistencia', '').strip()
+    fecha_desde_raw = request.GET.get('fecha_desde', '').strip()
+    fecha_hasta_raw = request.GET.get('fecha_hasta', '').strip()
+    termino_busqueda = request.GET.get('q', '').strip()
+
+    filtros_queryset = {}
+    filtros_aplicados = []
+
+    estado_labels = dict(Cita.ESTADO_CHOICES)
+    asistencia_labels = dict(Cita.ASISTENCIA_CHOICES)
+    servicio_labels = dict(Cita.SERVICIO_CHOICES)
+
+    if estado and estado in estado_labels:
+        filtros_queryset['estado'] = estado
+        filtros_aplicados.append(f"Estado: {estado_labels[estado]}")
+
+    if servicio and servicio in servicio_labels:
+        filtros_queryset['servicio'] = servicio
+        filtros_aplicados.append(f"Servicio: {servicio_labels[servicio]}")
+
+    if asistencia and asistencia in asistencia_labels:
+        filtros_queryset['asistencia'] = asistencia
+        filtros_aplicados.append(f"Asistencia: {asistencia_labels[asistencia]}")
+
+    citas = Cita.get_for_listado(**filtros_queryset)
+
+    fecha_desde = None
+    if fecha_desde_raw:
+        try:
+            fecha_desde = datetime.strptime(fecha_desde_raw, '%Y-%m-%d').date()
+        except ValueError:
+            fecha_desde_raw = ''
+            fecha_desde = None
+
+    fecha_hasta = None
+    if fecha_hasta_raw:
+        try:
+            fecha_hasta = datetime.strptime(fecha_hasta_raw, '%Y-%m-%d').date()
+        except ValueError:
+            fecha_hasta_raw = ''
+            fecha_hasta = None
+
+    rango_invalido = False
+    if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
+        # Rango inválido: se ignoran ambos para evitar confusiones
+        rango_invalido = True
+        fecha_desde = None
+        fecha_hasta = None
+        fecha_desde_raw = ''
+        fecha_hasta_raw = ''
+
+    if fecha_desde:
+        citas = citas.filter(fecha__date__gte=fecha_desde)
+        filtros_aplicados.append(f"Desde: {fecha_desde.strftime('%d/%m/%Y')}")
+
+    if fecha_hasta:
+        citas = citas.filter(fecha__date__lte=fecha_hasta)
+        filtros_aplicados.append(f"Hasta: {fecha_hasta.strftime('%d/%m/%Y')}")
+
+    if rango_invalido:
+        messages.warning(request, "El rango de fechas seleccionado es inválido. Se mostraron todas las citas sin filtrar por fecha.")
+
+    if termino_busqueda:
+        busqueda = termino_busqueda
+        filtros_texto = Q(cliente__nombre_cliente__icontains=busqueda) | Q(mascota__nombre__icontains=busqueda) | Q(usuario__username__icontains=busqueda)
+
+        try:
+            numero_cita = int(busqueda)
+        except ValueError:
+            numero_cita = None
+
+        if numero_cita is not None:
+            filtros_texto |= Q(n_cita=numero_cita)
+
+        citas = citas.filter(filtros_texto)
+        filtros_aplicados.append(f'Búsqueda: "{busqueda}"')
+
+    filtros_formulario = {
+        'estado': estado,
+        'servicio': servicio,
+        'asistencia': asistencia,
+        'fecha_desde': fecha_desde_raw,
+        'fecha_hasta': fecha_hasta_raw,
+        'q': termino_busqueda,
+    }
+
+    contexto = {
+        'citas': citas,
+        'es_home': False,
+        'estado_choices': Cita.ESTADO_CHOICES,
+        'servicio_choices': Cita.SERVICIO_CHOICES,
+        'asistencia_choices': Cita.ASISTENCIA_CHOICES,
+        'filtros': filtros_formulario,
+        'filtros_aplicados': filtros_aplicados,
+    }
+
+    return render(request, 'paneltrabajador/cita/listado.html', contexto)
 
 def cita_agregar(request):
     """

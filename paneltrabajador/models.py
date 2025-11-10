@@ -207,7 +207,7 @@ class Cita (models.Model):
 
     @staticmethod
     def get_for_listado(**args):
-        return Cita.objects.filter(**args)
+        return Cita.objects.filter(**args).order_by('-fecha')
     
     def save(self, *args, **kwargs):
         update_fields = kwargs.get('update_fields')

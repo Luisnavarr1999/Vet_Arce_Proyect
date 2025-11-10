@@ -3,12 +3,87 @@
   Listado - Citas
 {% endblock title %}
 {% block content %}
-  <div class="d-flex justify-content-between align-items-center mb-2">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h3 class="fw-light">Listado de citas</h3>
     {# Verificamos permisos #}
     {% if perms.paneltrabajador.add_cita %}
       <a href="{% url 'panel_cita_nuevo' %}" class="btn btn-success">Agregar nueva cita</a>
     {% endif %}
   </div>
+  <div class="card mb-3">
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-md-6 col-lg-4">
+          <label for="id_q" class="form-label">Buscar</label>
+          <input type="text" id="id_q" name="q" class="form-control" value="{{ filtros.q }}"
+                 placeholder="Cliente, mascota, usuario o N° cita">
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+          <label for="id_estado" class="form-label">Estado</label>
+          <select id="id_estado" name="estado" class="form-select">
+            <option value="">Todos</option>
+            {% for value, label in estado_choices %}
+              <option value="{{ value }}" {% if filtros.estado == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+          <label for="id_servicio" class="form-label">Servicio</label>
+          <select id="id_servicio" name="servicio" class="form-select">
+            <option value="">Todos</option>
+            {% for value, label in servicio_choices %}
+              <option value="{{ value }}" {% if filtros.servicio == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-2">
+          <label for="id_asistencia" class="form-label">Asistencia</label>
+          <select id="id_asistencia" name="asistencia" class="form-select">
+            <option value="">Todas</option>
+            {% for value, label in asistencia_choices %}
+              <option value="{{ value }}" {% if filtros.asistencia == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-2">
+          <label for="id_fecha_desde" class="form-label">Desde</label>
+          <input type="date" id="id_fecha_desde" name="fecha_desde" value="{{ filtros.fecha_desde }}" class="form-control">
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-2">
+          <label for="id_fecha_hasta" class="form-label">Hasta</label>
+          <input type="date" id="id_fecha_hasta" name="fecha_hasta" value="{{ filtros.fecha_hasta }}" class="form-control">
+        </div>
+
+        <div class="col-12 col-md-auto">
+          <button type="submit" class="btn btn-primary w-100">Aplicar filtros</button>
+        </div>
+
+        {% if filtros_aplicados %}
+          <div class="col-12 col-md-auto">
+            <a href="{% url 'panel_cita_listar' %}" class="btn btn-outline-secondary w-100">Limpiar</a>
+          </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  {% if filtros_aplicados %}
+    <div class="alert alert-info d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+      <div>
+        <strong>Filtros aplicados:</strong>
+        <ul class="list-inline mb-0">
+          {% for descripcion in filtros_aplicados %}
+            <li class="list-inline-item">• {{ descripcion }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <a href="{% url 'panel_cita_listar' %}" class="btn btn-sm btn-outline-secondary">Quitar filtros</a>
+    </div>
+  {% endif %}
   {% include "./tabla.html" with es_home=False %}
 {% endblock content %}
