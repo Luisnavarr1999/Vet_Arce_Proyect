@@ -99,7 +99,7 @@ class CitaForm(forms.ModelForm):
             'usuario': forms.Select(attrs={'class': 'form-select'}),
             'mascota': forms.Select(attrs={'class': 'form-select'}),
             'asistencia': forms.Select(attrs={'class': 'form-select'}),
-            'servicio': forms.Select(attrs={'class': 'form-select'}),
+            'servicio': forms.HiddenInput(),
         }
         
 
@@ -362,7 +362,7 @@ class EvolucionClinicaForm(forms.ModelForm):
 
         self.fields['archivos'].widget.attrs.setdefault('class', 'form-control')
 
-        self.fields['cita'].required = False
+        self.fields['cita'].required = True
         self.fields['cita'].widget.attrs.setdefault('class', 'form-select')
         self.fields['servicio'].required = False
 
@@ -372,10 +372,15 @@ class EvolucionClinicaForm(forms.ModelForm):
                 .order_by('-fecha')
             )
             self.fields['cita'].queryset = citas_qs
-            self.fields['cita'].empty_label = 'Sin cita asociada'
+            self.fields['cita'].empty_label = 'Selecciona una cita'
+            self.has_citas_disponibles = citas_qs.exists()
         else:
             self.fields['cita'].queryset = Cita.objects.none()
             self.fields['cita'].empty_label = 'Sin cita asociada'
+            self.has_citas_disponibles = False
+
+        if not getattr(self, 'has_citas_disponibles', False):
+            self.fields['cita'].widget.attrs['disabled'] = True
 
         for name, field in self.fields.items():
             if name not in ('servicio', 'cita', 'detalle', 'recomendaciones', 'archivos', 'resumen'):
@@ -383,14 +388,19 @@ class EvolucionClinicaForm(forms.ModelForm):
             if name not in ('servicio', 'cita'):
                 field.widget.attrs.setdefault('class', 'form-control')
 
-    def clean_servicio(self):
-        servicio = self.cleaned_data.get('servicio')
-        cita = self.cleaned_data.get('cita')
-        if servicio:
-            return servicio
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if not getattr(self, 'has_citas_disponibles', False):
+            raise ValidationError(
+                'La mascota no tiene citas registradas. Registra una cita antes de añadir una evolución.'
+            )
+
+        cita = cleaned_data.get('cita')
         if cita:
-            return cita.servicio
-        raise ValidationError('Debe seleccionar el servicio asociado a la evolución.')
+            cleaned_data['servicio'] = cita.servicio
+
+        return cleaned_data
 
     def clean_archivos(self):
         archivos = self.cleaned_data.get('archivos')

@@ -57,19 +57,82 @@
                 {% endfor %}
               </div>
             {% endif %}
-            {% for field in form %}
-              <div class="mb-3">
-                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}
-                  <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-                {% for error in field.errors %}
-                  <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
+            {% if not form.has_citas_disponibles %}
+              <div class="alert alert-warning" role="alert">
+                Esta mascota no tiene citas registradas. Registra una cita para habilitar el ingreso de evoluciones clínicas.
               </div>
-            {% endfor %}
-            <button type="submit" class="btn btn-primary w-100">
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.cita.id_for_label }}">{{ form.cita.label }}</label>
+              {{ form.cita }}
+              {% if form.cita.help_text %}
+                <div class="form-text">{{ form.cita.help_text }}</div>
+              {% endif %}
+              {% for error in form.cita.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="servicio-asociado">Servicio asociado</label>
+              <input
+                type="text"
+                id="servicio-asociado"
+                class="form-control"
+                value="{{ servicio_inicial|default:'Selecciona una cita para ver el servicio asociado' }}"
+                readonly
+              >
+              <div class="form-text">El servicio se define automáticamente según la cita seleccionada.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.resumen.id_for_label }}">{{ form.resumen.label }}</label>
+              {{ form.resumen }}
+              {% if form.resumen.help_text %}
+                <div class="form-text">{{ form.resumen.help_text }}</div>
+              {% endif %}
+              {% for error in form.resumen.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.detalle.id_for_label }}">{{ form.detalle.label }}</label>
+              {{ form.detalle }}
+              {% if form.detalle.help_text %}
+                <div class="form-text">{{ form.detalle.help_text }}</div>
+              {% endif %}
+              {% for error in form.detalle.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.recomendaciones.id_for_label }}">{{ form.recomendaciones.label }}</label>
+              {{ form.recomendaciones }}
+              {% if form.recomendaciones.help_text %}
+                <div class="form-text">{{ form.recomendaciones.help_text }}</div>
+              {% endif %}
+              {% for error in form.recomendaciones.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.archivos.id_for_label }}">{{ form.archivos.label }}</label>
+              {{ form.archivos }}
+              {% if form.archivos.help_text %}
+                <div class="form-text">{{ form.archivos.help_text }}</div>
+              {% endif %}
+              {% for error in form.archivos.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            {{ form.servicio }}
+
+            <button type="submit" class="btn btn-primary w-100" {% if not form.has_citas_disponibles %}disabled{% endif %}>
               <i class="bi bi-plus-circle"></i> Guardar evolución
             </button>
           </form>
@@ -77,4 +140,42 @@
       </div>
     </div>
   </div>
+ {% if form.has_citas_disponibles %}
+    {{ servicios_por_cita|json_script:"servicios-por-cita" }}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const selectCita = document.getElementById('id_cita');
+        const servicioDisplay = document.getElementById('servicio-asociado');
+        const servicioInput = document.getElementById('id_servicio');
+        const serviciosPorCitaElement = document.getElementById('servicios-por-cita');
+
+        if (!selectCita || !servicioDisplay || !serviciosPorCitaElement) {
+          return;
+        }
+
+        const serviciosPorCita = JSON.parse(serviciosPorCitaElement.textContent);
+        const placeholder = 'Selecciona una cita para ver el servicio asociado';
+
+        function actualizarServicio() {
+          const citaId = selectCita.value;
+          const datosServicio = serviciosPorCita[citaId];
+
+          if (datosServicio) {
+            servicioDisplay.value = datosServicio.nombre;
+            if (servicioInput) {
+              servicioInput.value = datosServicio.codigo;
+            }
+          } else {
+            servicioDisplay.value = placeholder;
+            if (servicioInput) {
+              servicioInput.value = '';
+            }
+          }
+        }
+
+        selectCita.addEventListener('change', actualizarServicio);
+        actualizarServicio();
+      });
+    </script>
+  {% endif %}
 {% endblock content %}

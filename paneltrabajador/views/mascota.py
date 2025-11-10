@@ -186,7 +186,12 @@ def mascota_historial(request, id_mascota):
 
     if request.method == 'POST':
         form = EvolucionClinicaForm(request.POST, request.FILES, mascota=mascota)
-        if form.is_valid():
+        if not form.has_citas_disponibles:
+            messages.error(
+                request,
+                "La mascota no tiene citas registradas. Registra una cita antes de añadir una evolución clínica.",
+            )
+        elif form.is_valid():
             evolucion = form.save(commit=False)
             evolucion.mascota = mascota
             if evolucion.cita and not evolucion.servicio:
@@ -205,6 +210,20 @@ def mascota_historial(request, id_mascota):
     else:
         form = EvolucionClinicaForm(mascota=mascota)
 
+    servicios_por_cita = {
+        str(cita.pk): {
+            'codigo': cita.servicio,
+            'nombre': cita.get_servicio_display(),
+        }
+        for cita in form.fields['cita'].queryset
+    }
+
+    servicio_inicial = None
+    if form.is_bound:
+        cita_value = form['cita'].value()
+        if cita_value:
+            servicio_inicial = servicios_por_cita.get(str(cita_value), {}).get('nombre')
+
     return render(
         request,
         'paneltrabajador/mascota/historial.html',
@@ -212,6 +231,8 @@ def mascota_historial(request, id_mascota):
             'mascota': mascota,
             'evoluciones': evoluciones,
             'form': form,
+            'servicios_por_cita': servicios_por_cita,
+            'servicio_inicial': servicio_inicial,
         },
     )
 
