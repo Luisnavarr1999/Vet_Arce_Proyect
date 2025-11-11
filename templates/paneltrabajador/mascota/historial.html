@@ -130,7 +130,9 @@
               {% endfor %}
             </div>
 
-            {{ form.servicio }}
+            <div class="d-none">
+              {{ form.servicio }}
+            </div>
 
             <button type="submit" class="btn btn-primary w-100" {% if not form.has_citas_disponibles %}disabled{% endif %}>
               <i class="bi bi-plus-circle"></i> Guardar evolución

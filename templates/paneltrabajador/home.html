@@ -12,8 +12,116 @@
   </section>
   <div class="row">
     <div class="col-lg-8">
-      {# Verificamos si tiene permisos #}
-      {% if perms.paneltrabajador.view_cita %}
+      {% if es_recepcionista %}
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="card dashboard-card shadow-sm border-0">
+              <div class="card-header border-0 bg-transparent py-3">
+                <h5 class="mb-0 fw-semibold text-primary">Resumen del día</h5>
+              </div>
+              <div class="card-body pt-0">
+                <div class="row g-3">
+                  <div class="col-sm-6 col-lg-3">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                      <p class="text-muted text-uppercase small mb-1">Citas reservadas</p>
+                      <h3 class="fw-semibold mb-0">{{ resumen_recepcionista.reservadas }}</h3>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                      <p class="text-muted text-uppercase small mb-1">Check-in pendientes</p>
+                      <h3 class="fw-semibold mb-0">{{ resumen_recepcionista.checkins_pendientes }}</h3>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                      <p class="text-muted text-uppercase small mb-1">Citas canceladas</p>
+                      <h3 class="fw-semibold mb-0">{{ resumen_recepcionista.canceladas }}</h3>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                      <p class="text-muted text-uppercase small mb-1">Atenciones completadas</p>
+                      <h3 class="fw-semibold mb-0">{{ resumen_recepcionista.atendidas }}</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card dashboard-card shadow-sm border-0 h-100">
+              <div class="card-header border-0 bg-transparent py-3">
+                <h5 class="mb-0 fw-semibold text-primary">Próximas llegadas</h5>
+              </div>
+              <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                  {% for cita in proximas_citas %}
+                    <li class="list-group-item py-3">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                          <h6 class="mb-1">{{ cita.fecha|date:"H:i" }} · {{ cita.nombre_mascota }}</h6>
+                          <small class="text-muted d-block">{{ cita.nombre_cliente }}</small>
+                        </div>
+                        <span class="badge rounded-pill bg-primary">{{ cita.get_servicio_display }}</span>
+                      </div>
+                    </li>
+                  {% empty %}
+                    <li class="list-group-item py-3 text-muted">No hay llegadas próximas para hoy.</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card dashboard-card shadow-sm border-0 h-100">
+              <div class="card-header border-0 bg-transparent py-3">
+                <h5 class="mb-0 fw-semibold text-primary">Check-in por confirmar</h5>
+              </div>
+              <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                  {% for cita in pendientes_checkin %}
+                    <li class="list-group-item py-3">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                          <h6 class="mb-1">{{ cita.fecha|date:"H:i" }} · {{ cita.nombre_mascota }}</h6>
+                          <small class="text-muted d-block">{{ cita.nombre_cliente }}</small>
+                        </div>
+                        <span class="badge rounded-pill bg-warning text-dark">Pendiente</span>
+                      </div>
+                    </li>
+                  {% empty %}
+                    <li class="list-group-item py-3 text-muted">No hay check-in pendientes en las próximas horas.</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card dashboard-card shadow-sm border-0">
+              <div class="card-header border-0 bg-transparent py-3">
+                <h5 class="mb-0 fw-semibold text-primary">Accesos rápidos</h5>
+              </div>
+              <div class="card-body pt-0">
+                <div class="row g-2">
+                  <div class="col-sm-6 col-lg-3">
+                    <a href="{% url 'panel_cita_nuevo' %}" class="btn btn-outline-primary w-100">Agendar nueva cita</a>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <a href="{% url 'panel_cliente_nuevo' %}" class="btn btn-outline-primary w-100">Registrar cliente</a>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <a href="{% url 'panel_mascota_nuevo' %}" class="btn btn-outline-primary w-100">Registrar mascota</a>
+                  </div>
+                  <div class="col-sm-6 col-lg-3">
+                    <a href="{% url 'panel_chat_list' %}" class="btn btn-outline-primary w-100">Abrir mensajes</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% elif perms.paneltrabajador.view_cita %}
         <div class="card dashboard-card h-100 shadow-sm border-0 mb-4">
           <div class="card-header border-0 bg-transparent text-center py-3">
             <h5 class="mb-0 fw-semibold text-primary">Mis Citas</h5>

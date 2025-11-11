@@ -204,6 +204,21 @@ class Cita (models.Model):
     @property
     def no_asistio(self):
         return self.asistencia == 'N'
+    
+    @property
+    def nombre_cliente(self):
+        """Nombre del cliente asociado a la cita o un texto descriptivo."""
+        if self.cliente:
+            return self.cliente.nombre_cliente
+        return "Sin cliente asignado"
+
+    @property
+    def nombre_mascota(self):
+        """Nombre de la mascota asociada a la cita o un texto descriptivo."""
+        if self.mascota:
+            return self.mascota.nombre
+        return "Sin mascota asignada"
+
 
     @staticmethod
     def get_for_listado(**args):
