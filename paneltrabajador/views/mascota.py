@@ -6,6 +6,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import strip_tags
+from django.db.models import Q
 from urllib.parse import urljoin
 
 from paneltrabajador.forms import EvolucionClinicaForm, MascotaDocumentoForm, MascotaForm
@@ -55,8 +56,22 @@ def mascota_listar(request):
         return redirect('panel_home')
 
     # Obtenemos todos los objetos del modelo
-    mascotas = Mascota.objects.all()
-    return render(request, 'paneltrabajador/mascota/listado.html', {'mascotas': mascotas})
+    busqueda = request.GET.get('q', '').strip()
+    mascotas = Mascota.objects.all().select_related('cliente')
+
+    if busqueda:
+        mascotas = mascotas.filter(
+            Q(nombre__icontains=busqueda)
+            | Q(numero_chip__icontains=busqueda)
+            | Q(cliente__nombre_cliente__icontains=busqueda)
+            | Q(cliente__rut__icontains=busqueda)
+        )
+
+    return render(
+        request,
+        'paneltrabajador/mascota/listado.html',
+        {'mascotas': mascotas, 'busqueda': busqueda},
+    )
 
 def mascota_agregar(request):
     """

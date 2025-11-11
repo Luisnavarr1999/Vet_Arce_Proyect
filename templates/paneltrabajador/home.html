@@ -60,7 +60,7 @@
                     <li class="list-group-item py-3">
                       <div class="d-flex justify-content-between align-items-start">
                         <div>
-                          <h6 class="mb-1">{{ cita.fecha|date:"H:i" }} · {{ cita.nombre_mascota }}</h6>
+                          <h6 class="mb-1">{{ cita.fecha|date:"d/m/Y H:i" }} · {{ cita.nombre_mascota }}</h6>
                           <small class="text-muted d-block">{{ cita.nombre_cliente }}</small>
                         </div>
                         <span class="badge rounded-pill bg-primary">{{ cita.get_servicio_display }}</span>
@@ -84,7 +84,7 @@
                     <li class="list-group-item py-3">
                       <div class="d-flex justify-content-between align-items-start">
                         <div>
-                          <h6 class="mb-1">{{ cita.fecha|date:"H:i" }} · {{ cita.nombre_mascota }}</h6>
+                          <h6 class="mb-1">{{ cita.fecha|date:"d/m/Y H:i" }} · {{ cita.nombre_mascota }}</h6>
                           <small class="text-muted d-block">{{ cita.nombre_cliente }}</small>
                         </div>
                         <span class="badge rounded-pill bg-warning text-dark">Pendiente</span>

@@ -39,6 +39,12 @@
           {% endif %}
         </td>
       </tr>
+    {% empty %}
+      <tr>
+        <td colspan="{% if mostrar_cliente == True %}5{% else %}4{% endif %}" class="text-center text-muted">
+          No se encontraron mascotas que coincidan con la búsqueda.
+        </td>
+      </tr>
     {% endfor %}
   </tbody>
 </table>
