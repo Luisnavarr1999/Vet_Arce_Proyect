@@ -1,5 +1,5 @@
 import re
-
+from datetime import date
 from django import forms
 from django.db.models import Q
 from .models import Cita, Cliente, Mascota, Factura, Producto, EvolucionClinica
@@ -261,6 +261,7 @@ class MascotaForm(forms.ModelForm):
                 field.widget.attrs['class'] = 'form-select'
             else:
                 field.widget.attrs['class'] = 'form-control'
+        self.fields['fecha_nacimiento'].widget.attrs['max'] = date.today().isoformat()
 
         self.fields['historial_medico'].required = False
         self.fields['historial_medico'].label = 'Historial médico general'
@@ -280,6 +281,14 @@ class MascotaForm(forms.ModelForm):
         if es_reserva == True:
             self.fields.pop('cliente')
             self.fields.pop('historial_medico')
+
+    def clean_fecha_nacimiento(self):
+        fecha_nacimiento = self.cleaned_data.get('fecha_nacimiento')
+
+        if fecha_nacimiento and fecha_nacimiento > date.today():
+            raise forms.ValidationError('La fecha de nacimiento no puede ser posterior a hoy.')
+
+        return fecha_nacimiento
 
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True

@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, time
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -77,12 +78,20 @@ def cita_listar(request):
         fecha_desde_raw = ''
         fecha_hasta_raw = ''
 
+    def _make_aware(fecha, limite):
+        fecha_combinada = datetime.combine(fecha, limite)
+        if settings.USE_TZ and timezone.is_naive(fecha_combinada):
+            return timezone.make_aware(fecha_combinada, timezone.get_current_timezone())
+        return fecha_combinada
+
     if fecha_desde:
-        citas = citas.filter(fecha__date__gte=fecha_desde)
+        inicio_dia = _make_aware(fecha_desde, time.min)
+        citas = citas.filter(fecha__gte=inicio_dia)
         filtros_aplicados.append(f"Desde: {fecha_desde.strftime('%d/%m/%Y')}")
 
     if fecha_hasta:
-        citas = citas.filter(fecha__date__lte=fecha_hasta)
+        fin_dia = _make_aware(fecha_hasta, time.max)
+        citas = citas.filter(fecha__lte=fin_dia)
         filtros_aplicados.append(f"Hasta: {fecha_hasta.strftime('%d/%m/%Y')}")
 
     if rango_invalido:
