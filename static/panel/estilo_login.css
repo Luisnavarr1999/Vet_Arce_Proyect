@@ -2,18 +2,77 @@ html,
 body {
   height: 100%;
 }
+
+/* Fondo base por si algo falla */
 body {
-  background: #da9133; /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #ccb035, #bd972e); /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(to right, #d4a82d, #c7a536); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-}
-form {
-  background: #ece9e6; /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #ffffff, #ece9e6); /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(to right, #ffffff, #ece9e6); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+  background: #da9133;
+  background: -webkit-linear-gradient(to right, #ccb035, #bd972e);
+  background: linear-gradient(to right, #d4a82d, #c7a536);
 }
 
-/* --- BOTÓN VOLVER BONITO --- */
+/* --- CONTENEDOR PRINCIPAL LOGIN --- */
+body.fondo-login {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  background: none;
+  overflow: hidden;
+}
+
+/* Capas del fondo */
+body.fondo-login::before,
+body.fondo-login::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+}
+
+/* --- CAPA 1: IMAGEN DIFUMINADA (más clara aún) --- */
+body.fondo-login::before {
+  background-image: url("../imagenes/fondo-login.jpg");
+  background-size: cover;
+  background-position: center;
+  /* MÁS brillo y menos blur */
+  filter: blur(8px) brightness(1.45);
+  transform: scale(1.03);
+}
+
+/* --- CAPA 2: GRADIENTE ANIMADO (MUCHO más claro) --- */
+body.fondo-login::after {
+  z-index: -1;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 225, 150, 0.14),
+    rgba(255, 190, 110, 0.14),
+    rgba(255, 240, 180, 0.12)
+  );
+  background-size: 400% 400%;
+  animation: cafeGlow 14s ease-in-out infinite;
+  opacity: 0.22;  /* MÁS BAJO para aclarar TODO */
+}
+
+/* Animación */
+@keyframes cafeGlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* --- FORMULARIO --- */
+form {
+  background: linear-gradient(to right, #ffffff, #f7f5f2);
+  position: relative;
+  z-index: 1;
+}
+
+/* Por delante de capas */
+.fondo-login .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- BOTÓN VOLVER --- */
 .btn-volver {
   position: fixed;
   top: 20px;
@@ -35,6 +94,16 @@ form {
 .btn-volver:hover {
   background-color: #6d4522 !important;
   transform: translateY(-2px);
-  color: #fff !important;
 }
-.btn-volver:active { transform: scale(0.97); }
+.btn-volver:active {
+  transform: scale(0.97);
+}
+
+/* Logo más visible, menos oscuro */
+.logo {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.678));
+}
+
+.hero-title-login {
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.4);
+}
