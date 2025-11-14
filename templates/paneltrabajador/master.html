@@ -137,7 +137,7 @@
                     </li>
                     {% endif %}
 
-                    {% if perms.paneltrabajador.view_producto %}
+                    {% if is_gerente and perms.paneltrabajador.view_producto %}
                     <li class="nav-item">
                         <a class="nav-link{% if '/panel/productos/' in request.path_info %} active{% endif %}"
                            href="{% url 'panel_producto_listar' %}">
@@ -147,7 +147,7 @@
                     </li>
                     {% endif %}
 
-                    {% if perms.paneltrabajador.view_factura %}
+                    {% if is_gerente and perms.paneltrabajador.view_factura %}
                     <li class="nav-item">
                         <a class="nav-link{% if '/panel/facturas/' in request.path_info %} active{% endif %}"
                            href="{% url 'panel_factura_listar' %}">
@@ -157,7 +157,7 @@
                     </li>
                     {% endif %}
 
-                    {% if perms.auth.view_user %}
+                    {% if is_gerente and perms.auth.view_user %}
                     <li class="nav-item">
                         <a class="nav-link{% if '/panel/usuarios/' in request.path_info %} active{% endif %}"
                            href="{% url 'panel_usuario_listar' %}">

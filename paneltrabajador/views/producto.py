@@ -6,6 +6,7 @@ from paneltrabajador.forms import ProductoForm
 from paneltrabajador.models import Producto
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from paneltrabajador.utils import user_is_gerente
 
 def producto_listar(request):
     """
@@ -19,6 +20,10 @@ def producto_listar(request):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -42,6 +47,10 @@ def producto_agregar(request):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -79,6 +88,10 @@ def producto_editar(request, id_producto):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -152,6 +165,10 @@ def producto_eliminar(request, id_producto):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error

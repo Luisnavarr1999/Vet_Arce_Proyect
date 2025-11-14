@@ -8,6 +8,7 @@ from paneltrabajador.forms import UsuarioForm
 from django.db import transaction
 from django.core.mail import EmailMultiAlternatives
 from django.templatetags.static import static
+from paneltrabajador.utils import user_is_gerente
 
 def usuario_listar(request):
     """
@@ -21,6 +22,10 @@ def usuario_listar(request):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -45,6 +50,10 @@ def usuario_agregar(request):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -91,6 +100,10 @@ def usuario_editar(request, id_usuario):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -147,6 +160,10 @@ def usuario_eliminar(request, id_usuario):
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
         return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
+        return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
     if not request.user.has_perm('auth.delete_user'):
@@ -184,6 +201,11 @@ def usuario_newpassword(request, id_usuario):
     # Validaciones de autenticación y permisos
     if not request.user.is_authenticated:
         return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
+        return redirect('panel_home')
+
 
     if not request.user.has_perm('auth.change_user'):
         messages.error(request, "No tiene los permisos para realizar esto.")

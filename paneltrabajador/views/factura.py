@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from paneltrabajador.forms import FacturaForm
 from paneltrabajador.models import Factura
+from paneltrabajador.utils import user_is_gerente
 def factura_listar(request):
     """
     Muestra un listado de todas las facturas.
@@ -16,6 +17,10 @@ def factura_listar(request):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -43,6 +48,10 @@ def factura_agregar(request):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -84,6 +93,10 @@ def factura_editar(request, numero_factura):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
@@ -129,6 +142,10 @@ def factura_eliminar(request, numero_factura):
     """
     # El usuario no está autenticado, redireccionar al inicio
     if not request.user.is_authenticated:
+        return redirect('panel_home')
+    
+    if not user_is_gerente(request.user):
+        messages.error(request, "Solo los gerentes pueden realizar esta acción.")
         return redirect('panel_home')
 
     # El usuario no tiene los permisos necesarios, redireccionar al home con un mensaje de error
