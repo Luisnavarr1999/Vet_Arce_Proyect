@@ -319,3 +319,27 @@
     border-radius: 0;
   }
 }
+
+/* ============================
+   LISTADO DE CITAS (SCROLL)
+=============================== */
+
+.citas-scroll-wrapper {
+  max-height: 520px;      /* ajusta a tu gusto: 400, 500, etc. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 0.75rem;
+}
+
+/* Que la tabla no deje espacio abajo dentro del contenedor */
+.citas-scroll-wrapper table {
+  margin-bottom: 0;
+}
+
+/* Cabecera fija mientras haces scroll (opcional pero útil) */
+.citas-scroll-wrapper thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #f8fafc;  /* o el que combine con tu tema */
+}

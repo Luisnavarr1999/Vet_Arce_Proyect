@@ -127,9 +127,62 @@
             <h5 class="mb-0 fw-semibold text-primary">Mis Citas</h5>
           </div>
           <div class="card-body pt-0">
+            <div class="row g-3 mb-4">
+              <div class="col-sm-6 col-lg-4">
+                <div class="p-3 border rounded-3 bg-light h-100">
+                  <p class="text-muted text-uppercase small mb-1">Total de citas (hoy)</p>
+                  <h3 class="fw-semibold mb-0">{{ estadisticas_hoy.total }}</h3>
+                </div>
+              </div>
+              <div class="col-sm-6 col-lg-4">
+                <div class="p-3 border rounded-3 bg-light h-100">
+                  <p class="text-muted text-uppercase small mb-1">Citas completadas</p>
+                  <h3 class="fw-semibold mb-0">{{ estadisticas_hoy.completadas }}</h3>
+                </div>
+              </div>
+              <div class="col-sm-6 col-lg-4">
+                <div class="p-3 border rounded-3 bg-light h-100">
+                  <p class="text-muted text-uppercase small mb-1">Pendientes de informe</p>
+                  <h3 class="fw-semibold mb-0">{{ estadisticas_hoy.pendientes_informe }}</h3>
+                </div>
+              </div>
+            </div>
+
+            {% if proxima_cita %}
+              <div class="border rounded-3 p-4 mb-4 bg-body-secondary">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                  <div>
+                    <p class="text-uppercase small text-muted mb-1">Próxima cita</p>
+                    <h4 class="fw-semibold mb-2">{{ proxima_cita.fecha|date:"d/m/Y H:i" }}</h4>
+                    <div class="small text-muted">Mascota: <span class="text-body fw-semibold">{{ proxima_cita.mascota|default:proxima_cita.nombre_mascota }}</span></div>
+                    <div class="small text-muted">Cliente: <span class="text-body fw-semibold">{{ proxima_cita.cliente|default:proxima_cita.nombre_cliente }}</span></div>
+                    <div class="small text-muted">Motivo: <span class="text-body fw-semibold">{{ proxima_cita.get_servicio_display }}</span></div>
+                  </div>
+                  <div class="ms-lg-auto">
+                    {% if proxima_cita.mascota %}
+                      <a class="btn btn-primary" href="{% url 'panel_mascota_historial' proxima_cita.mascota.id_mascota %}">Abrir ficha clínica</a>
+                    {% else %}
+                      <span class="badge text-bg-secondary">Sin mascota asignada</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+              <h6 class="mb-0 text-muted">Filtros rápidos</h6>
+              <div class="btn-group" role="group">
+                <a href="{% url 'panel_home' %}" class="btn btn-outline-secondary{% if not filtro_activo %} active{% endif %}">Todas</a>
+                <a href="{% url 'panel_home' %}?filtro=hoy" class="btn btn-outline-primary{% if filtro_activo == 'hoy' %} active{% endif %}">Hoy</a>
+                <a href="{% url 'panel_home' %}?filtro=proximas" class="btn btn-outline-primary{% if filtro_activo == 'proximas' %} active{% endif %}">Próximas</a>
+                <a href="{% url 'panel_home' %}?filtro=pendientes" class="btn btn-outline-primary{% if filtro_activo == 'pendientes' %} active{% endif %}">Pendientes de informe</a>
+              </div>
+            </div>
             {# Tiene citas? #}
             {% if citas %}
-              {% include "./cita/tabla.html" with es_home=True %}
+              <div class="citas-scroll-wrapper mt-2">
+                {% include "./cita/tabla.html" with es_home=True %}
+              </div>
             {% else %}
               <div class="alert alert-soft">Usted no tiene ninguna cita reservada</div>
             {% endif %}

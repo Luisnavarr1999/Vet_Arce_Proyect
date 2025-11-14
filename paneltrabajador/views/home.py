@@ -3,18 +3,17 @@ from datetime import datetime, timedelta, time
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.db.models import Exists, OuterRef
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from paneltrabajador.models import Cita
+from paneltrabajador.models import Cita, EvolucionClinica
 
 
 def home(request):
     """Vista principal del panel de trabajadores."""
     # Si el usuario está autenticado, cargar el panel
     if request.user.is_authenticated:
-        # Cargar todas las citas del usuario (para profesionales)
-        citas = Cita.get_for_listado(usuario=request.user, estado='1')
 
         # Grupos del usuario como cadena legible
         grupos_usuario = list(request.user.groups.values_list('name', flat=True))
@@ -27,6 +26,14 @@ def home(request):
         resumen_recepcionista = {}
         proximas_citas = []
         pendientes_checkin = []
+        citas = []
+        proxima_cita = None
+        filtro_activo = request.GET.get('filtro', '').strip().lower()
+        estadisticas_hoy = {
+            "total": 0,
+            "completadas": 0,
+            "pendientes_informe": 0,
+        }
 
         if es_recepcionista:
             # Fecha y hora actual
@@ -75,12 +82,107 @@ def home(request):
                 .order_by('fecha')[:5]
             )
 
+        else:
+            zona = timezone.get_current_timezone()
+            ahora = timezone.localtime()
+            hoy = ahora.date()
+
+            citas_queryset = (
+                Cita.objects.filter(usuario=request.user, estado='1')
+                .select_related('cliente', 'mascota')
+            )
+
+            proxima_cita = (
+                citas_queryset
+                .filter(fecha__gte=ahora)
+                .order_by('fecha')
+                .first()
+            )
+
+            evoluciones_por_cita = EvolucionClinica.objects.filter(cita=OuterRef('pk'))
+
+            if filtro_activo == 'hoy':
+                citas_queryset = citas_queryset.filter(fecha__date=hoy)
+            elif filtro_activo == 'proximas':
+                citas_queryset = citas_queryset.filter(fecha__gte=ahora)
+            elif filtro_activo == 'pendientes':
+                citas_queryset = (
+                    citas_queryset
+                    .filter(asistencia='A')
+                    .annotate(tiene_informe=Exists(evoluciones_por_cita))
+                    .filter(tiene_informe=False)
+                )
+
+            citas_ordenadas = list(citas_queryset.order_by('-fecha'))
+
+
+            for cita in citas_ordenadas:
+                indicadores = []
+                minutos_para_inicio = None
+
+                if cita.fecha is not None:
+                    try:
+                        fecha_local = timezone.localtime(cita.fecha, timezone=zona)
+                    except ValueError:
+                        fecha_local = cita.fecha
+                    diferencia = fecha_local - ahora
+                    minutos_para_inicio = diferencia.total_seconds() / 60
+
+                    if minutos_para_inicio >= 0:
+                        if minutos_para_inicio < 10:
+                            indicadores.append({
+                                'texto': 'Menos de 10 minutos',
+                                'tipo': 'danger',
+                            })
+                        elif minutos_para_inicio < 60:
+                            indicadores.append({
+                                'texto': 'Comienza pronto',
+                                'tipo': 'warning',
+                            })
+
+                servicio = (cita.servicio or '').lower()
+                if servicio == 'cirugia':
+                    indicadores.append({
+                        'texto': 'Cirugía',
+                        'tipo': 'primary',
+                    })
+                elif 'control' in servicio:
+                    indicadores.append({
+                        'texto': 'Control',
+                        'tipo': 'success',
+                    })
+
+                cita.indicadores = indicadores
+                cita.minutos_para_inicio = minutos_para_inicio
+
+            citas = citas_ordenadas
+
+            citas_hoy = Cita.objects.filter(
+                usuario=request.user,
+                estado='1',
+                fecha__date=hoy,
+            )
+
+            estadisticas_hoy["total"] = citas_hoy.count()
+            estadisticas_hoy["completadas"] = citas_hoy.filter(asistencia='A').count()
+            estadisticas_hoy["pendientes_informe"] = (
+                citas_hoy
+                .filter(asistencia='A')
+                .annotate(tiene_informe=Exists(evoluciones_por_cita))
+                .filter(tiene_informe=False)
+                .count()
+            )
+            
+
         # Variables para el template
         context = {
             "username": request.user.username,
             "first_name": request.user.first_name,
             "last_name": request.user.last_name,
             "citas": citas,
+            "proxima_cita": proxima_cita,
+            "filtro_activo": filtro_activo,
+            "estadisticas_hoy": estadisticas_hoy,
             "grupo": grupo,
             "es_recepcionista": es_recepcionista,
             "resumen_recepcionista": resumen_recepcionista,
