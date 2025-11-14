@@ -30,7 +30,7 @@ body.fondo-login::after {
 
 /* --- CAPA 1: IMAGEN DIFUMINADA (más clara aún) --- */
 body.fondo-login::before {
-  background-image: url("../imagenes/fondo-login.jpg");
+  background-image: url("../Imagenes/fondo-login.jpg");
   background-size: cover;
   background-position: center;
   /* MÁS brillo y menos blur */

@@ -18,12 +18,17 @@
   </head>
   <body>
     {# Navbar Bootstrap dinamica mediante la verificacion de la URL #}
-    <nav class="navbar navbar-expand-lg ficat-green" data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg maple-navbar shadow-sm" data-bs-theme="dark">
       <div class="container-fluid">
-        <div class="logo-container">
-          <img src="{% static 'Imagenes/Logo.png' %}" alt="Logo FiCats" class="logo" style="max-width: 100px; height: auto;">
+        
+        <div class="logo-container d-flex align-items-center">
+          <a href="{% url 'ambpublico_index' %}"
+            class="d-flex align-items-center text-decoration-none">
+            <img src="{% static 'Imagenes/Logo.png' %}"
+                alt="Veterinaria de Arce"
+                class="logo">
+          </a>
         </div>
-        <a class="navbar-brand" href="{% url 'ambpublico_index' %}"> Arce Vet</a>
         <button class="navbar-toggler"
                 type="button"
                 data-bs-toggle="collapse"
@@ -34,26 +39,56 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarMenuPrincipal">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-2">
             <li class="nav-item">
-              <a class="nav-link{% if request.path_info|length == 0 %} active{% endif %}"
-                 href="{% url 'ambpublico_index' %}">Inicio</a>
+              <a class="nav-link nav-link-icon{% if request.resolver_match.url_name == 'ambpublico_index' %} active{% endif %}"
+                 href="{% url 'ambpublico_index' %}"
+                 {% if request.resolver_match.url_name == 'ambpublico_index' %}aria-current="page"{% endif %}>
+                <i class="bi bi-house-door"></i>
+                <span>Inicio</span>
+              </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link{% if request.path_info == '/consulta_mascota/' %} active{% endif %}"
-                 href="{% url 'ambpublico_consulta' %}">Consulta Mascota</a>
+              <a class="nav-link nav-link-icon{% if request.resolver_match.url_name == 'ambpublico_consulta' %} active{% endif %}"
+                 href="{% url 'ambpublico_consulta' %}"
+                 {% if request.resolver_match.url_name == 'ambpublico_consulta' %}aria-current="page"{% endif %}>
+                <i class="bi bi-search-heart"></i>
+                <span>Consulta Mascota</span>
+              </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link{% if request.path_info == '/reservahora/' %} active{% endif %}"
-                 href="{% url 'ambpublico_reserva' %}">Reserva de Horas</a>
+              <a class="btn btn-cta nav-reserva{% if request.resolver_match.url_name == 'ambpublico_reserva' %} active{% endif %}"
+                 href="{% url 'ambpublico_reserva' %}"
+                 {% if request.resolver_match.url_name == 'ambpublico_reserva' %}aria-current="page"{% endif %}>
+                <i class="bi bi-calendar-heart me-1"></i>
+                Reserva de Horas
+              </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'panel_home' %}">Panel</a>
+              <a class="nav-link nav-link-icon"
+                 href="{% url 'panel_home' %}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Panel</span>
+              </a>
             </li>
           </ul>
         </div>
       </div>
     </nav>
+
+    <div class="maple-subbar">
+      <div class="container d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center gap-2">
+        <span class="promo-highlight">
+          <i class="bi bi-megaphone-fill me-2"></i>
+          Campaña de vacunas otoñales: agenda tu control preventivo y recibe un chequeo dental gratuito.
+        </span>
+        <span class="promo-schedule">
+          <i class="bi bi-clock-history me-1"></i>
+          Horario extendido sábados · 09:00 a 18:00 hrs.
+        </span>
+      </div>
+    </div>
+
     {# Verificamos si la URL es 0, es decir, está en la página de inicio #}
     {% if request.path_info|length != 0 %}<div class="container-fluid my-2">{% endif %}
       {# Cargamos los mensajes de Django #}
