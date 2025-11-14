@@ -219,8 +219,8 @@ header.home{
 
 /* ===== Servicios (versión final) ===== */
 :root{
-  --mustard: #d79416;
-  --mustard-hover: #c78311;
+  --mustard: #d07c19;        /* tono central del gradiente del header */
+  --mustard-hover: #e2831c;  /* un poco más brillante para hover */
   --card-radius: 14px;
 }
 
