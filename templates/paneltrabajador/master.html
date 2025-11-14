@@ -2,291 +2,242 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
-  <head>
+<head>
     <title>
-      {% block title %}
-      {% endblock title %}
-    - Panel de Veterinarai de Arce</title>
+        {% block title %}{% endblock title %} - Panel de Veterinaria de Arce
+    </title>
+
+    <!-- Tema Bootswatch + Bootstrap -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.2/zephyr/bootstrap.min.css"
-          integrity="sha512-tVaFJG+ePp27IMFymeEddl8DmqmDjlc2eInwfQ83Bddk8TC0lXUZ9kPy0VKGyQr52CY4THcBRBvCEZnsh63WmA=="
-          crossorigin="anonymous"
-          referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="{% static 'panel/estilo.css' %}" />
-  </head>
-  <body class="dashboard-body">
-    <header class="navbar navbar-dark sticky-top flex-md-nowrap p-0 shadow navbar-expand dashboard-navbar">
+          crossorigin="anonymous" />
 
-      <a class="navbar-brand col-6 col-lg-3 me-0 px-3 fs-6 d-flex align-items-center"
-         href="{% url 'panel_home' %}">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+          crossorigin="anonymous" />
+
+    <!-- Tu CSS principal -->
+    <link rel="stylesheet" href="{% static 'panel/estilo.css' %}">
+</head>
+
+<body class="dashboard-body">
+
+<header class="navbar navbar-dark sticky-top flex-md-nowrap p-0 shadow navbar-expand dashboard-navbar">
+
+    <!-- LOGO + NOMBRE -->
+    <a class="navbar-brand col-auto me-0 px-3 fs-6 d-flex align-items-center"
+       href="{% url 'panel_home' %}">
         <img class="brand-logo me-2"
              src="{% static 'Imagenes/Logo.png' %}"
-             alt="Logo de Veterinaria Arce" />
+             alt="Logo de Veterinaria Arce">
         <span class="brand-text text-truncate">Veterinaria Arce</span>
-      </a>
-      <div class="navbar-nav w-100">
-        <button class="navbar-toggler d-lg-none d-block collapsed border-0 order-1 order-lg-0 ms-auto mx-1"
+    </a>
+
+    <!-- BOTÓN PARA COLAPSAR SIDEBAR (EN PANTALLA GRANDE) -->
+    <button class="btn btn-link text-white sidebar-toggle d-none d-lg-inline-flex align-items-center justify-content-center"
+            type="button"
+            data-sidebar-toggle
+            aria-controls="sidebarMenu"
+            aria-label="Ocultar menú lateral"
+            aria-expanded="true">
+        <i class="bi bi-layout-sidebar-inset" data-sidebar-icon></i>
+    </button>
+
+    <!-- DERECHA DEL NAV (Opciones) -->
+    <div class="navbar-nav ms-auto">
+        <!-- Botón hamburguesa móvil -->
+        <button class="navbar-toggler d-lg-none border-0 mx-2"
                 type="button"
                 data-bs-toggle="collapse"
-                data-bs-target="#sidebarMenu"
-                aria-controls="sidebarMenu"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+                data-bs-target="#sidebarMenu">
+            <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="nav-item dropdown text-nowrap ms-lg-auto order-0 order-lg-1">
-          <a class="nav-link dropdown-toggle px-3"
-             href="#"
-             role="button"
-             data-bs-toggle="dropdown"
-             aria-expanded="false">Opciones</a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <a class="dropdown-item" href="{% url 'ambpublico_index' %}">Volver al Portal</a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="{% url 'panel_logout' %}">Cerrar Sesión</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </header>
-    <div class="container-fluid">
-      <div class="row">
-        {% comment %} Navbar de Boostrap. Asigna la clase CSS active mediante la URL. {% endcomment %}
-        <nav id="sidebarMenu"
-             class="col-lg-2 d-lg-block sidebar collapse">
-          <div class="position-sticky pt-3 sidebar-sticky">
-            <ul class="nav nav-pills px-2 flex-column mb-auto">
-              <li class="nav-item">
-                <a class="nav-link{% if request.path_info == '/panel/' %} active{% endif %}"
-                   href="{% url 'panel_home' %}">Inicio</a>
-              </li>
-              {% if perms.paneltrabajador.view_cita %}
-                <li class="nav-item">
-                  <a class="nav-link{% if '/panel/dashboard/' in request.path_info %} active{% endif %}"
-                     href="{% url 'panel_dashboard' %}">Dashboard</a>
-                </li>
-              {% endif %}
-              {% if perms.paneltrabajador.view_cliente %}
-                <li class="nav-item">
-                  <a class="nav-link{% if '/panel/clientes/' in request.path_info %} active{% endif %}"
-                     href="{% url 'panel_cliente_listado' %}">Clientes</a>
-                </li>
-              {% endif %}
-              {% if perms.paneltrabajador.view_mascota %}
-                <li class="nav-item">
-                  <a class="nav-link{% if '/panel/mascotas/' in request.path_info %} active{% endif %}"
-                     href="{% url 'panel_mascota_listar' %}">Mascotas</a>
-                </li>
-              {% endif %}
-              {% if perms.paneltrabajador.view_cita %}
-                <li class="nav-item">
-                  <a class="nav-link{% if '/panel/citas/' in request.path_info %} active{% endif %}"
-                     href="{% url 'panel_cita_listar' %}">Citas</a>
-                </li>
-              {% endif %}
-              {% if perms.paneltrabajador.view_chatconversation %}
-                <li class="nav-item">
-                  <a class="nav-link{% if '/panel/chat/' in request.path_info %} active{% endif %}"
-                     href="{% url 'panel_chat_list' %}">Chat en vivo</a>
-                </li>
-              {% endif %}
-              {% if perms.paneltrabajador.view_producto %}
-                <li class="nav-item">
-                  <a class="nav-link{% if '/panel/productos/' in request.path_info %} active{% endif %}"
-                     href="{% url 'panel_producto_listar' %}">Inventario</a>
-                </li>
-              {% endif %}
-              {% if perms.paneltrabajador.view_factura %}
-                <li class="nav-item">
-                  <a class="nav-link{% if '/panel/facturas/' in request.path_info %} active{% endif %}"
-                     href="{% url 'panel_factura_listar' %}">Facturaciones</a>
-                </li>
-              {% endif %}
-              {% if perms.auth.view_user %}
-                <li class="nav-item">
-                  <a class="nav-link{% if '/panel/usuarios/' in request.path_info %} active{% endif %}"
-                     href="{% url 'panel_usuario_listar' %}">Usuarios</a>
-                </li>
-              {% endif %}
+
+        <!-- Menú Opciones -->
+        <div class="nav-item dropdown text-nowrap">
+            <a class="nav-link dropdown-toggle px-3"
+               href="#"
+               role="button"
+               data-bs-toggle="dropdown">
+               Opciones
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'ambpublico_index' %}">Volver al Portal</a></li>
+                <li><a class="dropdown-item" href="{% url 'panel_logout' %}">Cerrar Sesión</a></li>
             </ul>
-          </div>
-        </nav>
-        <main class="ms-sm-auto col-lg-10 px-md-4 my-3 dashboard-main">
-          <div id="alerts" class="dj-b-alerts mb-3">
-            {% if perms.paneltrabajador.view_chatconversation %}
-              {% with pending_count=chat_pending_count %}
-                <div id="chat-pending-alert"
-                     class="alert alert-warning alert-dismissible fade{% if pending_count %} show{% endif %}{% if not pending_count %} d-none{% endif %}"
-                     role="alert"
-                     data-chat-alert
-                     data-chat-endpoint="{% url 'panel_chat_pending_count' %}"
-                     data-chat-initial-count="{{ pending_count }}"
-                     aria-hidden="{% if pending_count %}false{% else %}true{% endif %}">
-                  <strong>Chat en vivo:</strong>
-                  Hay <span data-chat-count>{{ pending_count }}</span>
-                  conversación<span data-chat-plural>{% if pending_count != 1 %}es{% endif %}</span>
-                  esperando respuesta. <a class="alert-link" href="{% url 'panel_chat_list' %}">Ir al chat</a>.
-                  <button type="button" class="btn-close" data-chat-dismiss aria-label="Cerrar"></button>
-                </div>
-              {% endwith %}
-            {% endif %}
-            {% if messages %}
-              {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                  {{ message }}
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                </div>
-              {% endfor %}
-            {% endif %}
-          </div>
-          <div class="dj-b-content">
-            {% block content %}
-            {% endblock content %}
-          </div>
-        </main>
-      </div>
+        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-            crossorigin="anonymous"></script>
-    <script>
-      (function () {
-        "use strict";
 
-        const container = document.getElementById("alerts");
-        if (!container) return;
+</header>
 
-        container.setAttribute("aria-live", "polite");
-        container.setAttribute("aria-atomic", "true");
+<div class="container-fluid">
+    <div class="row">
 
-        const alerts = container.querySelectorAll(
-          ".alert:not([data-chat-alert])"
-        );
-        alerts.forEach((alert, index) => {
-          const timeout = 5000 + index * 200;
-          window.setTimeout(() => {
-            const instance = bootstrap.Alert.getOrCreateInstance(alert);
-            instance.close();
-          }, timeout);
+        <!-- SIDEBAR -->
+        <nav id="sidebarMenu" class="col-lg-2 d-lg-block sidebar collapse">
+            <div class="position-sticky pt-3 sidebar-sticky">
+                <ul class="nav nav-pills px-2 flex-column mb-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link{% if request.path_info == '/panel/' %} active{% endif %}"
+                           href="{% url 'panel_home' %}">
+                            <i class="bi bi-house-door sidebar-icon"></i>
+                            <span>Inicio</span>
+                        </a>
+                    </li>
+
+                    {% if perms.paneltrabajador.view_cita %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/dashboard/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_dashboard' %}">
+                            <i class="bi bi-speedometer2 sidebar-icon"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.paneltrabajador.view_cliente %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/clientes/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_cliente_listado' %}">
+                            <i class="bi bi-people sidebar-icon"></i>
+                            <span>Clientes</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.paneltrabajador.view_mascota %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/mascotas/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_mascota_listar' %}">
+                            <i class="bi bi-heart-pulse sidebar-icon"></i>
+                            <span>Mascotas</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.paneltrabajador.view_cita %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/citas/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_cita_listar' %}">
+                            <i class="bi bi-calendar-check sidebar-icon"></i>
+                            <span>Citas</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.paneltrabajador.view_chatconversation %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/chat/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_chat_list' %}">
+                            <i class="bi bi-chat-dots sidebar-icon"></i>
+                            <span>Chat en vivo</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.paneltrabajador.view_producto %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/productos/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_producto_listar' %}">
+                            <i class="bi bi-box-seam sidebar-icon"></i>
+                            <span>Inventario</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.paneltrabajador.view_factura %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/facturas/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_factura_listar' %}">
+                            <i class="bi bi-receipt sidebar-icon"></i>
+                            <span>Facturaciones</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.auth.view_user %}
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/usuarios/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_usuario_listar' %}">
+                            <i class="bi bi-person-gear sidebar-icon"></i>
+                            <span>Usuarios</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </div>
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="ms-sm-auto col-lg-10 px-md-4 my-3 dashboard-main">
+
+            <!-- ALERTAS -->
+            <div id="alerts" class="dj-b-alerts mb-3">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- BLOQUE DE CONTENIDO -->
+            <div class="dj-b-content">
+                {% block content %}{% endblock content %}
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+<!-- SCRIPT DEL SIDEBAR -->
+<script>
+(function () {
+    const toggleButtons = document.querySelectorAll('[data-sidebar-toggle]');
+    if (!toggleButtons.length) return;
+
+    const mediaQuery = window.matchMedia('(min-width: 992px)');
+    const body = document.body;
+    const sidebar = document.getElementById('sidebarMenu');
+    const key = 'panel.sidebar.collapsed';
+
+    const updateButton = (btn, collapsed) => {
+        const icon = btn.querySelector('[data-sidebar-icon]');
+        if (icon) {
+            icon.classList.toggle('bi-layout-sidebar-inset', !collapsed);
+            icon.classList.toggle('bi-layout-sidebar-inset-reverse', collapsed);
+        }
+        btn.setAttribute('aria-expanded', (!collapsed).toString());
+    };
+
+    const applyStored = () => {
+        let collapsed = localStorage.getItem(key) === 'true';
+        if (mediaQuery.matches && collapsed) body.classList.add('sidebar-collapsed');
+        else body.classList.remove('sidebar-collapsed');
+
+        toggleButtons.forEach(btn => updateButton(btn, collapsed));
+    };
+
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            body.classList.toggle('sidebar-collapsed');
+            const isCollapsed = body.classList.contains('sidebar-collapsed');
+            toggleButtons.forEach(b => updateButton(b, isCollapsed));
+            localStorage.setItem(key, isCollapsed);
         });
-      })();
-    </script>
-    {% if perms.paneltrabajador.view_chatconversation %}
-      <script>
-        (function () {
-          const alertElement = document.querySelector('[data-chat-alert]');
-          if (!alertElement) {
-            return;
-          }
+    });
 
-          const endpoint = alertElement.getAttribute('data-chat-endpoint');
-          if (!endpoint) {
-            return;
-          }
+    applyStored();
+})();
+</script>
 
-          const countElement = alertElement.querySelector('[data-chat-count]');
-          const pluralElement = alertElement.querySelector('[data-chat-plural]');
-          const closeButton = alertElement.querySelector('[data-chat-dismiss]');
-          const initialCount = Number.parseInt(alertElement.getAttribute('data-chat-initial-count'), 10) || 0;
-          const pollIntervalMs = 15000;
-          let pollTimeoutId = null;
-          let dismissedManually = false;
-          let lastCount = initialCount;
-
-          const updateView = (count) => {
-            if (countElement) {
-              countElement.textContent = count;
-            }
-
-            if (pluralElement) {
-              pluralElement.textContent = count === 1 ? '' : 'es';
-            }
-
-            if (count > 0 && !dismissedManually) {
-              alertElement.classList.add('show');
-              alertElement.classList.remove('d-none');
-              alertElement.setAttribute('aria-hidden', 'false');
-            } else if (count === 0) {
-              alertElement.classList.remove('show');
-              alertElement.classList.add('d-none');
-              alertElement.setAttribute('aria-hidden', 'true');
-            }
-          };
-
-          if (closeButton) {
-            closeButton.addEventListener('click', function () {
-              dismissedManually = true;
-              alertElement.classList.remove('show');
-              alertElement.classList.add('d-none');
-              alertElement.setAttribute('aria-hidden', 'true');
-            });
-          }
-
-          const schedulePoll = () => {
-            pollTimeoutId = window.setTimeout(poll, pollIntervalMs);
-          };
-
-          const stopPolling = () => {
-            if (pollTimeoutId !== null) {
-              window.clearTimeout(pollTimeoutId);
-              pollTimeoutId = null;
-            }
-          };
-
-          const poll = () => {
-            fetch(endpoint, {
-              method: 'GET',
-              credentials: 'same-origin',
-              headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-              },
-              cache: 'no-store',
-            })
-              .then((response) => {
-                if (response.status === 403) {
-                  stopPolling();
-                  return null;
-                }
-
-                if (!response.ok) {
-                  throw new Error('Solicitud inválida');
-                }
-
-                return response.json();
-              })
-              .then((data) => {
-                if (!data) {
-                  return;
-                }
-
-                const count = Number.parseInt(data.pending_count, 10);
-                if (!Number.isNaN(count)) {
-                  if (dismissedManually && count > lastCount) {
-                    dismissedManually = false;
-                  }
-
-                  if (count === 0) {
-                    dismissedManually = false;
-                  }
-
-                  lastCount = count;
-                  updateView(count);
-                }
-
-                schedulePoll();
-              })
-              .catch((error) => {
-                console.error('No se pudo actualizar el estado del chat en vivo.', error);
-                schedulePoll();
-              });
-          };
-
-          updateView(initialCount);
-          poll();
-        })();
-      </script>
-    {% endif %}
-  </body>
+</body>
 </html>
