@@ -18,6 +18,15 @@ def home(request):
         # Grupos del usuario como cadena legible
         grupos_usuario = list(request.user.groups.values_list('name', flat=True))
         grupo = ", ".join(nombre.capitalize() for nombre in grupos_usuario)
+        grupo_legible = grupo if grupo else "Sin rol asignado"
+
+        nombre_completo = request.user.get_full_name().strip()
+        display_name = nombre_completo if nombre_completo else request.user.username
+
+        if nombre_completo:
+            iniciales = "".join(part[0] for part in nombre_completo.split() if part)[:2].upper()
+        else:
+            iniciales = (request.user.username[:2] or "U").upper()
 
         try:
             perfil_usuario = request.user.panel_profile  # type: ignore[attr-defined]
@@ -184,16 +193,19 @@ def home(request):
             "username": request.user.username,
             "first_name": request.user.first_name,
             "last_name": request.user.last_name,
+            "display_name": display_name,
             "citas": citas,
             "proxima_cita": proxima_cita,
             "filtro_activo": filtro_activo,
             "estadisticas_hoy": estadisticas_hoy,
+            "grupo": grupo_legible,
             "grupo": grupo,
             "es_recepcionista": es_recepcionista,
             "resumen_recepcionista": resumen_recepcionista,
             "proximas_citas": proximas_citas,
             "pendientes_checkin": pendientes_checkin,
             "profile_photo_url": perfil_usuario.photo_url if perfil_usuario else None,
+            "avatar_initials": iniciales or "U",
         }
         return render(request, 'paneltrabajador/home.html', context)
 

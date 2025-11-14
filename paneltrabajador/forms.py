@@ -1,17 +1,21 @@
 import re
 from datetime import date
-from django import forms
-from django.db.models import Q
-from .models import (Cita, Cliente, Mascota, Factura, Producto, EvolucionClinica, UserProfile,)
-from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import PasswordResetForm
-from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
+from io import BytesIO
+from pathlib import Path
+from PIL import Image, ImageOps, UnidentifiedImageError
 
-from django.forms.widgets import DateTimeInput
+from django import forms
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import PasswordChangeForm, PasswordResetForm, SetPasswordForm
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
+from django.core.mail import EmailMultiAlternatives
+from django.db.models import Q
+from django.forms.widgets import DateTimeInput
+from django.template.loader import render_to_string
 from django.utils import timezone
+from .models import (Cita, Cliente, EvolucionClinica, Factura, Mascota, Producto, UserProfile,)
 
 # https://stackoverflow.com/a/69965027
 class DateTimeLocalInput(forms.DateTimeInput):
@@ -223,6 +227,79 @@ class UserProfileAvatarForm(forms.ModelForm):
             css = widget.attrs.get("class", "")
             if "is-invalid" not in css:
                 widget.attrs["class"] = f"{css} is-invalid".strip()
+    
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        uploaded = self.cleaned_data.get("photo")
+
+        if uploaded:
+            processed_content, extension = self._process_image(uploaded)
+            if processed_content:
+                filename = Path(uploaded.name or "avatar").stem
+                profile.photo.save(f"{filename}{extension}", processed_content, save=False)
+            else:
+                uploaded.seek(0)
+                profile.photo = uploaded
+        elif uploaded is False:
+            profile.photo.delete(save=False)
+            profile.photo = None
+
+        if commit:
+            profile.save()
+            self.save_m2m()
+
+        return profile
+
+    def _process_image(self, uploaded_file):
+        try:
+            uploaded_file.seek(0)
+        except Exception:
+            return None, None
+
+        try:
+            image = Image.open(uploaded_file)
+            image.load()
+            image = ImageOps.exif_transpose(image)
+        except (UnidentifiedImageError, OSError):
+            uploaded_file.seek(0)
+            return None, None
+
+        width, height = image.size
+        if width <= 0 or height <= 0:
+            uploaded_file.seek(0)
+            return None, None
+
+        min_side = min(width, height)
+        left = (width - min_side) / 2
+        top = (height - min_side) / 2
+        right = left + min_side
+        bottom = top + min_side
+        image = image.crop((left, top, right, bottom))
+
+        target_size = 512
+        if image.width > target_size:
+            image = image.resize((target_size, target_size), Image.LANCZOS)
+
+        has_alpha = image.mode in ("RGBA", "LA") or (
+            image.mode == "P" and "transparency" in image.info
+        )
+
+        if has_alpha:
+            image = image.convert("RGBA")
+            image_format = "PNG"
+            extension = ".png"
+            save_kwargs = {}
+        else:
+            image = image.convert("RGB")
+            image_format = "JPEG"
+            extension = ".jpg"
+            save_kwargs = {"quality": 90, "optimize": True}
+
+        buffer = BytesIO()
+        image.save(buffer, format=image_format, **save_kwargs)
+        buffer.seek(0)
+
+        return ContentFile(buffer.read()), extension
 
 
 class StyledPasswordChangeForm(PasswordChangeForm):
