@@ -7,7 +7,7 @@ from django.db.models import Exists, OuterRef
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from paneltrabajador.models import Cita, EvolucionClinica
+from paneltrabajador.models import Cita, EvolucionClinica, UserProfile
 
 
 def home(request):
@@ -18,6 +18,11 @@ def home(request):
         # Grupos del usuario como cadena legible
         grupos_usuario = list(request.user.groups.values_list('name', flat=True))
         grupo = ", ".join(nombre.capitalize() for nombre in grupos_usuario)
+
+        try:
+            perfil_usuario = request.user.panel_profile  # type: ignore[attr-defined]
+        except UserProfile.DoesNotExist:
+            perfil_usuario = None
 
         # ¿Tiene rol de recepcionista?
         es_recepcionista = any(nombre.lower() == 'recepcionista' for nombre in grupos_usuario)
@@ -188,6 +193,7 @@ def home(request):
             "resumen_recepcionista": resumen_recepcionista,
             "proximas_citas": proximas_citas,
             "pendientes_checkin": pendientes_checkin,
+            "profile_photo_url": perfil_usuario.photo_url if perfil_usuario else None,
         }
         return render(request, 'paneltrabajador/home.html', context)
 

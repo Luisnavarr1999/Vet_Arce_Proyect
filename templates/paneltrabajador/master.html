@@ -167,6 +167,14 @@
                     </li>
                     {% endif %}
 
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/perfil/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_perfil' %}">
+                            <i class="bi bi-person-circle sidebar-icon"></i>
+                            <span>Perfil</span>
+                        </a>
+                    </li>
+
                 </ul>
             </div>
         </nav>

@@ -1,0 +1,117 @@
+{% extends "paneltrabajador/master.html" %}
+{% load static %}
+
+{% block title %}Perfil{% endblock title %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card profile-card shadow-sm border-0 h-100">
+      <div class="card-body text-center">
+        {% if profile.photo_url %}
+          <div class="avatar-photo-wrapper mx-auto mb-3">
+            <img src="{{ profile.photo_url }}" alt="Foto de perfil" class="avatar-photo">
+          </div>
+        {% else %}
+          <div class="avatar-circle mx-auto mb-3">
+            <span class="avatar-initial">{{ request.user.first_name|default:"U"|slice:":1" }}{{ request.user.last_name|default:""|slice:":1" }}</span>
+          </div>
+        {% endif %}
+        <h5 class="fw-semibold mb-1">{{ request.user.get_full_name|default:request.user.username }}</h5>
+        <p class="text-muted mb-0">{{ request.user.username }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header border-0 bg-transparent py-3">
+        <h5 class="mb-0 fw-semibold text-primary">Actualizar nombre de usuario</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="username">
+          {% if username_form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in username_form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <div class="mb-3">
+            <label class="form-label" for="id_username">{{ username_form.username.label }}</label>
+            {{ username_form.username }}
+            {% if username_form.username.help_text %}
+              <div class="form-text">{{ username_form.username.help_text }}</div>
+            {% endif %}
+            {% for error in username_form.username.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header border-0 bg-transparent py-3">
+        <h5 class="mb-0 fw-semibold text-primary">Fotografía de perfil</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="avatar">
+          {% if avatar_form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in avatar_form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <div class="mb-3">
+            <label class="form-label" for="id_photo">{{ avatar_form.photo.label }}</label>
+            {{ avatar_form.photo }}
+            {% for error in avatar_form.photo.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary">Actualizar fotografía</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header border-0 bg-transparent py-3">
+        <h5 class="mb-0 fw-semibold text-primary">Cambiar contraseña</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="password">
+          {% if password_form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in password_form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% for field in password_form %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
+              {% for error in field.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary">Cambiar contraseña</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -400,3 +400,66 @@ class ChatMessage(models.Model):
         super().save(*args, **kwargs)
         if is_new:
             self.conversation.touch(summary=self.content)
+
+class UserProfile(models.Model):
+    """Perfil asociado a un usuario del panel de trabajadores."""
+
+    user = models.OneToOneField(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name="panel_profile",
+    )
+    photo = models.ImageField(
+        upload_to="panel/perfiles/",
+        blank=True,
+        null=True,
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Perfil de usuario"
+        verbose_name_plural = "Perfiles de usuarios"
+
+    def __str__(self):
+        nombre = self.user.get_full_name().strip()
+        if not nombre:
+            nombre = self.user.get_username()
+        return f"Perfil de {nombre}"
+
+    @property
+    def photo_url(self) -> Optional[str]:
+        if self.photo:
+            try:
+                return self.photo.url
+            except ValueError:
+                return None
+        return None
+
+    def save(self, *args, **kwargs):
+        old_photo_name: Optional[str] = None
+        old_storage = None
+
+        if self.pk:
+            try:
+                old = UserProfile.objects.only("photo").get(pk=self.pk)
+            except UserProfile.DoesNotExist:
+                old = None
+            if old and old.photo:
+                if not self.photo:
+                    old_photo_name = old.photo.name
+                    old_storage = old.photo.storage
+                elif old.photo.name != self.photo.name:
+                    old_photo_name = old.photo.name
+                    old_storage = old.photo.storage
+
+        super().save(*args, **kwargs)
+
+        if old_photo_name and old_storage and old_storage.exists(old_photo_name):
+            old_storage.delete(old_photo_name)
+
+    def delete(self, using=None, keep_parents=False):
+        photo_name = self.photo.name if self.photo else None
+        storage = self.photo.storage if self.photo else None
+        super().delete(using=using, keep_parents=keep_parents)
+        if photo_name and storage and storage.exists(photo_name):
+            storage.delete(photo_name)

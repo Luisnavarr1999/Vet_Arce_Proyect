@@ -2,10 +2,10 @@ import re
 from datetime import date
 from django import forms
 from django.db.models import Q
-from .models import Cita, Cliente, Mascota, Factura, Producto, EvolucionClinica
+from .models import (Cita, Cliente, Mascota, Factura, Producto, EvolucionClinica, UserProfile,)
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import PasswordResetForm 
-from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -172,6 +172,74 @@ class CitaForm(forms.ModelForm):
                     "Solo puedes marcar 'Asistió' o 'No asistió' cuando la cita fue 'Reservada' y ya ocurrió."
                 )
         return cleaned
+    
+
+class UserProfileForm(forms.ModelForm):
+    """Formulario para actualizar el nombre de usuario del colaborador."""
+
+    class Meta:
+        model = get_user_model()
+        fields = ["username"]
+        labels = {"username": "Nombre de usuario"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        username_field = self.fields["username"]
+        username_field.widget.attrs.setdefault("class", "form-control")
+        username_field.widget.attrs.setdefault("autocomplete", "username")
+        username_field.help_text = "Este nombre se utilizará para iniciar sesión en el panel."
+
+        if self.is_bound and self.errors:
+            css = username_field.widget.attrs.get("class", "")
+            if "is-invalid" not in css:
+                username_field.widget.attrs["class"] = f"{css} is-invalid".strip()
+
+
+class UserProfileAvatarForm(forms.ModelForm):
+    """Formulario para administrar la fotografía de perfil."""
+
+    class Meta:
+        model = UserProfile
+        fields = ["photo"]
+        labels = {"photo": "Fotografía"}
+        widgets = {
+            "photo": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control",
+                    "accept": "image/*",
+                }
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["photo"].required = False
+        clear_label = "Eliminar fotografía actual"
+        widget = self.fields["photo"].widget
+        if isinstance(widget, forms.ClearableFileInput):
+            widget.clear_checkbox_label = clear_label
+
+        if self.is_bound and self.errors:
+            css = widget.attrs.get("class", "")
+            if "is-invalid" not in css:
+                widget.attrs["class"] = f"{css} is-invalid".strip()
+
+
+class StyledPasswordChangeForm(PasswordChangeForm):
+    """Versión del formulario de cambio de contraseña con estilos Bootstrap."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.widget.attrs.setdefault("class", "form-control")
+            field.widget.attrs.setdefault("autocomplete", "new-password")
+            if name == "old_password":
+                field.widget.attrs["autocomplete"] = "current-password"
+            if self.is_bound and self.errors.get(name):
+                css = field.widget.attrs.get("class", "")
+                if "is-invalid" not in css:
+                    field.widget.attrs["class"] = f"{css} is-invalid".strip()
+
 
 ESPECIE_CHOICES = [
     ("Perro", "Perro"),

@@ -194,11 +194,20 @@
     <div class="col-lg-4">
       <div class="card profile-card shadow-sm border-0 mb-4">
         <div class="card-body text-center">
-          <div class="avatar-circle mx-auto mb-3">
-            <span class="avatar-initial">{{ first_name|default:"U"|slice:":1" }}{{ last_name|default:""|slice:":1" }}</span>
-          </div>
+          {% if profile_photo_url %}
+            <div class="avatar-photo-wrapper mx-auto mb-3">
+              <img src="{{ profile_photo_url }}" alt="Foto de perfil" class="avatar-photo">
+            </div>
+          {% else %}
+            <div class="avatar-circle mx-auto mb-3">
+              <span class="avatar-initial">{{ first_name|default:"U"|slice:":1" }}{{ last_name|default:""|slice:":1" }}</span>
+            </div>
+          {% endif %}
           <h5 class="card-title fw-semibold mb-1">{{ first_name }} {{ last_name }}</h5>
           <p class="card-text text-muted mb-0">{{ grupo }}</p>
+          <div class="mt-3">
+            <a href="{% url 'panel_perfil' %}" class="btn btn-outline-primary btn-sm">Administrar perfil</a>
+          </div>
         </div>
       </div>
     </div>

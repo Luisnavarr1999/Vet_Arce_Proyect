@@ -9,6 +9,7 @@ from paneltrabajador.models import (
     Mascota,
     MascotaDocumento,
     Producto,
+    UserProfile,
 )
 
 @admin.register(Cita)
@@ -39,3 +40,4 @@ admin.site.register(Factura)
 admin.site.register(ChatConversation)
 admin.site.register(ChatMessage)
 admin.site.register(EvolucionClinica)
+admin.site.register(UserProfile)

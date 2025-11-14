@@ -14,5 +14,7 @@ from .chat import (
     chat_pending_count,
 )
 
+from .profile import perfil
+
 # Este archivo importará todas las vistas en esta carpeta
 # Recordar importar aqui en el caso de crear una nueva vista

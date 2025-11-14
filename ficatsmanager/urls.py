@@ -30,6 +30,7 @@ urlpatterns = [
 
     path('panel/', vistas_panel.home, name="panel_home"),
     path('panel/dashboard/', vistas_panel.dashboard, name='panel_dashboard'),
+    path('panel/perfil/', vistas_panel.perfil, name='panel_perfil'),
     
     path('panel/password/recuperar/', vistas_panel.password_reset_request, name='panel_password_reset'),
     path('panel/password/recuperar/exito/', auth_views.PasswordResetDoneView.as_view(template_name='paneltrabajador/password_reset_done.html'), name='panel_password_reset_done',),
