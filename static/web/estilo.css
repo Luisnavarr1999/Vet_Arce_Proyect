@@ -1,8 +1,66 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap');
 
+:root {
+  --maple-orange: #d67d2c;
+  --maple-orange-dark: #b35a12;
+  --maple-amber: #f2c38b;
+  --maple-beige: #f8efe3;
+  --maple-brown: #5b3b25;
+  --maple-green: #4f7b4e;
+  --maple-green-dark: #365538;
+  --maple-red: #b64634;
+  --maple-red-dark: #8b2e24;
+}
+
 /* ===== Navbar maple otoñal ===== */
-.ficat-green {
-  background: #db9615;
+.ficat-green,
+.maple-hero-block {
+  background: linear-gradient(120deg, rgba(214, 125, 44, 0.95), rgba(143, 69, 20, 0.92));
+  color: #fff8ef;
+  border-radius: 28px;
+  padding: 3rem 2rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(92, 45, 15, 0.22);
+}
+
+.maple-hero-block::after {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+}
+
+.maple-hero-block .lead,
+.maple-hero-block p {
+  color: #fff5ea;
+}
+
+.maple-hero-block h1,
+.maple-hero-block .display-4 {
+  color: #fffaf1;
+  font-weight: 700;
+}
+
+.maple-hero-block .sep-short {
+  width: 80px;
+  height: 4px;
+  border: none;
+  margin: 1rem auto;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+}
+
+.maple-hero-block .maple-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  background: rgba(248, 239, 227, 0.15);
+  border-radius: 999px;
+  font-weight: 600;
 }
 
 .maple-navbar {
@@ -149,6 +207,220 @@
     animation: none;
   }
 }
+
+/* ===== Maple public pages ===== */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: var(--maple-beige);
+  color: #3f2c1f;
+}
+
+.maple-section-title {
+  font-weight: 700;
+  color: var(--maple-brown);
+}
+
+.maple-card {
+  border: none;
+  border-radius: 22px;
+  background: #fffdf9;
+  box-shadow: 0 12px 35px rgba(123, 75, 34, 0.08);
+  padding: 1.75rem;
+}
+
+.maple-card + .maple-card {
+  margin-top: 1rem;
+}
+
+.maple-card h1,
+.maple-card h2,
+.maple-card h3,
+.maple-card h4 {
+  color: var(--maple-brown);
+  font-weight: 700;
+}
+
+.maple-card ul {
+  padding-left: 1.25rem;
+  color: #5b4230;
+}
+
+.maple-highlight-card,
+.maple-info-card {
+  border-radius: 20px;
+  padding: 1.75rem;
+  background: #fff8f0;
+  border: 1px solid rgba(214, 125, 44, 0.18);
+  box-shadow: 0 10px 28px rgba(102, 63, 29, 0.08);
+}
+
+.maple-info-card h2,
+.maple-info-card h3 {
+  color: var(--maple-brown);
+}
+
+.maple-availability {
+  border-radius: 18px;
+  padding: 1.5rem;
+  background: linear-gradient(120deg, rgba(245, 229, 207, 0.95), rgba(230, 205, 173, 0.85));
+  border: 1px solid rgba(212, 156, 92, 0.35);
+  color: var(--maple-brown);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.maple-availability .badge {
+  background: var(--maple-green);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.btn-maple-green {
+  background: linear-gradient(120deg, var(--maple-green), var(--maple-green-dark));
+  border: none;
+  color: #f7fff6;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-maple-green:hover,
+.btn-maple-green:focus {
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(54, 85, 56, 0.35);
+}
+
+.btn-maple-red {
+  background: linear-gradient(120deg, var(--maple-red), var(--maple-red-dark));
+  border: none;
+  color: #fff8f6;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-maple-red:hover,
+.btn-maple-red:focus {
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(139, 46, 36, 0.35);
+}
+
+.btn-outline-maple {
+  border-radius: 999px;
+  border: 2px solid rgba(91, 59, 37, 0.25);
+  color: var(--maple-brown);
+  font-weight: 600;
+}
+
+.maple-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 26px;
+  background: #fff9f2;
+  border: 1px solid rgba(215, 149, 78, 0.3);
+  box-shadow: 0 12px 32px rgba(108, 70, 32, 0.08);
+}
+
+.maple-step {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: 16px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.maple-step .step-index {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.maple-step .step-label {
+  font-weight: 600;
+  color: var(--maple-brown);
+}
+
+.maple-step small {
+  color: rgba(91, 59, 37, 0.75);
+}
+
+.maple-step.is-current {
+  background: rgba(250, 224, 198, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(214, 125, 44, 0.35);
+}
+
+.maple-step.is-current .step-index {
+  background: var(--maple-orange);
+  border-color: transparent;
+  color: #fffaf4;
+}
+
+.maple-step.is-completed {
+  background: rgba(79, 123, 78, 0.08);
+}
+
+.maple-step.is-completed .step-index {
+  background: var(--maple-green);
+  border-color: transparent;
+  color: #f7fff6;
+}
+
+.maple-step:not(.is-current):not(.is-completed) .step-index {
+  color: rgba(91, 59, 37, 0.85);
+  border-color: rgba(91, 59, 37, 0.25);
+}
+
+.maple-form p {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1.25rem;
+}
+
+.maple-form label {
+  font-weight: 600;
+  color: var(--maple-brown);
+}
+
+.maple-form input,
+.maple-form select,
+.maple-form textarea {
+  border-radius: 14px;
+  border: 1px solid rgba(91, 59, 37, 0.25);
+  padding: 0.75rem 1rem;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  background: #fff;
+}
+
+.maple-form input:focus,
+.maple-form select:focus,
+.maple-form textarea:focus {
+  border-color: rgba(214, 125, 44, 0.65);
+  box-shadow: 0 0 0 0.15rem rgba(214, 125, 44, 0.2);
+  outline: none;
+}
+
+.maple-form .helptext {
+  font-size: 0.85rem;
+  color: rgba(91, 59, 37, 0.7);
+}
+
+.maple-form .errorlist {
+  margin: 0;
+  color: var(--maple-red);
+  list-style: none;
+  font-size: 0.9rem;
+}
+
 
 /* ===== Hero con carrusel ===== */
 header.home {
@@ -313,6 +585,23 @@ header.home{
 .social-icons .social-link:hover {
   color: #000;                  /* Negro al pasar el mouse */
   transform: scale(1.15);       /* Ligeramente más grande */
+}
+
+.maple-footer {
+  background: linear-gradient(120deg, #f7efe4, #f2e4d3);
+  color: var(--maple-brown);
+}
+
+.maple-footer p {
+  color: var(--maple-brown);
+}
+
+.maple-footer .social-link {
+  color: var(--maple-orange);
+}
+
+.maple-footer .social-link:hover {
+  color: var(--maple-brown);
 }
 
 

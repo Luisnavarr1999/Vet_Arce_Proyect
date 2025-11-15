@@ -3,20 +3,30 @@
   Arce Vet - Consulta de mascotas
 {% endblock title %}
 {% block content %}
-  <div class="p-5 my-2 border-0 rounded ficat-green text-light">
-    <div class="text-center py-5">
-      <h1 class="display-4 text-light">Consulta de mascotas</h1>
-      <hr class="sep-short" />
-      <p class="lead">Consulte la ficha y otro tipo de datos de su mascota registrados en nuestra clínica.</p>
+  <section class="maple-hero-block text-center my-4">
+    <div class="maple-hero-badge text-uppercase">
+      <i class="bi bi-paw"></i>
+      Consulta
     </div>
-  </div>
-  <div class="card">
-    <div class="card-body">
-      <h3>Complete con los datos requeridos</h3>
-      <form method="post">
-        {% csrf_token %} {{ form.as_p }}
-        <button type="submit" class="btn btn-primary w-100">Buscar</button>
-      </form>
+  <h1 class="display-5 mt-3">Consulta de mascotas</h1>
+    <hr class="sep-short" />
+    <p class="lead mb-0">
+      Consulte la ficha y los principales datos de su mascota registrados en nuestra clínica.
+    </p>
+  </section>
+
+  <div class="maple-card shadow-sm">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <span class="badge bg-light text-dark rounded-pill px-3 py-2 fw-semibold">
+        <i class="bi bi-journal-text me-1 text-warning"></i>
+        Paso único
+      </span>
+      <h3 class="mb-0">Complete los datos requeridos</h3>
     </div>
+    <form method="post" class="maple-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-maple-green w-100">Buscar</button>
+    </form>
   </div>
 {% endblock content %}

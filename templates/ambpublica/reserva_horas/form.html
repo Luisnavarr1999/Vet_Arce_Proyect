@@ -3,97 +3,113 @@
   Arce Vet - Reserva de horas
 {% endblock title %}
 {% block content %}
+
+  {# HERO INICIAL (PRIMER PASO O SIN HORAS) #}
   {% if step == '' or step == 'nohours' %}
-    <div class="p-5 my-2 border-0 rounded ficat-green text-light">
-      <div class="text-center py-5">
-        <h1 class="display-4 text-light">Reserva de horas</h1>
-        <hr class="sep-short" />
-        <p class="lead">
-          Desde la comodidad de su casa solicite nuestra atención médica en un par de clics.
-        </p>
-        <p class="mb-0 fs-5">
-          El proceso se completa en tres pasos: selecciona el servicio, identifica a tu mascota y confirma tu hora.
-        </p>
+    <section class="maple-hero-block text-center my-4">
+      <div class="maple-hero-badge text-uppercase">
+        <i class="bi bi-calendar-heart"></i>
+        Agenda
       </div>
+      <h1 class="display-5 mt-3">Reserva de horas</h1>
+      <hr class="sep-short" />
+      <p class="lead">
+        Desde la comodidad de tu casa solicita nuestra atención médica en tres pasos.
+      </p>
+      <p class="mb-0 fs-5">
+        Selecciona el servicio, identifica a tu mascota y confirma tu hora.
+      </p>
 
       {% if service_highlights %}
         <div class="row row-cols-1 row-cols-md-3 g-3 mt-4">
           {% for service in service_highlights %}
             <div class="col">
-              <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                  <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success border border-success-subtle"
-                          style="width: 3rem; height: 3rem;">
-                      <i class="bi {{ service.icon }} fs-4"></i>
-                    </span>
-                    <h2 class="h5 mb-0">{{ service.name }}</h2>
-                  </div>
-                  <p class="mb-0 text-muted">{{ service.description }}</p>
+              <div class="maple-highlight-card h-100 text-start">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <span class="rounded-circle d-flex align-items-center justify-content-center bg-white text-warning shadow-sm"
+                        style="width: 3.25rem; height: 3.25rem;">
+                    <i class="bi {{ service.icon }} fs-4"></i>
+                  </span>
+                  <h2 class="h5 mb-0 text-uppercase text-muted">{{ service.name }}</h2>
                 </div>
+                <p class="mb-0 text-secondary">{{ service.description }}</p>
               </div>
             </div>
           {% endfor %}
         </div>
       {% endif %}
+    </section>
+  {% endif %}
+
+  {# PASOS / WIZARD #}
+  {% if progress and step != 'nohours' %}
+    <div class="maple-steps mb-4">
+      {% for stage in progress %}
+        <div class="maple-step {% if stage.is_current %}is-current{% elif stage.is_completed %}is-completed{% endif %}">
+          <div class="step-index">{{ forloop.counter }}</div>
+          <div>
+            <div class="step-label">
+              <i class="bi {{ stage.icon }} me-1"></i>{{ stage.label }}
+            </div>
+            {% if stage.is_completed %}
+              <small>Completado</small>
+            {% elif stage.is_current %}
+              <small>Paso actual</small>
+            {% else %}
+              <small>Pendiente</small>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
     </div>
   {% endif %}
 
-  {% if progress and step != 'nohours' %}
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-body">
-        <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
-          {% for stage in progress %}
-            <div class="d-flex align-items-center gap-3">
-              <span class="rounded-circle border border-2 d-flex align-items-center justify-content-center fw-semibold {% if stage.is_current %}border-primary text-primary{% elif stage.is_completed %}border-success text-success{% else %}text-muted{% endif %}"
-                    style="width: 3rem; height: 3rem;">
-                {{ forloop.counter }}
-              </span>
-              <div>
-                <div class="fw-semibold {% if stage.is_current %}text-primary{% elif stage.is_completed %}text-success{% else %}text-muted{% endif %}">
-                  <i class="bi {{ stage.icon }} me-1"></i>{{ stage.label }}
-                </div>
-                {% if stage.is_completed %}
-                  <small class="text-success">Completado</small>
-                {% elif stage.is_current %}
-                  <small class="text-primary">Paso actual</small>
-                {% else %}
-                  <small class="text-muted">Pendiente</small>
-                {% endif %}
-              </div>
-            </div>
-          {% endfor %}
+  {# CASO SIN HORAS DISPONIBLES #}
+  {% if step == 'nohours' %}
+    <div class="maple-info-card shadow-sm mb-3">
+      <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <span class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center"
+              style="width: 3.5rem; height: 3.5rem;">
+          <i class="bi bi-hourglass-split fs-4 text-warning"></i>
+        </span>
+        <div>
+          <h2 class="h5 mb-2">Por ahora no contamos con horas disponibles.</h2>
+          <p class="mb-2">
+            Actualizamos nuestra agenda con frecuencia. Te invitamos a intentarlo nuevamente más tarde
+            o a comunicarte con nuestro equipo para recibir asistencia personalizada.
+          </p>
+          <p class="mb-0">
+            Si ya tienes una hora agendada y necesitas hacer cambios, puedes gestionarla desde la sección
+            <strong>Cancelar cita</strong>.
+          </p>
         </div>
       </div>
     </div>
-  {% endif %}
-
-  {% if step == 'nohours' %}
-    <div class="alert alert-warning shadow-sm">
-      <h2 class="h5 mb-2">Por ahora no contamos con horas disponibles.</h2>
-      <p class="mb-2">Actualizamos nuestra agenda con frecuencia. Te invitamos a intentarlo nuevamente más tarde o a comunicarte con nuestro equipo para recibir asistencia personalizada.</p>
-      <p class="mb-0">Si ya tienes una hora agendada y necesitas hacer cambios, puedes gestionarla desde la sección <strong>Cancelar cita</strong>.</p>
-    </div>
     <div class="d-flex flex-column flex-md-row gap-2">
-      <a href="{% url 'ambpublico_index' %}" class="btn btn-outline-secondary w-100">Volver al inicio</a>
-      <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">Cancelar cita</a>
+      <a href="{% url 'ambpublico_index' %}" class="btn btn-outline-maple w-100">Volver al inicio</a>
+      <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-maple-red w-100">Cancelar cita</a>
     </div>
+
   {% else %}
+    {# OTRAS ESPECIALIDADES CON DISPONIBILIDAD #}
     {% if servicios_alternativos %}
-      <div class="alert alert-info shadow-sm">
-        <h2 class="h5 mb-3">Otras especialidades con disponibilidad</h2>
+      <div class="maple-info-card shadow-sm mb-4">
+        <h2 class="h5 mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-stars text-warning"></i>
+          Otras especialidades con disponibilidad
+        </h2>
         <div class="row row-cols-1 row-cols-md-3 g-3">
           {% for service in servicios_alternativos %}
             <div class="col">
-              <div class="card h-100 border-info-subtle border shadow-sm">
-                <div class="card-body">
-                  <div class="d-flex align-items-center gap-2 mb-2">
-                    <i class="bi {{ service.icon }} text-info fs-4"></i>
-                    <h3 class="h5 mb-0">{{ service.name }}</h3>
-                  </div>
-                  <p class="mb-3 text-muted">{{ service.description }}</p>
-                  <p class="mb-0 text-info fw-semibold">Selecciona este servicio en el primer paso para ver sus horarios disponibles.</p>
+              <div class="maple-card h-100">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="text-warning fs-4"><i class="bi {{ service.icon }}"></i></span>
+                  <h3 class="h5 mb-0">{{ service.name }}</h3>
                 </div>
+                <p class="mb-3 text-muted">{{ service.description }}</p>
+                <p class="mb-0 fw-semibold text-secondary">
+                  Selecciona este servicio en el primer paso para ver sus horarios disponibles.
+                </p>
               </div>
             </div>
           {% endfor %}
@@ -101,147 +117,152 @@
       </div>
     {% endif %}
 
+    {# BANDA "TENEMOS HORAS DISPONIBLES" #}
     {% if step == '' and servicios_disponibles %}
-      <div class="alert bg-success-subtle border border-success-subtle text-success-emphasis shadow-sm">
-        <div class="fw-semibold mb-2"><i class="bi bi-clock-history me-2"></i>Tenemos Horas Disponibles en:</div>
+      <div class="maple-availability shadow-sm mb-4">
+        <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+          <i class="bi bi-clock-history"></i>
+          Tenemos horas disponibles en:
+        </div>
         <div class="d-flex flex-wrap gap-2">
           {% for service in servicios_disponibles %}
-            <span class="badge bg-success text-light fs-6">{{ service.name }}</span>
+            <span class="badge text-light fs-6">{{ service.name }}</span>
           {% endfor %}
         </div>
       </div>
     {% endif %}
 
+    {# RESUMEN FINAL ANTES DE CONFIRMAR #}
     {% if step == 'final' %}
-      <div class="p-5 my-2 border-0 rounded ficat-green text-light">
-        <div class="text-center py-5">
-          <h1 class="display-4 text-light">¡Está a punto de reservar su hora!</h1>
-          <p class="lead">Por favor, revise su información...</p>
+      <section class="maple-hero-block text-center my-4">
+        <div class="maple-hero-badge text-uppercase">
+          <i class="bi bi-shield-check"></i>
+          Confirmación
         </div>
-      </div>
+        <h1 class="display-5 mt-3">¡Está a punto de reservar su hora!</h1>
+        <p class="lead mb-0">Revisa con calma la información antes de confirmar.</p>
+      </section>
 
       {% if servicio_nombre %}
-        <div class="card mb-2">
-          <div class="card-body">
-            <h3>Servicio seleccionado</h3>
-            <p class="mb-0">{{ servicio_nombre }}</p>
-          </div>
+        <div class="maple-card mb-3">
+          <h3>Servicio seleccionado</h3>
+          <p class="mb-0">{{ servicio_nombre }}</p>
         </div>
       {% endif %}
 
-      <div class="card mb-2">
-        <div class="card-body">
-          <h3>Detalles del Cliente</h3>
-          <ul>
-            <li><strong>Rut:</strong> {{ cliente.rut }}</li>
-            <li><strong>Nombre:</strong> {{ cliente.nombre_cliente }}</li>
-            <li><strong>Dirección:</strong> {{ cliente.direccion }}</li>
-            <li><strong>Teléfono:</strong> {{ cliente.telefono }}</li>
-            <li><strong>Email:</strong> {{ cliente.email }}</li>
-          </ul>
-        </div>
+      <div class="maple-card mb-3">
+        <h3>Detalles del Cliente</h3>
+        <ul class="mb-0">
+          <li><strong>Rut:</strong> {{ cliente.rut }}</li>
+          <li><strong>Nombre:</strong> {{ cliente.nombre_cliente }}</li>
+          <li><strong>Dirección:</strong> {{ cliente.direccion }}</li>
+          <li><strong>Teléfono:</strong> {{ cliente.telefono }}</li>
+          <li><strong>Email:</strong> {{ cliente.email }}</li>
+        </ul>
       </div>
 
-      <div class="card mb-2">
-        <div class="card-body">
-          <h3>Detalles de la Mascota</h3>
-          <ul>
-            <li><strong>Nombre:</strong> {{ mascota.nombre }}</li>
-            <li><strong>Número de Chip:</strong> {{ mascota.numero_chip }}</li>
-          </ul>
-        </div>
+      <div class="maple-card mb-3">
+        <h3>Detalles de la Mascota</h3>
+        <ul class="mb-0">
+          <li><strong>Nombre:</strong> {{ mascota.nombre }}</li>
+          <li><strong>Número de Chip:</strong> {{ mascota.numero_chip }}</li>
+        </ul>
       </div>
     {% endif %}
 
-    <div class="card mb-2">
-      <div class="card-body">
-        {% if step != '' and step != 'final' %}
-          <h1>{{ titulo }}</h1>
-        {% endif %}
+    {# CARD PRINCIPAL DEL FORMULARIO (TODOS LOS PASOS) #}
+    <div class="maple-card mb-3">
+      {% if step != '' and step != 'final' %}
+        <h2 class="h4 mb-3">{{ titulo }}</h2>
+      {% endif %}
 
-        {% if servicio_nombre %}
-          <div class="alert alert-info" role="status">
-            <strong>Servicio seleccionado:</strong> {{ servicio_nombre }}
-          </div>
-        {% endif %}
+      {% if servicio_nombre %}
+        <div class="maple-info-card mb-3" role="status">
+          <strong>Servicio seleccionado:</strong> {{ servicio_nombre }}
+        </div>
+      {% endif %}
 
-        {% if step == 'crear_cliente' and cliente_rut %}
-          <div class="alert alert-secondary" role="status">
-            <strong>RUT registrado:</strong> {{ cliente_rut }}
-          </div>
-        {% endif %}
+      {% if step == 'crear_cliente' and cliente_rut %}
+        <div class="maple-info-card mb-3" role="status">
+          <strong>RUT registrado:</strong> {{ cliente_rut }}</strong>
+        </div>
+      {% endif %}
 
-        <form method="post">
-          {% csrf_token %}
-          {{ form.as_p }}
+      <form method="post" class="maple-form">
+        {% csrf_token %}
+        {{ form.as_p }}
 
-          <button type="submit" class="btn btn-primary w-100 mb-2">Continuar</button>
-        </form>
+        <button type="submit" class="btn btn-maple-green w-100 mb-2">
+          {% if step == 'final' %}Confirmar reserva{% else %}Continuar{% endif %}
+        </button>
+      </form>
 
-        {% if step == '' %}
-          <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-danger w-100">
-            Cancelar cita
-          </a>
-        {% else %}
-          <a href="{% url 'ambpublico_reserva_cancelar' %}" class="btn btn-danger w-100">
-            Cancelar
-          </a>
-        {% endif %}
+      {% if step == '' %}
+        <a href="{% url 'ambpublico_cancelar_cita' %}" class="btn btn-maple-red w-100">
+          Cancelar cita
+        </a>
+      {% else %}
+        <a href="{% url 'ambpublico_reserva_cancelar' %}" class="btn btn-maple-red w-100">
+          Cancelar
+        </a>
+      {% endif %}
 
-        {% if step == 'crear_mascota' %}
-          <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              const speciesField = document.getElementById('id_especie');
-              const breedField = document.getElementById('id_raza');
+      {% if step == 'crear_mascota' %}
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            const speciesField = document.getElementById('id_especie');
+            const breedField = document.getElementById('id_raza');
 
-              if (!speciesField || !breedField) return;
+            if (!speciesField || !breedField) return;
 
-              const breedOptions = {
-                'Perro': ['Mestizo', 'Labrador Retriever', 'Pastor Alemán', 'Poodle', 'Bulldog', 'Beagle', 'Golden Retriever', 'Chihuahua', 'Pug', 'Schnauzer'],
-                'Gato': ['Mestizo', 'Siamés', 'Persa', 'Maine Coon', 'Bengalí', 'Sphynx', 'British Shorthair', 'Abisinio', 'Angora Turco', 'Ragdoll'],
-                'Otros': ['Erizo', 'Hámster', 'Ratón', 'Cobaya', 'Conejo', 'Hurón', 'Tortuga', 'Iguana', 'Ave Exótica', 'Pez']
-              };
+            const breedOptions = {
+              'Perro': ['Mestizo', 'Labrador Retriever', 'Pastor Alemán', 'Poodle', 'Bulldog', 'Beagle', 'Golden Retriever', 'Chihuahua', 'Pug', 'Schnauzer'],
+              'Gato': ['Mestizo', 'Siamés', 'Persa', 'Maine Coon', 'Bengalí', 'Sphynx', 'British Shorthair', 'Abisinio', 'Angora Turco', 'Ragdoll'],
+              'Otros': ['Erizo', 'Hámster', 'Ratón', 'Cobaya', 'Conejo', 'Hurón', 'Tortuga', 'Iguana', 'Ave Exótica', 'Pez']
+            };
 
-              const createPlaceholder = () => {
+            const createPlaceholder = () => {
+              const option = document.createElement('option');
+              option.value = '';
+              option.textContent = 'Seleccione una raza';
+              option.disabled = true;
+              return option;
+            };
+
+            const populateBreeds = (species, preserveSelection = false) => {
+              const previousValue = preserveSelection ? breedField.value : '';
+              const options = breedOptions[species] ? [...breedOptions[species]] : [];
+              if (previousValue && !options.includes(previousValue)) options.push(previousValue);
+
+              breedField.innerHTML = '';
+              const placeholder = createPlaceholder();
+              breedField.appendChild(placeholder);
+
+              options.forEach(breed => {
                 const option = document.createElement('option');
-                option.value = '';
-                option.textContent = 'Seleccione una raza';
-                option.disabled = true;
-                return option;
-              };
+                option.value = breed;
+                option.textContent = breed;
+                breedField.appendChild(option);
+              });
 
-              const populateBreeds = (species, preserveSelection = false) => {
-                const previousValue = preserveSelection ? breedField.value : '';
-                const options = breedOptions[species] ? [...breedOptions[species]] : [];
-                if (previousValue && !options.includes(previousValue)) options.push(previousValue);
+              if (previousValue && options.includes(previousValue)) {
+                breedField.value = previousValue;
+                placeholder.selected = false;
+              } else {
+                placeholder.selected = true;
+              }
 
-                breedField.innerHTML = '';
-                const placeholder = createPlaceholder();
-                breedField.appendChild(placeholder);
+              breedField.disabled = options.length === 0;
+            };
 
-                options.forEach(breed => {
-                  const option = document.createElement('option');
-                  option.value = breed;
-                  option.textContent = breed;
-                  breedField.appendChild(option);
-                });
+            speciesField.addEventListener('change', event => populateBreeds(event.target.value, false));
+            populateBreeds(speciesField.value, true);
+          });
+        </script>
+      {% endif %}
+    </div>  {# cierre maple-card #}
 
-                if (previousValue && options.includes(previousValue)) {
-                  breedField.value = previousValue;
-                  placeholder.selected = false;
-                } else {
-                  placeholder.selected = true;
-                }
+  {% endif %}  {# cierre del else de step != 'nohours' #}
 
-                breedField.disabled = options.length === 0;
-              };
-
-              speciesField.addEventListener('change', event => populateBreeds(event.target.value, false));
-              populateBreeds(speciesField.value, true);
-            });
-          </script>
-        {% endif %}
-      </div>
-    </div>
-  {% endif %}
 {% endblock content %}
+
