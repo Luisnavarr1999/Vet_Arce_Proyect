@@ -14,8 +14,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.forms.widgets import DateTimeInput
 from django.template.loader import render_to_string
-from django.utils import timezone
-from .models import (Cita, Cliente, EvolucionClinica, Factura, Mascota, Producto, UserProfile,)
+from django.utils import formats, timezone
+from .models import (Cita,Cliente,EvolucionClinica,Factura,Mascota,MascotaDocumento,Producto,UserProfile,)
 
 # https://stackoverflow.com/a/69965027
 class DateTimeLocalInput(forms.DateTimeInput):
@@ -531,21 +531,48 @@ class EvolucionClinicaForm(forms.ModelForm):
         self.fields['cita'].widget.attrs.setdefault('class', 'form-select')
         self.fields['servicio'].required = False
 
+        cita_field = self.fields['cita']
+
         if mascota is not None:
             citas_qs = (
-                Cita.objects.filter(mascota=mascota)
+                Cita.objects.filter(
+                    mascota=mascota,
+                    estado='1',
+                    asistencia='A',
+                )
+                .filter(evoluciones__isnull=True)
                 .order_by('-fecha')
+                .distinct()
             )
-            self.fields['cita'].queryset = citas_qs
-            self.fields['cita'].empty_label = 'Selecciona una cita'
+            cita_field.queryset = citas_qs
             self.has_citas_disponibles = citas_qs.exists()
+            if self.has_citas_disponibles:
+                cita_field.empty_label = 'Selecciona una cita'
+            else:
+                cita_field.empty_label = 'No hay una cita disponible'
         else:
-            self.fields['cita'].queryset = Cita.objects.none()
-            self.fields['cita'].empty_label = 'Sin cita asociada'
+            cita_field.queryset = Cita.objects.none()
+            cita_field.empty_label = 'Sin cita asociada'
             self.has_citas_disponibles = False
 
-        if not getattr(self, 'has_citas_disponibles', False):
-            self.fields['cita'].widget.attrs['disabled'] = True
+        def _cita_label(cita):
+            fecha = cita.fecha
+            if fecha:
+                try:
+                    fecha = timezone.localtime(fecha)
+                except (ValueError, TypeError):
+                    pass
+                fecha_str = formats.date_format(fecha, 'DATETIME_FORMAT')
+            else:
+                fecha_str = 'Sin fecha'
+            return f"Cita #{cita.n_cita} – {fecha_str}"
+
+        cita_field.label_from_instance = _cita_label
+
+        if not self.has_citas_disponibles:
+            cita_field.widget.attrs['disabled'] = True
+        else:
+            cita_field.widget.attrs.pop('disabled', None)
 
         for name, field in self.fields.items():
             if name not in ('servicio', 'cita', 'detalle', 'recomendaciones', 'archivos', 'resumen'):
@@ -566,6 +593,56 @@ class EvolucionClinicaForm(forms.ModelForm):
             cleaned_data['servicio'] = cita.servicio
 
         return cleaned_data
+
+    def clean_archivos(self):
+        archivos = self.cleaned_data.get('archivos')
+        return archivos or []
+    
+class EvolucionClinicaUpdateForm(forms.ModelForm):
+    archivos = MultipleFileField(
+        label='Adjuntar nuevos archivos',
+        required=False,
+        widget=MultipleFileInput(attrs={'multiple': True}),
+        help_text='Los documentos se sumarán a los existentes de esta evolución.',
+    )
+    eliminar_archivos = forms.ModelMultipleChoiceField(
+        label='Eliminar archivos adjuntos',
+        required=False,
+        queryset=MascotaDocumento.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        help_text='Selecciona los archivos que deseas eliminar al guardar los cambios.',
+    )
+
+    class Meta:
+        model = EvolucionClinica
+        fields = ['resumen', 'detalle', 'recomendaciones']
+        widgets = {
+            'resumen': forms.TextInput(attrs={'class': 'form-control'}),
+            'detalle': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'recomendaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['archivos'].widget.attrs.setdefault('class', 'form-control')
+
+        documentos_qs = (
+            self.instance.documentos.all()
+            if getattr(self.instance, 'pk', None)
+            else MascotaDocumento.objects.none()
+        )
+        eliminar_field = self.fields['eliminar_archivos']
+        eliminar_field.queryset = documentos_qs
+
+        if not documentos_qs.exists():
+            eliminar_field.widget = forms.MultipleHiddenInput()
+            eliminar_field.help_text = ''
+
+        for name, field in self.fields.items():
+            if name in ('archivos', 'eliminar_archivos'):
+                continue
+            field.widget.attrs.setdefault('class', 'form-control')
 
     def clean_archivos(self):
         archivos = self.cleaned_data.get('archivos')

@@ -9,7 +9,7 @@ from django.utils.html import strip_tags
 from django.db.models import Q
 from urllib.parse import urljoin
 
-from paneltrabajador.forms import EvolucionClinicaForm, MascotaDocumentoForm, MascotaForm
+from paneltrabajador.forms import (EvolucionClinicaForm,EvolucionClinicaUpdateForm,MascotaDocumentoForm,MascotaForm,)
 from paneltrabajador.models import EvolucionClinica, Mascota, MascotaDocumento
 
 
@@ -248,6 +248,57 @@ def mascota_historial(request, id_mascota):
             'form': form,
             'servicios_por_cita': servicios_por_cita,
             'servicio_inicial': servicio_inicial,
+        },
+    )
+
+def mascota_evolucion_editar(request, id_mascota, evolucion_id):
+    """Permite actualizar los detalles de una evolución clínica existente."""
+
+    if not request.user.is_authenticated:
+        return redirect('panel_home')
+
+    if not request.user.has_perm('paneltrabajador.change_mascota'):
+        messages.error(request, "No tiene los permisos para realizar esto.")
+        return redirect('panel_home')
+
+    mascota = get_object_or_404(Mascota, id_mascota=id_mascota)
+    evolucion = get_object_or_404(
+        EvolucionClinica.objects.select_related('cita'),
+        pk=evolucion_id,
+        mascota=mascota,
+    )
+
+    if request.method == 'POST':
+        form = EvolucionClinicaUpdateForm(request.POST, request.FILES, instance=evolucion)
+        if form.is_valid():
+            evolucion = form.save()
+
+            documentos_a_eliminar = form.cleaned_data.get('eliminar_archivos') or []
+            for documento in documentos_a_eliminar:
+                documento.delete()
+
+            for archivo in form.cleaned_data['archivos']:
+                MascotaDocumento.objects.create(
+                    mascota=mascota,
+                    archivo=archivo,
+                    evolucion=evolucion,
+                )
+
+            messages.success(request, "Se actualizó la evolución clínica.")
+            return redirect('panel_mascota_historial', id_mascota=mascota.id_mascota)
+    else:
+        form = EvolucionClinicaUpdateForm(instance=evolucion)
+
+    documentos = evolucion.documentos.all()
+
+    return render(
+        request,
+        'paneltrabajador/mascota/evolucion_form.html',
+        {
+            'form': form,
+            'mascota': mascota,
+            'evolucion': evolucion,
+            'documentos': documentos,
         },
     )
 

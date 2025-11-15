@@ -30,7 +30,7 @@
         </div>
         <div class="card-body">
           {% if evoluciones %}
-            {% include "components/evolucion_timeline.html" with evoluciones=evoluciones accent='primary' %}
+            {% include "components/evolucion_timeline.html" with evoluciones=evoluciones accent='primary' mascota=mascota permitir_edicion=True %}
           {% else %}
             <div class="text-center py-5">
               <i class="bi bi-journal-medical text-primary fs-1 mb-3"></i>
