@@ -93,10 +93,34 @@
           <div id="collapse-rendimiento" class="collapse show">
             <div class="card-body">
               {% if rendimiento_veterinarios %}
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-3 mb-4">
+                  <div class="d-flex flex-wrap align-items-center gap-2" data-rendimiento-filter-group>
+                    <span class="text-muted small text-uppercase fw-semibold me-1">Profesionales</span>
+                    {% for item in rendimiento_veterinarios %}
+                      <div class="form-check form-check-inline mb-0">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="rendimiento-filter-{{ forloop.counter }}"
+                               value="{{ item.profesional }}"
+                               data-rendimiento-filter
+                               checked />
+                        <label class="form-check-label small fw-semibold"
+                               for="rendimiento-filter-{{ forloop.counter }}">
+                          {{ item.profesional }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-rendimiento-reset>
+                      Mostrar todos
+                    </button>
+                  </div>
+                </div>
                 <div class="chart-area mb-4" style="height: 360px;">
                   <canvas id="chart-rendimiento"></canvas>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive rendimiento-table-wrapper">
                   <table class="table align-middle mb-0">
                     <thead>
                       <tr>
@@ -111,7 +135,7 @@
                     </thead>
                     <tbody>
                       {% for item in rendimiento_veterinarios %}
-                        <tr>
+                        <tr data-rendimiento-row="{{ item.profesional }}">
                           <td>{{ item.profesional }}</td>
                           <td class="text-center">{{ item.reservadas }}</td>
                           <td class="text-center">{{ item.canceladas }}</td>
@@ -445,13 +469,14 @@
           const rendimientoChart = new Chart(rendimientoCanvas, {
             type: 'bar',
             data: {
-              labels,
+              labels: rendimientoData.map((item) => item.profesional),
               datasets: metricConfigs.map((config) => ({
                 label: config.label,
                 data: rendimientoData.map((item) => item[config.key] || 0),
                 backgroundColor: config.color,
                 borderRadius: 6,
-                maxBarThickness: 48
+                maxBarThickness: 48,
+                _dataKey: config.key
               }))
             },
             options: {
@@ -480,6 +505,64 @@
               }
             }
           });
+
+          const rendimientoFilterCheckboxes = document.querySelectorAll('[data-rendimiento-filter]');
+          const rendimientoResetButton = document.querySelector('[data-rendimiento-reset]');
+          const rendimientoTableRows = document.querySelectorAll('[data-rendimiento-row]');
+
+          const updateRendimientoVisuals = () => {
+            let filteredData = rendimientoData;
+            let activeSet = null;
+
+            if (rendimientoFilterCheckboxes.length) {
+              let activeCheckboxes = Array.from(rendimientoFilterCheckboxes).filter((checkbox) => checkbox.checked);
+
+              if (!activeCheckboxes.length) {
+                activeCheckboxes = Array.from(rendimientoFilterCheckboxes);
+                activeCheckboxes.forEach((checkbox) => {
+                  checkbox.checked = true;
+                });
+              }
+
+              activeSet = new Set(activeCheckboxes.map((checkbox) => checkbox.value));
+              filteredData = rendimientoData.filter((item) => activeSet.has(item.profesional));
+            }
+
+            rendimientoChart.data.labels = filteredData.map((item) => item.profesional);
+            rendimientoChart.data.datasets.forEach((dataset) => {
+              const dataKey = dataset._dataKey;
+              dataset.data = filteredData.map((item) => item[dataKey] || 0);
+            });
+            rendimientoChart.update();
+
+            if (rendimientoTableRows.length) {
+              if (activeSet) {
+                rendimientoTableRows.forEach((row) => {
+                  const profesional = row.getAttribute('data-rendimiento-row');
+                  row.classList.toggle('d-none', !activeSet.has(profesional));
+                });
+              } else {
+                rendimientoTableRows.forEach((row) => row.classList.remove('d-none'));
+              }
+            }
+          };
+
+          if (rendimientoFilterCheckboxes.length) {
+            rendimientoFilterCheckboxes.forEach((checkbox) => {
+              checkbox.addEventListener('change', updateRendimientoVisuals);
+            });
+          }
+
+          if (rendimientoResetButton) {
+            rendimientoResetButton.addEventListener('click', () => {
+              rendimientoFilterCheckboxes.forEach((checkbox) => {
+                checkbox.checked = true;
+              });
+              updateRendimientoVisuals();
+            });
+          }
+
+          updateRendimientoVisuals();
         }
       }
 
