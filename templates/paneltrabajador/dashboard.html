@@ -71,6 +71,122 @@
     </div>
   </div>
 
+  <div class="row g-3 mb-4">
+    {% if alcance_global and rendimiento_veterinarios %}
+      <div class="col-lg-7">
+        <div class="card dashboard-card shadow-sm border-0 h-100">
+          <div class="card-header border-0 bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex flex-column">
+              <h5 class="mb-0 fw-semibold text-primary">Rendimiento por profesional</h5>
+              <span class="badge text-bg-light text-muted" style="width: fit-content;">{{ mes_actual_label|title }}</span>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapse-rendimiento"
+                    aria-expanded="true"
+                    aria-controls="collapse-rendimiento"
+                    data-toggle-text>
+              Ocultar
+            </button>
+          </div>
+          <div id="collapse-rendimiento" class="collapse show">
+            <div class="card-body">
+              {% if rendimiento_veterinarios %}
+                <div class="chart-area mb-4" style="height: 360px;">
+                  <canvas id="chart-rendimiento"></canvas>
+                </div>
+                <div class="table-responsive">
+                  <table class="table align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Profesional</th>
+                        <th class="text-center">Reservadas</th>
+                        <th class="text-center">Canceladas</th>
+                        <th class="text-center">No tomadas</th>
+                        <th class="text-center">Asistencias</th>
+                        <th class="text-center">Pendientes</th>
+                        <th class="text-center">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in rendimiento_veterinarios %}
+                        <tr>
+                          <td>{{ item.profesional }}</td>
+                          <td class="text-center">{{ item.reservadas }}</td>
+                          <td class="text-center">{{ item.canceladas }}</td>
+                          <td class="text-center">{{ item.no_tomadas }}</td>
+                          <td class="text-center">{{ item.asistencias }}</td>
+                          <td class="text-center">{{ item.pendientes }}</td>
+                          <td class="text-center fw-semibold">{{ item.total }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <div class="alert alert-soft mb-0">Aún no hay datos de rendimiento disponibles para el mes seleccionado.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="{% if alcance_global and rendimiento_veterinarios %}col-lg-5{% else %}col-12{% endif %}">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header border-0 bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="d-flex flex-column">
+            <h5 class="mb-0 fw-semibold text-primary">Tipos de mascota más atendidos</h5>
+            <span class="badge text-bg-light text-muted" style="width: fit-content;">Datos de {{ mascotas_populares_label }}</span>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapse-mascotas"
+                  aria-expanded="true"
+                  aria-controls="collapse-mascotas"
+                  data-toggle-text>
+            Ocultar
+          </button>
+        </div>
+        <div id="collapse-mascotas" class="collapse show">
+          <div class="card-body">
+            {% if mascotas_populares %}
+              <div class="chart-area mb-4" style="height: 320px;">
+                <canvas id="chart-mascotas"></canvas>
+              </div>
+              <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Especie registrada</th>
+                      <th>Raza</th>
+                      <th class="text-center">Citas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for mascota in mascotas_populares %}
+                      <tr>
+                        <td>{{ mascota.tipo }}</td>
+                        <td>{{ mascota.especie }}</td>
+                        <td>{{ mascota.raza }}</td>
+                        <td class="text-center fw-semibold">{{ mascota.total }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="alert alert-soft mb-0">Aún no hay datos de mascotas para el mes seleccionado.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
     <h4 class="mb-0 fw-semibold text-primary">Visualizaciones interactivas</h4>
     <div class="dropdown">
@@ -239,6 +355,12 @@
       {% endif %}
     </div>
   </div>
+  {% if alcance_global and rendimiento_veterinarios %}
+    {{ rendimiento_veterinarios|json_script:"rendimiento-veterinarios-data" }}
+  {% endif %}
+  {% if mascotas_populares %}
+    {{ mascotas_populares|json_script:"mascotas-populares-data" }}
+  {% endif %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script>
     (function () {
@@ -257,9 +379,47 @@
         updateVisibility();
       });
 
+      const collapseButtons = document.querySelectorAll('[data-toggle-text]');
+      collapseButtons.forEach((button) => {
+        const targetSelector = button.getAttribute('data-bs-target');
+        if (!targetSelector) {
+          return;
+        }
+        const target = document.querySelector(targetSelector);
+        if (!target) {
+          return;
+        }
+
+        const updateLabel = () => {
+          const isShown = target.classList.contains('show');
+          button.innerText = isShown ? 'Ocultar' : 'Mostrar';
+        };
+
+        target.addEventListener('shown.bs.collapse', updateLabel);
+        target.addEventListener('hidden.bs.collapse', updateLabel);
+        button.addEventListener('click', () => {
+          window.setTimeout(updateLabel, 0);
+        });
+
+        updateLabel();
+      });
+
       if (!window.Chart) {
         return;
       }
+
+      const parseJSONData = (elementId) => {
+        const element = document.getElementById(elementId);
+        if (!element) {
+          return null;
+        }
+        try {
+          return JSON.parse(element.textContent);
+        } catch (error) {
+          console.warn('No se pudieron leer los datos del gráfico', error);
+          return null;
+        }
+      };
 
       const chartPalette = {
         primary: '#0d6efd',
@@ -268,6 +428,122 @@
         danger: '#dc3545',
         warning: '#ffc107'
       };
+
+      const rendimientoCanvas = document.getElementById('chart-rendimiento');
+      if (rendimientoCanvas) {
+        const rendimientoData = parseJSONData('rendimiento-veterinarios-data');
+        if (Array.isArray(rendimientoData) && rendimientoData.length) {
+          const labels = rendimientoData.map((item) => item.profesional);
+          const metricConfigs = [
+            { key: 'reservadas', label: 'Reservadas', color: chartPalette.primary },
+            { key: 'canceladas', label: 'Canceladas', color: chartPalette.danger },
+            { key: 'no_tomadas', label: 'No tomadas', color: chartPalette.secondary },
+            { key: 'asistencias', label: 'Asistencias', color: chartPalette.success },
+            { key: 'pendientes', label: 'Pendientes', color: chartPalette.warning }
+          ];
+
+          const rendimientoChart = new Chart(rendimientoCanvas, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: metricConfigs.map((config) => ({
+                label: config.label,
+                data: rendimientoData.map((item) => item[config.key] || 0),
+                backgroundColor: config.color,
+                borderRadius: 6,
+                maxBarThickness: 48
+              }))
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  stacked: false
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    precision: 0
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => `${context.dataset.label}: ${context.formattedValue}`
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      const mascotasCanvas = document.getElementById('chart-mascotas');
+      if (mascotasCanvas) {
+        const mascotasData = parseJSONData('mascotas-populares-data');
+        if (Array.isArray(mascotasData) && mascotasData.length) {
+          const colorCycle = [
+            chartPalette.primary,
+            chartPalette.success,
+            chartPalette.warning,
+            chartPalette.danger,
+            chartPalette.secondary
+          ];
+
+          const mascotasChart = new Chart(mascotasCanvas, {
+            type: 'bar',
+            data: {
+              labels: mascotasData.map((item) => {
+                const tipo = item.tipo || item.especie || 'Mascota';
+                const raza = item.raza || 'Sin raza';
+                return `${tipo} · ${raza}`;
+              }),
+              datasets: [
+                {
+                  label: 'Citas',
+                  data: mascotasData.map((item) => item.total || 0),
+                  backgroundColor: mascotasData.map((_, index) => colorCycle[index % colorCycle.length]),
+                  borderRadius: 6,
+                  maxBarThickness: 36
+                }
+              ]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  beginAtZero: true,
+                  ticks: {
+                    precision: 0
+                  }
+                }
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (context) => {
+                      const dataIndex = context.dataIndex;
+                      const dataItem = mascotasData[dataIndex] || {};
+                      const tipo = dataItem.tipo || dataItem.especie || 'Mascota';
+                      const especie = dataItem.especie || 'Sin especie';
+                      const raza = dataItem.raza || 'Sin raza';
+                      return `${context.formattedValue} citas — ${tipo} (${especie}, ${raza})`;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
 
       const resumenCanvas = document.getElementById('chart-resumen');
       if (resumenCanvas) {

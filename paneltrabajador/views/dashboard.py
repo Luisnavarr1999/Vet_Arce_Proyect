@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.db.models import Count, Q
 from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -56,6 +57,8 @@ def _generar_csv_citas(queryset, nombre_archivo):
             'Profesional',
             'Cliente',
             'Mascota',
+            'Tipo de mascota',
+            'Raza de mascota',
         ]
     )
     for cita in queryset:
@@ -74,9 +77,21 @@ def _generar_csv_citas(queryset, nombre_archivo):
                 profesional,
                 getattr(cita.cliente, 'nombre_cliente', ''),
                 getattr(cita.mascota, 'nombre', ''),
+                getattr(cita.mascota, 'especie', ''),
+                getattr(cita.mascota, 'raza', ''),
             ]
         )
     return response
+
+def _normalizar_especie(nombre_especie):
+    if not nombre_especie:
+        return 'Sin información'
+    especie_normalizada = nombre_especie.strip().lower()
+    if especie_normalizada in {'gato', 'gata'}:
+        return 'Gato'
+    if especie_normalizada in {'perro', 'perra'}:
+        return 'Perro'
+    return 'Otro'
 
 
 def dashboard(request):
@@ -196,6 +211,65 @@ def dashboard(request):
         for item in servicios_reservas
     ]
 
+    rendimiento_veterinarios = []
+    if puede_ver_global:
+        rendimiento_query = (
+            citas_mes.values(
+                'usuario__id',
+                'usuario__first_name',
+                'usuario__last_name',
+                'usuario__username',
+            )
+            .annotate(
+                total=Count('pk'),
+                reservadas=Count('pk', filter=Q(estado='1')),
+                canceladas=Count('pk', filter=Q(estado='2')),
+                no_tomadas=Count('pk', filter=Q(estado='3')),
+                asistencias=Count('pk', filter=Q(asistencia='A')),
+                pendientes=Count('pk', filter=Q(asistencia='P')),
+            )
+            .order_by('-total', 'usuario__last_name', 'usuario__first_name')
+        )
+
+        for item in rendimiento_query:
+            nombre = f"{item['usuario__first_name']} {item['usuario__last_name']}".strip()
+            if not nombre:
+                nombre = item['usuario__username']
+            rendimiento_veterinarios.append(
+                {
+                    'profesional': nombre,
+                    'total': item['total'],
+                    'reservadas': item['reservadas'],
+                    'canceladas': item['canceladas'],
+                    'no_tomadas': item['no_tomadas'],
+                    'asistencias': item['asistencias'],
+                    'pendientes': item['pendientes'],
+                }
+            )
+
+    mascotas_populares = []
+    mascotas_base = citas_mes.exclude(mascota__isnull=True)
+    mascotas_query = (
+        mascotas_base.values('mascota__especie', 'mascota__raza')
+        .annotate(total=Count('pk'))
+        .order_by('-total', 'mascota__especie', 'mascota__raza')[:5]
+    )
+
+    for item in mascotas_query:
+        especie_original = item['mascota__especie'] or ''
+        mascotas_populares.append(
+            {
+                'tipo': _normalizar_especie(especie_original),
+                'especie': especie_original or 'Sin información',
+                'raza': item['mascota__raza'] or 'Sin información',
+                'total': item['total'],
+            }
+        )
+
+    mascotas_populares_label = (
+        'toda la veterinaria' if puede_ver_global else 'sus citas asignadas'
+    )
+
     inicio_periodo = inicio_mes_seleccionado - timedelta(days=180)
     tendencias_registros = citas_base.filter(fecha__gte=inicio_periodo).values_list('fecha', 'estado')
     tendencias_acumulado = defaultdict(lambda: {'reservadas': 0, 'canceladas': 0})
@@ -248,6 +322,9 @@ def dashboard(request):
         'total_pendientes_asistencia_mes': total_pendientes_asistencia_mes,
         'tasa_cancelacion_mes': tasa_cancelacion_mes,
         'servicios_reservas': servicios_reservas,
+        'rendimiento_veterinarios': rendimiento_veterinarios,
+        'mascotas_populares': mascotas_populares,
+        'mascotas_populares_label': mascotas_populares_label,
         'tendencias_mensuales': tendencias_mensuales,
         'proximas_citas': proximas_citas,
         'mes_actual_label': mes_actual_label,
