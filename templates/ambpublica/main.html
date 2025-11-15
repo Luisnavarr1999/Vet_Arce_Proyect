@@ -58,7 +58,7 @@
       margin-left: auto;
     }
 
-      /* 🔧 FIX visual: evita que el botón "Enviar" desaparezca */
+    /* 🔧 FIX visual: evita que el botón "Enviar" desaparezca */
     .chatbot-panel {
       height: 420px; /* reemplaza max-height */
       display: flex;
@@ -118,55 +118,49 @@
       background: #d1e7dd;
       color: #0f5132;
     }
-
-    .service-icon {
-      max-width: 80px;
-      height: auto;
-      margin-bottom: 1rem;
-    }
-
   </style>
 
   {# Pagina de inicio de Veterinaria de Arce #}
   {# Encabezado #}
   <header class="text-center home text-white hero-carousel">
-  <!-- Carrusel de fondo (autoplay) -->
-  <div id="heroCarousel" class="carousel slide"
-       data-bs-ride="carousel"
-       data-bs-interval="4500"
-       data-bs-pause="false"
-       data-bs-touch="true" aria-hidden="true">
-    <div class="carousel-inner">
-      <div class="carousel-item active">
-        <img src="{% static 'Imagenes/hero-vet.jpg' %}" class="d-block w-100 hero-bg" alt="Portada veterinaria">
-      </div>
-      <div class="carousel-item">
-        <img src="{% static 'Imagenes/gallery-1.jpg' %}" class="d-block w-100 hero-bg" alt="Revisión de mascota">
-      </div>
-      <div class="carousel-item">
-        <img src="{% static 'Imagenes/gallery-2.jpg' %}" class="d-block w-100 hero-bg" alt="Perro feliz">
-      </div>
-      <div class="carousel-item">
-        <img src="{% static 'Imagenes/gallery-3.jpg' %}" class="d-block w-100 hero-bg" alt="Gato cariñoso">
-      </div>
-      <div class="carousel-item">
-        <img src="{% static 'Imagenes/gallery-4.jpg' %}" class="d-block w-100 hero-bg" alt="Dueños y veterinarios">
+    <!-- Carrusel de fondo (autoplay) -->
+    <div id="heroCarousel" class="carousel slide"
+         data-bs-ride="carousel"
+         data-bs-interval="4500"
+         data-bs-pause="false"
+         data-bs-touch="true" aria-hidden="true">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="{% static 'Imagenes/hero-vet.jpg' %}" class="d-block w-100 hero-bg" alt="Portada veterinaria">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'Imagenes/gallery-1.jpg' %}" class="d-block w-100 hero-bg" alt="Revisión de mascota">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'Imagenes/gallery-2.jpg' %}" class="d-block w-100 hero-bg" alt="Perro feliz">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'Imagenes/gallery-3.jpg' %}" class="d-block w-100 hero-bg" alt="Gato cariñoso">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'Imagenes/gallery-4.jpg' %}" class="d-block w-100 hero-bg" alt="Dueños y veterinarios">
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Overlay para que el logo y textos siempre se lean -->
-  <div class="hero-overlay"></div>
+    <!-- Overlay para que el logo y textos siempre se lean -->
+    <div class="hero-overlay"></div>
 
-  <!-- Contenido encima del carrusel -->
-  <div class="container hero-content">
-    <div class="logo-container mb-2">
-      <img src="{% static 'Imagenes/Logo.png' %}" alt="Logo FiCats" class="logo hero-logo" style="max-width: 200px; height: auto;">
+    <!-- Contenido encima del carrusel -->
+    <div class="container hero-content">
+      <div class="logo-container mb-2">
+        <img src="{% static 'Imagenes/Logo.png' %}" alt="Logo FiCats" class="logo hero-logo">
+      </div>
+      <h1 class="text-light display-6 fw-bold mb-2">Veterinaria de Arce</h1>
+      <p class="lead mb-0">Cuidando la salud y felicidad de tus mascotas</p>
     </div>
-    <h1 class="text-light display-6 fw-bold mb-2">Veterinaria de Arce</h1>
-    <p class="lead mb-0">Cuidando la salud y felicidad de tus mascotas</p>
-  </div>
-</header>
+  </header>
+
   {# Nuestros Servicios #}
   <section id="servicios" class="py-5">
     <div class="container">
@@ -206,6 +200,7 @@
       </div>
     </div>
   </section>
+
   {# Reserva de Horas Online #}
   <section id="reserva" class="py-5">
     <div class="container">
@@ -216,6 +211,7 @@
       </div>
     </div>
   </section>
+
   {# Revisión de Ficha Clínica Online #}
   <section id="ficha-clinica" class="py-5">
     <div class="container">
@@ -226,48 +222,58 @@
       </div>
     </div>
   </section>
+
   {# Opiniones de Nuestros Clientes #}
-  <section id="opiniones" class="py-5 bg-light autumn-decor">
-    <div class="container">
-      <h2 class="text-center">Opiniones de Nuestros Clientes</h2>
-      <div class="row">
+  <section id="opiniones" class="py-5 bg-maple-soft autumn-decor">
+    <div class="container testimonials-wrap">
+      <h2 class="text-center mb-4">Opiniones de Nuestros Clientes</h2>
+      <div class="row g-4">
         <div class="col-md-4">
-          <div class="card">
+          <div class="card testimonial-card h-100">
             <div class="card-body">
-              <p class="card-text">"Mi gata Josefa Faraona recibió un excelente cuidado aquí. ¡Realmente se peinan!" - Cesar Arce</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card">
-            <div class="card-body">
-              <p class="card-text">
-                "El equipo de Arce tienen los chakras muy alineados. Realmente se preocupan por nuestros amigos peludos." - Robinson Contreras
+              <p class="card-text mb-0">
+                "Mi gata Josefa Faraona recibió un excelente cuidado aquí. ¡Realmente se peinan!"
+                <br><strong>- Cesar Arce</strong>
               </p>
             </div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card">
+          <div class="card testimonial-card h-100">
             <div class="card-body">
-              <p class="card-text">"¡Servicio profesional y amigable! Mi perico siempre está en buenas manos." - Danilo Jose Arias</p>
+              <p class="card-text mb-0">
+                "El equipo de Arce tiene los chakras muy alineados. Realmente se preocupan por nuestros amigos peludos."
+                <br><strong>- Robinson Contreras</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card testimonial-card h-100">
+            <div class="card-body">
+              <p class="card-text mb-0">
+                "¡Servicio profesional y amigable! Mi perico siempre está en buenas manos."
+                <br><strong>- Danilo Jose Arias</strong>
+              </p>
             </div>
           </div>
         </div>
       </div>
     </div>
   </section>
+
   {# Contáctanos #}
-  <section id="contacto" class="py-5">
+  <section id="contacto" class="py-5 bg-maple-cream">
     <div class="container">
-      <h2 class="text-center">Contáctanos</h2>
-      <p class="text-center">
-        Estamos aquí para ayudarte. Si tienes alguna pregunta o necesitas más información, no dudes en ponerte en contacto con nosotros. igualmente puede visitarnos personalmente en nuestra clinica
+      <h2 class="text-center mb-3">Contáctanos</h2>
+      <p class="text-center mb-4">
+        Estamos aquí para ayudarte. Si tienes alguna pregunta o necesitas más información, no dudes en ponerte en contacto con nosotros.
+        Igualmente puedes visitarnos personalmente en nuestra clínica.
       </p>
-      <div class="row">
+      <div class="row g-4">
         <!-- mapa -->
-        <div class="col-lg-6 mb-4">
-          <div class="ratio ratio-16x9">
+        <div class="col-lg-6">
+          <div class="ratio maple-map">
             <iframe
               src="https://www.google.com/maps?q=-33.4489,-70.6693&z=16&hl=es&output=embed"
               loading="lazy"
@@ -279,64 +285,68 @@
 
         <!--formulario -->
         <div class="col-lg-6">
-          <form id="form-contacto" method="post" action="#contacto">
-            {% csrf_token %}
+          <div class="maple-form-card maple-form h-100">
+            <form id="form-contacto" method="post" action="#contacto">
+              {% csrf_token %}
 
-            {% if contact_success %}
-              <div class="alert alert-success" role="alert">
-                ¡Gracias por contactarnos! Tu mensaje fue enviado correctamente y te responderemos a la brevedad.
-              </div>
-            {% elif contact_error %}
-              <div class="alert alert-danger" role="alert">
-                {{ contact_error }}
-              </div>
-            {% endif %}
+              {% if contact_success %}
+                <div class="alert alert-success" role="alert">
+                  ¡Gracias por contactarnos! Tu mensaje fue enviado correctamente y te responderemos a la brevedad.
+                </div>
+              {% elif contact_error %}
+                <div class="alert alert-danger" role="alert">
+                  {{ contact_error }}
+                </div>
+              {% endif %}
 
-            {% if contact_form.errors %}
-              <div class="alert alert-danger" role="alert">
-                <p class="mb-1">Revisa los datos ingresados:</p>
-                <ul class="mb-0">
-                  {% for field in contact_form %}
-                    {% for error in field.errors %}
+              {% if contact_form.errors %}
+                <div class="alert alert-danger" role="alert">
+                  <p class="mb-1">Revisa los datos ingresados:</p>
+                  <ul class="mb-0">
+                    {% for field in contact_form %}
+                      {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                    {% endfor %}
+                    {% for error in contact_form.non_field_errors %}
                       <li>{{ error }}</li>
                     {% endfor %}
-                  {% endfor %}
-                  {% for error in contact_form.non_field_errors %}
-                    <li>{{ error }}</li>
-                  {% endfor %}
-                </ul>
+                  </ul>
+                </div>
+              {% endif %}
+
+              <div class="mb-3">
+                <label for="{{ contact_form.nombre.id_for_label }}" class="form-label">Nombre</label>
+                {{ contact_form.nombre }}
+                {% for error in contact_form.nombre.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
               </div>
-            {% endif %}
-            <div class="mb-3">
-              <label for="{{ contact_form.nombre.id_for_label }}" class="form-label">Nombre</label>
-              {{ contact_form.nombre }}
-              {% for error in contact_form.nombre.errors %}
-                <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-            </div>
-            <div class="mb-3">
-              <label for="{{ contact_form.correo.id_for_label }}" class="form-label">Correo Electrónico</label>
-              {{ contact_form.correo }}
-              {% for error in contact_form.correo.errors %}
-                <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-            </div>
-            <div class="mb-3">
-              <label for="{{ contact_form.mensaje.id_for_label }}" class="form-label">Mensaje</label>
-              {{ contact_form.mensaje }}
-              {% for error in contact_form.mensaje.errors %}
-                <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-            </div>
-            <div class="text-center">
-              <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
-            </div>
-          </form>
+              <div class="mb-3">
+                <label for="{{ contact_form.correo.id_for_label }}" class="form-label">Correo Electrónico</label>
+                {{ contact_form.correo }}
+                {% for error in contact_form.correo.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="mb-3">
+                <label for="{{ contact_form.mensaje.id_for_label }}" class="form-label">Mensaje</label>
+                {{ contact_form.mensaje }}
+                {% for error in contact_form.mensaje.errors %}
+                  <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+              </div>
+              <div class="text-center">
+                <button type="submit" class="btn btn-maple-green px-4">Enviar Mensaje</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
   </section>
-  {# Todavia no estará listo el formulario contacto #}
+
+  {# Chatbot #}
   <div id="chatbot-widget" class="chatbot-widget" data-conversation="{{ chatbot_conversation_id|default:'' }}">
     <div class="chatbot-avatar text-center mb-1">
       <img src="{% static 'Imagenes/chatdog.png' %}" alt="Asistente Arce" class="chatbot-dog">
@@ -366,265 +376,265 @@
       </div>
     </div>
   </div>
+
   <script>
-(function () {
-  "use strict";
+  (function () {
+    "use strict";
 
+    // --- CHATBOT WIDGET ---
+    const widget = document.getElementById("chatbot-widget");
+    if (!widget) return;
 
-  // --- CHATBOT WIDGET ---
-  const widget = document.getElementById("chatbot-widget");
-  if (!widget) return;
+    const toggleButton  = document.getElementById("chatbot-toggle");
+    const closeButton   = document.getElementById("chatbot-close");
+    const panel         = widget.querySelector(".chatbot-panel");
+    const messageList   = document.getElementById("chatbot-messages");
+    const form          = document.getElementById("chatbot-form");
+    const input         = document.getElementById("chatbot-input");
+    const handoffNotice = document.getElementById("chatbot-handoff");
+    const quickReplies  = document.getElementById("chatbot-quick-replies");
+    const pollUrl       = "{% url 'ambpublico_chatbot_messages' %}";
 
-  const toggleButton  = document.getElementById("chatbot-toggle");
-  const closeButton   = document.getElementById("chatbot-close");
-  const panel         = widget.querySelector(".chatbot-panel");
-  const messageList   = document.getElementById("chatbot-messages");
-  const form          = document.getElementById("chatbot-form");
-  const input         = document.getElementById("chatbot-input");
-  const handoffNotice = document.getElementById("chatbot-handoff");
-  const quickReplies  = document.getElementById("chatbot-quick-replies");
-  const pollUrl       = "{% url 'ambpublico_chatbot_messages' %}";
-
-  const existingConversation = widget.dataset.conversation;
-  let conversationId = existingConversation ? parseInt(existingConversation, 10) : null;
-  if (Number.isNaN(conversationId)) {
-    conversationId = null;
-  }
-  let pollTimer = null;
-  let lastMessageId = null;
-
-  const togglePanel = (show) => {
-    const shouldShow = typeof show === "boolean" ? show : panel.classList.contains("d-none");
-    panel.classList.toggle("d-none", !shouldShow);
-    if (shouldShow) input.focus();
-  };
-
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-    return null;
-  };
-
-  const appendMessage = (text, author, prefix) => {
-    const bubble = document.createElement("div");
-    bubble.className = `chatbot-bubble ${author}`;
-    bubble.textContent = prefix ? `${prefix}: ${text}` : text;
-    messageList.appendChild(bubble);
-    messageList.scrollTop = messageList.scrollHeight;
-  };
-
-  const clearQuickReplies = () => {
-    if (!quickReplies) return;
-    quickReplies.innerHTML = "";
-    quickReplies.classList.add("d-none");
-  };
-
-  const showConfirmationOptions = () => {
-    if (!quickReplies) return;
-    quickReplies.innerHTML = "";
-
-    const yesOption = document.createElement("button");
-    yesOption.type = "button";
-    yesOption.className = "chatbot-quick-reply";
-    yesOption.textContent = "Sí, hablar con recepción";
-    yesOption.addEventListener("click", () => {
-      clearQuickReplies();
-      submitMessage("Sí quiero hablar con la recepción");
-    });
-
-    const noOption = document.createElement("button");
-    noOption.type = "button";
-    noOption.className = "chatbot-quick-reply";
-    noOption.textContent = "No, gracias";
-    noOption.addEventListener("click", () => {
-      clearQuickReplies();
-      submitMessage("No, gracias");
-    });
-
-    quickReplies.appendChild(yesOption);
-    quickReplies.appendChild(noOption);
-    quickReplies.classList.remove("d-none");
-  };
-
-  const handleError = () => {
-    clearQuickReplies();
-    appendMessage("No pude conectar con el asistente en este momento. Intenta nuevamente más tarde.", "bot");
-  };
-
-  const stopPolling = () => {
-    if (pollTimer) {
-      window.clearTimeout(pollTimer);
-      pollTimer = null;
+    const existingConversation = widget.dataset.conversation;
+    let conversationId = existingConversation ? parseInt(existingConversation, 10) : null;
+    if (Number.isNaN(conversationId)) {
+      conversationId = null;
     }
-  };
+    let pollTimer = null;
+    let lastMessageId = null;
 
-  const schedulePoll = (delay = 4000) => {
-    stopPolling();
-    pollTimer = window.setTimeout(() => {
-      pollTimer = null;
-      pollConversation();
-    }, delay);
-  };
+    const togglePanel = (show) => {
+      const shouldShow = typeof show === "boolean" ? show : panel.classList.contains("d-none");
+      panel.classList.toggle("d-none", !shouldShow);
+      if (shouldShow) input.focus();
+    };
 
-  async function pollConversation() {
-    if (!conversationId) {
-      return;
-    }
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    };
 
-    const isInitialLoad = lastMessageId === null;
+    const appendMessage = (text, author, prefix) => {
+      const bubble = document.createElement("div");
+      bubble.className = `chatbot-bubble ${author}`;
+      bubble.textContent = prefix ? `${prefix}: ${text}` : text;
+      messageList.appendChild(bubble);
+      messageList.scrollTop = messageList.scrollHeight;
+    };
 
-    try {
-      let url = pollUrl;
-      if (!isInitialLoad && lastMessageId !== null) {
-        url = `${pollUrl}?after=${encodeURIComponent(lastMessageId)}`;
-      }
+    const clearQuickReplies = () => {
+      if (!quickReplies) return;
+      quickReplies.innerHTML = "";
+      quickReplies.classList.add("d-none");
+    };
 
-      const response = await fetch(url, {
-        headers: { "Accept": "application/json" },
-        credentials: "same-origin",
+    const showConfirmationOptions = () => {
+      if (!quickReplies) return;
+      quickReplies.innerHTML = "";
+
+      const yesOption = document.createElement("button");
+      yesOption.type = "button";
+      yesOption.className = "chatbot-quick-reply";
+      yesOption.textContent = "Sí, hablar con recepción";
+      yesOption.addEventListener("click", () => {
+        clearQuickReplies();
+        submitMessage("Sí quiero hablar con la recepción");
       });
 
-      if (!response.ok) {
-        throw new Error("Network error");
+      const noOption = document.createElement("button");
+      noOption.type = "button";
+      noOption.className = "chatbot-quick-reply";
+      noOption.textContent = "No, gracias";
+      noOption.addEventListener("click", () => {
+        clearQuickReplies();
+        submitMessage("No, gracias");
+      });
+
+      quickReplies.appendChild(yesOption);
+      quickReplies.appendChild(noOption);
+      quickReplies.classList.remove("d-none");
+    };
+
+    const handleError = () => {
+      clearQuickReplies();
+      appendMessage("No pude conectar con el asistente en este momento. Intenta nuevamente más tarde.", "bot");
+    };
+
+    const stopPolling = () => {
+      if (pollTimer) {
+        window.clearTimeout(pollTimer);
+        pollTimer = null;
+      }
+    };
+
+    const schedulePoll = (delay = 4000) => {
+      stopPolling();
+      pollTimer = window.setTimeout(() => {
+        pollTimer = null;
+        pollConversation();
+      }, delay);
+    };
+
+    async function pollConversation() {
+      if (!conversationId) {
+        return;
       }
 
-      const data = await response.json();
+      const isInitialLoad = lastMessageId === null;
 
-      if (!conversationId && data.conversation_id) {
-        const parsedId = parseInt(data.conversation_id, 10);
-        conversationId = Number.isNaN(parsedId) ? null : parsedId;
-      }
-
-      if (Array.isArray(data.messages) && data.messages.length) {
-        if (isInitialLoad) {
-          messageList.innerHTML = "";
+      try {
+        let url = pollUrl;
+        if (!isInitialLoad && lastMessageId !== null) {
+          url = `${pollUrl}?after=${encodeURIComponent(lastMessageId)}`;
         }
 
-        data.messages.forEach((message) => {
-          const messageId = typeof message.id === "number" ? message.id : null;
-          if (messageId !== null && (lastMessageId === null || messageId > lastMessageId)) {
-            lastMessageId = messageId;
-          }
-
-          if (message.author === "client") {
-            if (isInitialLoad) {
-              appendMessage(message.content, "user");
-            }
-            return;
-          }
-
-          if (message.author === "staff") {
-            appendMessage(message.content, "staff", message.staff_user || "Recepción");
-            return;
-          }
-
-          appendMessage(message.content, "bot");
+        const response = await fetch(url, {
+          headers: { "Accept": "application/json" },
+          credentials: "same-origin",
         });
-      } else if (typeof data.last_id === "number" && (lastMessageId === null || data.last_id > lastMessageId)) {
-        lastMessageId = data.last_id;
-      }
 
-      if (data.state === "closed") {
-        appendMessage("La conversación se cerró. Gracias por escribirnos.", "bot");
-        handoffNotice.classList.add("d-none");
-        conversationId = null;
-        stopPolling();
+        if (!response.ok) {
+          throw new Error("Network error");
+        }
+
+        const data = await response.json();
+
+        if (!conversationId && data.conversation_id) {
+          const parsedId = parseInt(data.conversation_id, 10);
+          conversationId = Number.isNaN(parsedId) ? null : parsedId;
+        }
+
+        if (Array.isArray(data.messages) && data.messages.length) {
+          if (isInitialLoad) {
+            messageList.innerHTML = "";
+          }
+
+          data.messages.forEach((message) => {
+            const messageId = typeof message.id === "number" ? message.id : null;
+            if (messageId !== null && (lastMessageId === null || messageId > lastMessageId)) {
+              lastMessageId = messageId;
+            }
+
+            if (message.author === "client") {
+              if (isInitialLoad) {
+                appendMessage(message.content, "user");
+              }
+              return;
+            }
+
+            if (message.author === "staff") {
+              appendMessage(message.content, "staff", message.staff_user || "Recepción");
+              return;
+            }
+
+            appendMessage(message.content, "bot");
+          });
+        } else if (typeof data.last_id === "number" && (lastMessageId === null || data.last_id > lastMessageId)) {
+          lastMessageId = data.last_id;
+        }
+
+        if (data.state === "closed") {
+          appendMessage("La conversación se cerró. Gracias por escribirnos.", "bot");
+          handoffNotice.classList.add("d-none");
+          conversationId = null;
+          stopPolling();
+          return;
+        }
+
+        if (conversationId) {
+          handoffNotice.classList.remove("d-none");
+        }
+      } catch (err) {
+        console.error("Error actualizando el chat", err);
+      } finally {
+        if (conversationId) {
+          schedulePoll();
+        }
+      }
+    }
+
+    const startPolling = (immediate = false) => {
+      if (!conversationId) {
         return;
       }
 
-      if (conversationId) {
-        handoffNotice.classList.remove("d-none");
-      }
-    } catch (err) {
-      console.error("Error actualizando el chat", err);
-    } finally {
-      if (conversationId) {
+      if (immediate) {
+        stopPolling();
+        pollConversation();
+      } else {
         schedulePoll();
       }
+    };
+
+    toggleButton.addEventListener("click", () => togglePanel());
+    closeButton.addEventListener("click", () => togglePanel(false));
+
+    if (conversationId) {
+      handoffNotice.classList.remove("d-none");
+      startPolling(true);
     }
-  }
 
-  const startPolling = (immediate = false) => {
-    if (!conversationId) {
-      return;
-    }
+    const submitMessage = async (message) => {
+      appendMessage(message, "user");
+      handoffNotice.classList.add("d-none");
 
-    if (immediate) {
-      stopPolling();
-      pollConversation();
-    } else {
-      schedulePoll();
-    }
-  };
+      try {
+        const response = await fetch("{% url 'ambpublico_chatbot_message' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({ message }),
+          credentials: "same-origin",
+        });
 
-  toggleButton.addEventListener("click", () => togglePanel());
-  closeButton.addEventListener("click", () => togglePanel(false));
+        if (!response.ok) return handleError();
 
-  if (conversationId) {
-    handoffNotice.classList.remove("d-none");
-    startPolling(true);
-  }
+        const data = await response.json();
+        if (data.error) {
+          appendMessage(data.error, "bot");
+          return;
+        }
 
-  const submitMessage = async (message) => {
-    appendMessage(message, "user");
-    handoffNotice.classList.add("d-none");
+        if (data.reply) {
+          appendMessage(data.reply, "bot");
+        }
 
-    try {
-      const response = await fetch("{% url 'ambpublico_chatbot_message' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),
-        },
-        body: JSON.stringify({ message }),
-        credentials: "same-origin",
-      });
+        if (typeof data.last_message_id === "number") {
+          lastMessageId = data.last_message_id;
+        }
 
-      if (!response.ok) return handleError();
+        if (data.handoff) {
+          conversationId = data.conversation_id || conversationId;
+          handoffNotice.classList.remove("d-none");
+          startPolling(true);
+        } else if (!data.pending_confirmation) {
+          handoffNotice.classList.add("d-none");
+        }
 
-      const data = await response.json();
-      if (data.error) {
-        appendMessage(data.error, "bot");
-        return;
+        if (data.pending_confirmation) {
+          showConfirmationOptions();
+        } else {
+          clearQuickReplies();
+        }
+      } catch (err) {
+        handleError();
       }
+    };
 
-      if (data.reply) {
-        appendMessage(data.reply, "bot");
-      }
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
 
-      if (typeof data.last_message_id === "number") {
-        lastMessageId = data.last_message_id;
-      }
+      input.value = "";
+      clearQuickReplies();
+      submitMessage(message);
+    });
 
-      if (data.handoff) {
-        conversationId = data.conversation_id || conversationId;
-        handoffNotice.classList.remove("d-none");
-        startPolling(true);
-      } else if (!data.pending_confirmation) {
-        handoffNotice.classList.add("d-none");
-      }
-
-      if (data.pending_confirmation) {
-        showConfirmationOptions();
-      } else {
-        clearQuickReplies();
-      }
-    } catch (err) {
-      handleError();
-    }
-  };
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const message = input.value.trim();
-    if (!message) return;
-
-    input.value = "";
-    clearQuickReplies();
-    submitMessage(message);
-  });
-
-})();
-</script>
+  })();
+  </script>
 {% endblock content %}

@@ -166,8 +166,14 @@
   display: inline-flex;
   align-items: center;
   gap: 2.5rem;
+  padding-left: 2.5rem;
   white-space: nowrap;
   animation: promo-scroll 22s linear infinite;
+}
+
+.promo-track::before {
+  content: "";
+  flex: 0 0 2rem;
 }
 
 .promo-item {
@@ -187,7 +193,7 @@
     transform: translateX(0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translateX(calc(-50% - 2.5rem));
   }
 }
 
@@ -502,8 +508,24 @@ header.home{
 
 .hero-logo{
   filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
-  max-width: 200px;
+  max-width: 170px;
   height: auto;
+}
+
+/* Botón secundario estilo "glass" para el hero */
+.hero-secondary {
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  color: #fffaf1;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.hero-secondary:hover,
+.hero-secondary:focus {
+  color: #2f1a0f;
+  background: #fffaf1;
+  border-color: #fffaf1;
 }
 
 @media (min-width: 992px){
@@ -511,7 +533,7 @@ header.home{
   .hero-content{  min-height: 70vh; }
 }
 
-/* ===== Servicios (versión final) ===== */
+/* ===== Servicios (versión mejorada) ===== */
 :root{
   --mustard: #d07c19;        /* tono central del gradiente del header */
   --mustard-hover: #e2831c;  /* un poco más brillante para hover */
@@ -519,13 +541,13 @@ header.home{
 }
 
 .service-card{
-  background: var(--mustard);
-  color: #fff;
+  background: linear-gradient(160deg, #e9ae6a 0%, #d67d2c 60%, #c76a1c 100%);
+  color: #fff8f0;
   border-radius: var(--card-radius);
-  padding: 2rem 1.25rem;
+  padding: 2.25rem 1.75rem;
   text-align: center;
-  box-shadow: 0 6px 14px rgba(0,0,0,.08);
-  transition: transform .25s ease, box-shadow .25s ease, background-color .25s ease;
+  box-shadow: 0 10px 26px rgba(95, 55, 22, 0.18);
+  transition: transform .25s ease, box-shadow .25s ease, background-color .25s ease, filter .25s ease;
   height: 100%;
   cursor: default;
 }
@@ -533,8 +555,8 @@ header.home{
 /* Ícono (SVG o JPG) centrado y grande */
 .service-card .service-icon{
   display: block;
-  width: 64px;
-  height: 64px;
+  width: 78px;
+  height: 78px;
   margin: 0 auto 1rem;
   object-fit: contain; /* útil si usas JPG/PNG */
   filter: drop-shadow(0 1px 6px rgba(0,0,0,.15));
@@ -545,23 +567,25 @@ header.home{
 .service-card h4{
   color: #fff !important;  /* fuerza sobre bootstrap si hace falta */
   font-weight: 700;
-  margin-bottom: .5rem;
+  margin-bottom: .65rem;
 }
 
 /* Texto */
 .service-card p{
-  color: #fff;
-  opacity: .95;
-  margin: 0;
+  color: #fff8f0;
+  opacity: .94;
+  margin: 0 auto;
   line-height: 1.5;
+  max-width: 320px;
 }
 
 /* Hover elegante */
 .service-card:hover,
 .service-card:focus-within{
   transform: translateY(-6px);
-  background-color: var(--mustard-hover);
-  box-shadow: 0 14px 32px rgba(0,0,0,.12);
+  background: linear-gradient(160deg, #f0ba79 0%, #e08d38 60%, #d47721 100%);
+  box-shadow: 0 18px 38px rgba(86, 48, 18, 0.18);
+  filter: saturate(1.03);
 }
 
 /* Accesibilidad teclado */
@@ -604,6 +628,67 @@ header.home{
   color: var(--maple-brown);
 }
 
+/* Fondos suaves para secciones públicas */
+.bg-maple-soft {
+  background: linear-gradient(180deg, rgba(250, 236, 218, 0.6) 0%, rgba(247, 229, 202, 0.6) 100%);
+}
+
+.bg-maple-cream {
+  background: #fdf7ef;
+}
+
+/* Testimonios y mapa/contacto */
+.testimonials-wrap {
+  max-width: 1080px;
+}
+
+.testimonial-card {
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(253, 244, 231, 0.85));
+}
+
+.testimonial-card .card-body {
+  padding: 1.75rem;
+  color: #4a3322;
+}
+
+.maple-map iframe {
+  border-radius: 18px;
+  min-height: 260px;
+}
+
+.maple-map {
+  --bs-aspect-ratio: 62%;
+}
+
+.maple-form-card {
+  border-radius: 18px;
+  padding: 1.5rem;
+  background: #fffdf9;
+  border: 1px solid rgba(91, 59, 37, 0.08);
+}
+
+.maple-form-card .form-label {
+  color: var(--maple-brown);
+}
+
+.maple-form-card .alert {
+  border-radius: 14px;
+}
+
+/* Posición refinada del widget de chatbot */
+.chatbot-widget {
+  right: 1.25rem;
+  bottom: 1.25rem;
+}
+
+@media (min-width: 992px) {
+  .chatbot-widget {
+    right: 2rem;
+    bottom: 2rem;
+  }
+}
 
 /* ===== Decoración de árboles (full-bleed y más grandes) ===== */
 .autumn-decor{
