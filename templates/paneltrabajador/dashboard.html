@@ -177,10 +177,47 @@
         <div id="collapse-mascotas" class="collapse show">
           <div class="card-body">
             {% if mascotas_populares %}
-              <div class="chart-area mb-4" style="height: 320px;">
-                <canvas id="chart-mascotas"></canvas>
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <div class="d-flex flex-column">
+                  <span class="text-muted small text-uppercase fw-semibold">Visualización</span>
+                  <span class="text-muted small">Cambia entre gráfico de barras y gráfico pastel.</span>
+                </div>
+                <div class="btn-group btn-group-sm" role="group" data-mascotas-chart-toggle>
+                  <button type="button"
+                          class="btn btn-outline-primary active"
+                          data-mascotas-chart="bar">
+                    Barras
+                  </button>
+                  <button type="button"
+                          class="btn btn-outline-primary"
+                          data-mascotas-chart="pie"
+                          {% if not mascotas_resumen_tipo %}disabled{% endif %}>
+                    Pastel
+                  </button>
+                </div>
               </div>
-              <div class="table-responsive">
+              <div class="chart-area mb-4" data-mascotas-chart-container="bar" style="height: 320px;">
+                <canvas id="chart-mascotas-bar"></canvas>
+              </div>
+              <div class="chart-area mb-4 d-none" data-mascotas-chart-container="pie" style="height: 320px;">
+                <canvas id="chart-mascotas-pie"></canvas>
+              </div>
+              <div class="mascotas-detail d-none" data-mascotas-detail>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                  <h6 class="mb-0 fw-semibold text-primary">
+                    Razas para: <span data-mascotas-detail-label></span>
+                  </h6>
+                  <button type="button"
+                          class="btn btn-sm btn-outline-secondary"
+                          data-mascotas-detail-reset>
+                    Ver todos los tipos
+                  </button>
+                </div>
+                <div class="chart-area" style="height: 260px;">
+                  <canvas id="chart-mascotas-detalle"></canvas>
+                </div>
+              </div>
+              <div class="table-responsive mascotas-table-scroll">
                 <table class="table align-middle mb-0">
                   <thead>
                     <tr>
@@ -346,6 +383,13 @@
     </div>
   </div>
 
+  <style>
+    .mascotas-table-scroll {
+      max-height: 260px;
+      overflow-y: auto;
+    }
+  </style>
+
   <div class="card dashboard-card shadow-sm border-0 mt-4">
     <div class="card-header border-0 bg-transparent py-3">
       <h5 class="mb-0 fw-semibold text-primary">Agenda próxima (7 días)</h5>
@@ -384,6 +428,7 @@
   {% endif %}
   {% if mascotas_populares %}
     {{ mascotas_populares|json_script:"mascotas-populares-data" }}
+    {{ mascotas_resumen_tipo|json_script:"mascotas-por-tipo-data" }}
   {% endif %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script>
@@ -566,67 +611,232 @@
         }
       }
 
-      const mascotasCanvas = document.getElementById('chart-mascotas');
-      if (mascotasCanvas) {
-        const mascotasData = parseJSONData('mascotas-populares-data');
-        if (Array.isArray(mascotasData) && mascotasData.length) {
-          const colorCycle = [
-            chartPalette.primary,
-            chartPalette.success,
-            chartPalette.warning,
-            chartPalette.danger,
-            chartPalette.secondary
-          ];
+      const mascotasBarCanvas = document.getElementById('chart-mascotas-bar');
+      const mascotasPieCanvas = document.getElementById('chart-mascotas-pie');
+      const mascotasDetailCanvas = document.getElementById('chart-mascotas-detalle');
+      const mascotasChartToggleButtons = document.querySelectorAll('[data-mascotas-chart]');
+      const mascotasChartContainers = document.querySelectorAll('[data-mascotas-chart-container]');
+      const mascotasDetailWrapper = document.querySelector('[data-mascotas-detail]');
+      const mascotasDetailLabel = document.querySelector('[data-mascotas-detail-label]');
+      const mascotasDetailReset = document.querySelector('[data-mascotas-detail-reset]');
 
-          const mascotasChart = new Chart(mascotasCanvas, {
-            type: 'bar',
-            data: {
-              labels: mascotasData.map((item) => {
-                const tipo = item.tipo || item.especie || 'Mascota';
-                const raza = item.raza || 'Sin raza';
-                return `${tipo} · ${raza}`;
-              }),
-              datasets: [
-                {
-                  label: 'Citas',
-                  data: mascotasData.map((item) => item.total || 0),
-                  backgroundColor: mascotasData.map((_, index) => colorCycle[index % colorCycle.length]),
-                  borderRadius: 6,
-                  maxBarThickness: 36
+      let mascotasBarChart = null;
+      let mascotasPieChart = null;
+      let mascotasDetailChart = null;
+
+      const mascotasData = parseJSONData('mascotas-populares-data') || [];
+      const mascotasPorTipo = parseJSONData('mascotas-por-tipo-data') || [];
+
+      const createMascotasBarChart = () => {
+        if (!mascotasBarCanvas || mascotasBarChart || !mascotasData.length) {
+          return;
+        }
+
+        mascotasBarChart = new Chart(mascotasBarCanvas, {
+          type: 'bar',
+          data: {
+            labels: mascotasData.map((item) => {
+              const tipo = item.tipo || item.especie || 'Mascota';
+              const raza = item.raza || 'Sin información';
+              return `${tipo} · ${raza}`;
+            }),
+            datasets: [
+              {
+                label: 'Citas por raza',
+                data: mascotasData.map((item) => item.total || 0),
+                backgroundColor: chartPalette.primary,
+                borderRadius: 6,
+                maxBarThickness: 48
+              }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0
                 }
-              ]
+              }
             },
-            options: {
-              indexAxis: 'y',
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  beginAtZero: true,
-                  ticks: {
-                    precision: 0
-                  }
-                }
-              },
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: (context) => {
-                      const dataIndex = context.dataIndex;
-                      const dataItem = mascotasData[dataIndex] || {};
-                      const tipo = dataItem.tipo || dataItem.especie || 'Mascota';
-                      const especie = dataItem.especie || 'Sin especie';
-                      const raza = dataItem.raza || 'Sin raza';
-                      return `${context.formattedValue} citas — ${tipo} (${especie}, ${raza})`;
-                    }
-                  }
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (context) => `${context.formattedValue} citas`
                 }
               }
             }
-          });
+          }
+        });
+      };
+
+      const createMascotasPieChart = () => {
+        if (!mascotasPieCanvas || mascotasPieChart || !mascotasPorTipo.length) {
+          return;
         }
+
+        const basePalette = [
+          chartPalette.primary,
+          chartPalette.success,
+          chartPalette.warning,
+          chartPalette.danger,
+          chartPalette.secondary
+        ];
+
+        mascotasPieChart = new Chart(mascotasPieCanvas, {
+          type: 'doughnut',
+          data: {
+            labels: mascotasPorTipo.map((item) => item.tipo || 'Mascota'),
+            datasets: [
+              {
+                data: mascotasPorTipo.map((item) => item.total || 0),
+                backgroundColor: mascotasPorTipo.map((_, index) => basePalette[index % basePalette.length]),
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const label = context.label || 'Mascota';
+                    return `${label}: ${context.formattedValue} citas`;
+                  }
+                }
+              }
+            },
+            onClick: (_, elements) => {
+              if (!elements.length) {
+                return;
+              }
+              const index = elements[0].index;
+              const tipo = mascotasPorTipo[index];
+              if (tipo) {
+                renderMascotasDetail(tipo);
+              }
+            }
+          }
+        });
+      };
+
+      const renderMascotasDetail = (tipoData) => {
+        if (!mascotasDetailCanvas || !tipoData) {
+          return;
+        }
+
+        const razas = Array.isArray(tipoData.razas) ? tipoData.razas : [];
+        if (!razas.length) {
+          return;
+        }
+
+        if (mascotasDetailChart) {
+          mascotasDetailChart.destroy();
+        }
+
+        mascotasDetailChart = new Chart(mascotasDetailCanvas, {
+          type: 'bar',
+          data: {
+            labels: razas.map((item) => item.raza || 'Sin información'),
+            datasets: [
+              {
+                label: `Citas ({{ tipoData.tipo }})`,
+                data: razas.map((item) => item.total || 0),
+                backgroundColor: chartPalette.primary,
+                borderRadius: 6,
+                maxBarThickness: 48
+              }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (context) => `${context.formattedValue} citas`
+                }
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0
+                }
+              }
+            }
+          }
+        });
+
+        if (mascotasDetailLabel) {
+          mascotasDetailLabel.textContent = tipoData.tipo;
+        }
+
+        if (mascotasDetailWrapper) {
+          mascotasDetailWrapper.classList.remove('d-none');
+        }
+      };
+
+      const resetMascotasDetail = () => {
+        if (mascotasDetailChart) {
+          mascotasDetailChart.destroy();
+          mascotasDetailChart = null;
+        }
+        if (mascotasDetailWrapper) {
+          mascotasDetailWrapper.classList.add('d-none');
+        }
+        if (mascotasDetailLabel) {
+          mascotasDetailLabel.textContent = '';
+        }
+      };
+
+      if (mascotasDetailReset) {
+        mascotasDetailReset.addEventListener('click', resetMascotasDetail);
       }
+
+      const toggleMascotasChart = (target) => {
+        mascotasChartContainers.forEach((container) => {
+          const chartType = container.getAttribute('data-mascotas-chart-container');
+          container.classList.toggle('d-none', chartType !== target);
+        });
+
+        mascotasChartToggleButtons.forEach((button) => {
+          const chartType = button.getAttribute('data-mascotas-chart');
+          button.classList.toggle('active', chartType === target);
+        });
+
+        if (target === 'bar') {
+          resetMascotasDetail();
+          createMascotasBarChart();
+        } else if (target === 'pie') {
+          createMascotasPieChart();
+        }
+      };
+
+      mascotasChartToggleButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const chartType = button.getAttribute('data-mascotas-chart');
+          if (!chartType || button.classList.contains('active') || button.disabled) {
+            return;
+          }
+          toggleMascotasChart(chartType);
+        });
+      });
+
+      if (mascotasBarCanvas) {
+        createMascotasBarChart();
+      }
+      toggleMascotasChart('bar');
 
       const resumenCanvas = document.getElementById('chart-resumen');
       if (resumenCanvas) {

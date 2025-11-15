@@ -252,19 +252,45 @@ def dashboard(request):
     mascotas_query = (
         mascotas_base.values('mascota__especie', 'mascota__raza')
         .annotate(total=Count('pk'))
-        .order_by('-total', 'mascota__especie', 'mascota__raza')[:5]
+        .order_by('-total', 'mascota__especie', 'mascota__raza')
     )
+
+    resumen_mascotas_por_tipo = defaultdict(lambda: {'tipo': '', 'total': 0, 'razas': []})
 
     for item in mascotas_query:
         especie_original = item['mascota__especie'] or ''
+        tipo_normalizado = _normalizar_especie(especie_original)
+        raza = item['mascota__raza'] or 'Sin información'
+        total = item['total']
         mascotas_populares.append(
             {
-                'tipo': _normalizar_especie(especie_original),
+                'tipo': tipo_normalizado,
                 'especie': especie_original or 'Sin información',
-                'raza': item['mascota__raza'] or 'Sin información',
-                'total': item['total'],
+                'raza': raza,
+                'total': total,
             }
         )
+
+        resumen = resumen_mascotas_por_tipo[tipo_normalizado]
+        if not resumen['tipo']:
+            resumen['tipo'] = tipo_normalizado
+        resumen['total'] += total
+        resumen['razas'].append(
+            {
+                'raza': raza,
+                'total': total,
+            }
+        )
+
+    mascotas_resumen_tipo = [
+        {
+            'tipo': datos['tipo'],
+            'total': datos['total'],
+            'razas': sorted(datos['razas'], key=lambda item: item['total'], reverse=True),
+        }
+        for datos in sorted(resumen_mascotas_por_tipo.values(), key=lambda item: item['total'], reverse=True)
+        if datos['tipo']
+    ]
 
     mascotas_populares_label = (
         'toda la veterinaria' if puede_ver_global else 'sus citas asignadas'
@@ -324,6 +350,7 @@ def dashboard(request):
         'servicios_reservas': servicios_reservas,
         'rendimiento_veterinarios': rendimiento_veterinarios,
         'mascotas_populares': mascotas_populares,
+        'mascotas_resumen_tipo': mascotas_resumen_tipo,
         'mascotas_populares_label': mascotas_populares_label,
         'tendencias_mensuales': tendencias_mensuales,
         'proximas_citas': proximas_citas,
