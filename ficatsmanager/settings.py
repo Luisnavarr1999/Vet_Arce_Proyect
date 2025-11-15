@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Ahora lee la variable desde .ENV. La que viene con Django en caso de no existir.
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY') or 'unsafe-development-key'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Ahora lee la variable desde .ENV. False en caso de no existir.
@@ -34,7 +34,12 @@ DEBUG = os.getenv('DEBUG') == 'True'
 
 #esto es para permitir ngrok prueba
 #ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(' ') >>> antiguo dejar si existe error o solo querer ejecutar el localhost
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split() + [".ngrok-free.dev", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split() + [
+    ".ngrok-free.dev",
+    "localhost",
+    "127.0.0.1",
+    "testserver",
+]
 
 # Permitir peticiones desde dominios ngrok (HTTPS)
 CSRF_TRUSTED_ORIGINS = [
@@ -103,16 +108,34 @@ WSGI_APPLICATION = 'ficatsmanager.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# ===========================================================
+#   CONFIGURACIÓN DE BASE DE DATOS
+#
+# - PRODUCCIÓN (PythonAnywhere): usa MySQL con datos del .env aqui esta nuestra pagina
+# - LOCAL (sin MySQL): si DB_NAME no existe → usa SQLite (db.sqlite3) para agregar cositas
+# - TESTS: siempre usa SQLite en memoria (:memory:) para no tocar datos reales para probar los test
+# ===========================================================
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': str(os.getenv('DB_NAME')),
-        'USER': str(os.getenv('DB_USER')),
-        'PASSWORD': str(os.getenv('DB_PASSWORD')),
-        'HOST': str(os.getenv('DB_HOST')),
-        'PORT': str(os.getenv('DB_PORT')),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT') or '',
+        'TEST': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        },
     }
 }
+
+if not DATABASES['default']['NAME']:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 
 
 # Password validation
