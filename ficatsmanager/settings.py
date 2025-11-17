@@ -97,25 +97,29 @@ SECURE_REFERRER_POLICY = "same-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "https://cdn.jsdelivr.net")
-CSP_STYLE_SRC = (
-    "'self'",
-    "'unsafe-inline'",
-    "https://cdnjs.cloudflare.com",
-    "https://cdn.jsdelivr.net",
-    "https://fonts.googleapis.com",
-)
-CSP_FONT_SRC = (
-    "'self'",
-    "https://cdn.jsdelivr.net",
-    "https://cdnjs.cloudflare.com",
-    "https://fonts.gstatic.com",
-    "data:",
-)
-CSP_IMG_SRC = ("'self'", "data:", "https://www.google.com")
-CSP_FRAME_SRC = ("'self'", "https://www.google.com")
-CSP_CONNECT_SRC = ("'self'",)
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ("'self'",),
+        "script-src": ("'self'", "https://cdn.jsdelivr.net"),
+        "style-src": (
+            "'self'",
+            "'unsafe-inline'",
+            "https://cdnjs.cloudflare.com",
+            "https://cdn.jsdelivr.net",
+            "https://fonts.googleapis.com",
+        ),
+        "font-src": (
+            "'self'",
+            "https://cdn.jsdelivr.net",
+            "https://cdnjs.cloudflare.com",
+            "https://fonts.gstatic.com",
+            "data:",
+        ),
+        "img-src": ("'self'", "data:", "https://www.google.com"),
+        "frame-src": ("'self'", "https://www.google.com"),
+        "connect-src": ("'self'",),
+    }
+}
 
 
 if DJANGO_PROD:
