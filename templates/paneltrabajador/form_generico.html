@@ -2,122 +2,156 @@
 {% block title %}
   Editor
 {% endblock title %}
+
 {% block content %}
   {% comment %} Este archivo se usará para aquellas vistas que no requieran mostrar informacion adicional. {% endcomment %}
-  <form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
 
-    {% if form.non_field_errors %}
-      <div class="alert alert-danger" role="alert">
-        {% for error in form.non_field_errors %}
-          <div>{{ error }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
+  <div class="row g-4 align-items-start">
+    <div class="col-12 col-lg-8">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
 
-    {% for field in form %}
-      {% if field.is_hidden %}
-        {{ field }}
-      {% elif field.name == 'telefono' %}
-        <div class="mb-3">
-          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-          <div class="input-group">
-            <span class="input-group-text">+56</span>
-            {{ field }}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">
+            {% for error in form.non_field_errors %}
+              <div>{{ error }}</div>
+            {% endfor %}
           </div>
-          {% if field.help_text %}
-            <div class="form-text" id="telefonoHelp">{{ field.help_text }}</div>
+        {% endif %}
+
+        {% for field in form %}
+          {% if field.is_hidden %}
+            {{ field }}
+
+          {% elif field.name == 'telefono' %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              <div class="input-group">
+                <span class="input-group-text">+56</span>
+                {{ field }}
+              </div>
+              {% if field.help_text %}
+                <div class="form-text" id="telefonoHelp">{{ field.help_text }}</div>
+              {% endif %}
+              {% for error in field.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+          {% elif field.field.widget.input_type == 'checkbox' %}
+            <div class="form-check mb-3">
+              {{ field }}
+              <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
+              {% for error in field.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+          {% else %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
+              {% for error in field.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+              {% endfor %}
+            </div>
           {% endif %}
-          {% for error in field.errors %}
-            <div class="invalid-feedback d-block">{{ error }}</div>
-          {% endfor %}
-        </div>
-      {% elif field.field.widget.input_type == 'checkbox' %}
-        <div class="form-check mb-3">
-          {{ field }}
-          <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {% if field.help_text %}
-            <div class="form-text">{{ field.help_text }}</div>
-          {% endif %}
-          {% for error in field.errors %}
-            <div class="invalid-feedback d-block">{{ error }}</div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="mb-3">
-          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}
-            <div class="form-text">{{ field.help_text }}</div>
-          {% endif %}
-          {% for error in field.errors %}
-            <div class="invalid-feedback d-block">{{ error }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endfor %}
+        {% endfor %}
+
+        {% if doc_form %}
+          <div class="card shadow-sm mb-4">
+            <div class="card-body">
+              <h5 class="card-title">Historial médico general y documentos asociados</h5>
+              <p class="text-muted mb-4">
+                Los archivos cargados aquí quedarán asociados a la ficha de la mascota y visibles en el portal público.
+                Puedes vincularlos a una evolución clínica específica desde el selector.
+              </p>
+
+              {{ doc_form.non_field_errors }}
+
+              {% with field=doc_form.archivos %}
+                {% if field.is_hidden %}
+                  {{ field }}
+                {% else %}
+                  <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                      <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                      <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              {% endwith %}
+
+              {% with field=doc_form.evolucion %}
+                {% if field.is_hidden %}
+                  {{ field }}
+                {% else %}
+                  <div class="mb-0">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                      <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                      <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              {% endwith %}
+            </div>
+          </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary mt-3">Aceptar</button>
+      </form>
+    </div>
+
 
     {% if doc_form %}
-      <div class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h5 class="card-title">Historial médico general y documentos asociados</h5>
-          <p class="text-muted mb-4">
-            Los archivos cargados aquí quedarán asociados a la ficha de la mascota y visibles en el portal público. Puedes vincularlos a una evolución clínica específica desde el selector.
-          </p>
-          {{ doc_form.non_field_errors }}
+      <div class="col-12 col-lg-4">
+        <div class="card shadow-lg border-0 text-white h-100 position-relative overflow-hidden"
+             style="background: linear-gradient(135deg, #0d6efd, #6610f2);">
+          <div class="position-absolute top-0 end-0 opacity-25 display-1 me-3 mt-2">
+            <i class="bi bi-activity"></i>
+          </div>
+          <div class="card-body">
+            <span class="badge bg-white text-primary fw-semibold mb-3 text-uppercase small">
+              Actualizar Ficha
+            </span>
 
-          {% with field=doc_form.archivos %}
-            {% if field.is_hidden %}
-              {{ field }}
-            {% else %}
-              <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}
-                  <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-                {% for error in field.errors %}
-                  <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
-              </div>
+            <h4 class="card-title fw-bold">
+              Registrar nuevas evoluciones clínicas o actualizaciones del historial médico
+            </h4>
+
+            <p class="text-white-50 mb-4">
+              Mantén al día los seguimientos clínicos, controles y documentos recientes en un solo lugar.
+              Cada evolución complementa el historial general de la mascota.
+            </p>
+
+            {% if mascota %}
+              <a class="btn btn-light text-primary fw-semibold w-100 d-flex align-items-center justify-content-center gap-2"
+                 href="{% url 'panel_mascota_historial' mascota.id_mascota %}">
+                <i class="bi bi-journal-medical"></i>
+                <span>Ver evoluciones clínicas y registrar nuevas atenciones</span>
+              </a>
             {% endif %}
-          {% endwith %}
-
-          {% with field=doc_form.evolucion %}
-            {% if field.is_hidden %}
-              {{ field }}
-            {% else %}
-              <div class="mb-0">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}
-                  <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-                {% for error in field.errors %}
-                  <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
-              </div>
-            {% endif %}
-          {% endwith %}
-        </div>
-      </div>
-
-      <div class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h5 class="card-title">Registrar nuevas evoluciones clínicas o actualizaciones del historial médico</h5>
-          <p class="text-muted mb-3">
-            El historial médico general guarda los antecedentes permanentes de la mascota. Para registrar atenciones, seguimientos y adjuntar documentos recientes, utiliza las evoluciones clínicas.
-          </p>
-          {% if mascota %}
-            <a class="btn btn-outline-primary" href="{% url 'panel_mascota_historial' mascota.id_mascota %}">
-              <i class="bi bi-journal-medical"></i> Ver evoluciones clínicas y registrar nuevas atenciones
-            </a>
-          {% endif %}
+          </div>
         </div>
       </div>
     {% endif %}
-    <button type="submit" class="btn btn-primary mt-3">Aceptar</button>
-  </form>
+  </div>
+
+
   {% if documentos %}
     <div class="mt-4">
       <h5>Documentos cargados</h5>
@@ -147,4 +181,5 @@
       </ul>
     </div>
   {% endif %}
+
 {% endblock content %}
