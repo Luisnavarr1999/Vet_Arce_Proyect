@@ -97,29 +97,29 @@ SECURE_REFERRER_POLICY = "same-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 
-CONTENT_SECURITY_POLICY = {
-    "DIRECTIVES": {
-        "default-src": ("'self'",),
-        "script-src": ("'self'", "https://cdn.jsdelivr.net"),
-        "style-src": (
-            "'self'",
-            "'unsafe-inline'",
-            "https://cdnjs.cloudflare.com",
-            "https://cdn.jsdelivr.net",
-            "https://fonts.googleapis.com",
-        ),
-        "font-src": (
-            "'self'",
-            "https://cdn.jsdelivr.net",
-            "https://cdnjs.cloudflare.com",
-            "https://fonts.gstatic.com",
-            "data:",
-        ),
-        "img-src": ("'self'", "data:", "https://www.google.com"),
-        "frame-src": ("'self'", "https://www.google.com"),
-        "connect-src": ("'self'",),
-    }
-}
+#CONTENT_SECURITY_POLICY = {
+#    "DIRECTIVES": {
+#        "default-src": ("'self'",),
+#        "script-src": ("'self'", "https://cdn.jsdelivr.net"),
+#        "style-src": (
+#            "'self'",
+#            "'unsafe-inline'",
+#            "https://cdnjs.cloudflare.com",
+#            "https://cdn.jsdelivr.net",
+#            "https://fonts.googleapis.com",
+#        ),
+#        "font-src": (
+#            "'self'",
+#            "https://cdn.jsdelivr.net",
+#            "https://cdnjs.cloudflare.com",
+#            "https://fonts.gstatic.com",
+#            "data:",
+#        ),
+#        "img-src": ("'self'", "data:", "https://www.google.com"),
+#        "frame-src": ("'self'", "https://www.google.com"),
+#        "connect-src": ("'self'",),
+#    }
+#}
 
 
 if DJANGO_PROD:
@@ -162,8 +162,8 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
-if HAS_CSP:
-    MIDDLEWARE.insert(1, 'csp.middleware.CSPMiddleware')
+#if HAS_CSP:
+#    MIDDLEWARE.insert(1, 'csp.middleware.CSPMiddleware')
 
 ROOT_URLCONF = 'ficatsmanager.urls'
 
