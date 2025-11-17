@@ -31,7 +31,7 @@ La configuración global reside en el paquete `ficatsmanager/`, que define la co
 - **Panel de facturación e inventario**: registro de productos/servicios utilizados y emisión de comprobantes (ver vistas en `paneltrabajador/views/factura.py` y `paneltrabajador/views/producto.py`).
 - **Portal público con autoservicio**: flujo guiado para solicitar horas, cancelar citas, actualizar datos y un chatbot con respuestas frecuentes (`ambpublica/views.py`).
 - **Notificaciones por correo**: envío de correos mediante SMTP configurable para contactos, confirmaciones y restablecimiento de contraseñas.
-- **Control de permisos**: comando personalizado `configurar_permisos` para preparar roles y grupos según el modelo operativo de la clínica.
+Integre las credenciales, claves y endpoints externos mediante el sistema de gestión de secretos que utilice su equipo (por ejemplo, variables de entorno protegidas o servicios como Vault). Consulte `ficatsmanager/settings.py` para conocer los nombres de cada variable esperada. Defina `DJANGO_PROD=1` en los ambientes publicados para habilitar HTTPS forzado, cookies seguras y Argon2.
 
 ## Requisitos previos
 - Python 3.10 o superior.
@@ -66,7 +66,7 @@ La configuración global reside en el paquete `ficatsmanager/`, que define la co
    ```bash
    python manage.py createsuperuser
    ```
-3. **Configurar grupos y permisos base** (opcional, recomendado para ambientes productivos):
+3. **Configurar grupos y permisos base**: se crean automáticamente después de `migrate`, pero puedes reejecutar el comando si necesitas forzar la sincronización manual.
    ```bash
    python manage.py configurar_permisos
    ```
@@ -84,8 +84,12 @@ La configuración global reside en el paquete `ficatsmanager/`, que define la co
   ```bash
   python manage.py collectstatic
   ```
-- **Reseteo de contraseñas vía correo**: disponible desde `/panel/usuarios/` para administradores.
-- **Scripts Windows**: `configuracion_inicial.bat` y `correr_servidor.bat` automatizan pasos frecuentes en entornos Windows.
+- **Auditoría de dependencias** (OWASP):
+  ```bash
+  pip install -r requirements-dev.txt
+  pip-audit
+  ```
+  Ejecuta este comando antes de desplegar para detectar librerías vulnerables.
 
 ## Respaldo automático de la base de datos
 Para cumplir con el requerimiento de respaldos diarios en Dropbox se añadió el comando

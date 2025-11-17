@@ -16,6 +16,7 @@ from django.forms.widgets import DateTimeInput
 from django.template.loader import render_to_string
 from django.utils import formats, timezone
 from .models import (Cita,Cliente,EvolucionClinica,Factura,Mascota,MascotaDocumento,Producto,UserProfile,)
+from common.validators import clean_multiline_text, clean_plain_text
 
 # https://stackoverflow.com/a/69965027
 class DateTimeLocalInput(forms.DateTimeInput):
@@ -495,6 +496,17 @@ class MascotaDocumentoForm(forms.Form):
     def clean_archivos(self):
         archivos = self.cleaned_data.get('archivos')
         return archivos or []
+    
+    def clean_resumen(self):
+        return clean_plain_text(self.cleaned_data.get('resumen'), max_length=255, field_name='Resumen clínico')
+
+    def clean_detalle(self):
+        return clean_multiline_text(self.cleaned_data.get('detalle'), max_length=2000, field_name='Detalle de atención')
+
+    def clean_recomendaciones(self):
+        return clean_multiline_text(
+            self.cleaned_data.get('recomendaciones'), max_length=1500, field_name='Recomendaciones'
+        )
 
     def clean_evolucion(self):
         evolucion = self.cleaned_data.get('evolucion')
@@ -647,6 +659,17 @@ class EvolucionClinicaUpdateForm(forms.ModelForm):
     def clean_archivos(self):
         archivos = self.cleaned_data.get('archivos')
         return archivos or []
+    
+    def clean_resumen(self):
+        return clean_plain_text(self.cleaned_data.get('resumen'), max_length=255, field_name='Resumen clínico')
+
+    def clean_detalle(self):
+        return clean_multiline_text(self.cleaned_data.get('detalle'), max_length=2000, field_name='Detalle de atención')
+
+    def clean_recomendaciones(self):
+        return clean_multiline_text(
+            self.cleaned_data.get('recomendaciones'), max_length=1500, field_name='Recomendaciones'
+        )
 
 
 class FacturaForm(forms.ModelForm):

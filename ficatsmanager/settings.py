@@ -11,14 +11,52 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
+import warnings
 from pathlib import Path
 from django.contrib import messages
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 load_dotenv()  # loads the configs from .env
 
+def env_flag(name: str, default: str = "") -> bool:
+    return os.getenv(name, default).lower() in {"1", "true", "yes", "on"}
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+DJANGO_PROD = env_flag("DJANGO_PROD")
+if DJANGO_PROD:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    CSRF_COOKIE_HTTPONLY = False  # fasle hasta cuando ya adaptemos el chatbot
+else:
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
+    CSRF_COOKIE_HTTPONLY = False
+
+try:  # pragma: no cover - depende del entorno de instalación
+    import argon2  # type: ignore  # noqa: F401
+
+    HAS_ARGON2 = True
+except ImportError:  # pragma: no cover
+    HAS_ARGON2 = False
+    warnings.warn(
+        "argon2-cffi no está instalado; se usará PBKDF2 salvo en producción",
+        RuntimeWarning,
+    )
+
+try:  # pragma: no cover
+    import csp  # type: ignore  # noqa: F401
+
+    HAS_CSP = True
+except ImportError:  # pragma: no cover
+    HAS_CSP = False
+    warnings.warn(
+        "django-csp no está instalado; las cabeceras CSP no se aplicarán en este entorno",
+        RuntimeWarning,
+    )
 
 
 # Quick-start development settings - unsuitable for production
@@ -51,9 +89,39 @@ PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
-SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
+CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax")
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_REFERRER_POLICY = "same-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
+
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "https://cdn.jsdelivr.net")
+CSP_STYLE_SRC = (
+    "'self'",
+    "'unsafe-inline'",
+    "https://cdnjs.cloudflare.com",
+    "https://cdn.jsdelivr.net",
+    "https://fonts.googleapis.com",
+)
+CSP_FONT_SRC = (
+    "'self'",
+    "https://cdn.jsdelivr.net",
+    "https://cdnjs.cloudflare.com",
+    "https://fonts.gstatic.com",
+    "data:",
+)
+CSP_IMG_SRC = ("'self'", "data:", "https://www.google.com")
+CSP_FRAME_SRC = ("'self'", "https://www.google.com")
+CSP_CONNECT_SRC = ("'self'",)
+
+
+if DJANGO_PROD:
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 
 # Application definition
@@ -65,7 +133,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ficatsmanager',
+
+]
+
+if HAS_CSP:
+    INSTALLED_APPS.append('csp')
+
+INSTALLED_APPS += [
     'ambpublica',
     'paneltrabajador',
     'django.contrib.admindocs',
@@ -83,6 +157,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
+
+if HAS_CSP:
+    MIDDLEWARE.insert(1, 'csp.middleware.CSPMiddleware')
 
 ROOT_URLCONF = 'ficatsmanager.urls'
 
@@ -155,7 +232,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'ficatsmanager.password_validators.ComplexPasswordValidator',
+    },
 ]
+
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+]
+
+if HAS_ARGON2:
+    PASSWORD_HASHERS.insert(0, 'django.contrib.auth.hashers.Argon2PasswordHasher')
+elif DJANGO_PROD:
+    raise ImproperlyConfigured(
+        "argon2-cffi es obligatorio en producción. Instala la dependencia antes de desplegar."
+    )
 
 
 # Internationalization

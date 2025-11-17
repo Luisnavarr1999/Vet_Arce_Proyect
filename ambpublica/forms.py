@@ -6,6 +6,7 @@ from django.utils.timezone import localtime
 
 from paneltrabajador.models import Cita
 from .validators import normalize_rut
+from common.validators import clean_multiline_text, clean_plain_text
 
 class ContactForm(forms.Form):
     nombre = forms.CharField(label='Nombre', max_length=150)
@@ -17,6 +18,12 @@ class ContactForm(forms.Form):
         for field_name, field in self.fields.items():
             field.widget.attrs.setdefault('class', 'form-control')
             field.widget.attrs.setdefault('id', field_name)
+    
+    def clean_nombre(self):
+        return clean_plain_text(self.cleaned_data['nombre'], max_length=150, field_name='Nombre')
+
+    def clean_mensaje(self):
+        return clean_multiline_text(self.cleaned_data['mensaje'], max_length=1000, field_name='Mensaje')
 
 class BuscarMascotaForm(forms.Form):
     rut = forms.CharField(label='RUT')
