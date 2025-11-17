@@ -9,6 +9,7 @@ Plataforma web desarrollada con Django para digitalizar la gestión de una clín
 - [Configuración del entorno](#configuración-del-entorno)
 - [Ejecución de migraciones y datos iniciales](#ejecución-de-migraciones-y-datos-iniciales)
 - [Comandos útiles](#comandos-útiles)
+- [Respaldo automático de la base de datos](#respaldo-automático-de-la-base-de-datos)
 - [Estructura de carpetas](#estructura-de-carpetas)
 - [Buenas prácticas y convenciones](#buenas-prácticas-y-convenciones)
 - [Pruebas automatizadas](#pruebas-automatizadas)
@@ -85,6 +86,33 @@ La configuración global reside en el paquete `ficatsmanager/`, que define la co
   ```
 - **Reseteo de contraseñas vía correo**: disponible desde `/panel/usuarios/` para administradores.
 - **Scripts Windows**: `configuracion_inicial.bat` y `correr_servidor.bat` automatizan pasos frecuentes en entornos Windows.
+
+## Respaldo automático de la base de datos
+Para cumplir con el requerimiento de respaldos diarios en Dropbox se añadió el comando
+personalizado `backup_database`. Sigue estos pasos para dejarlo operando:
+
+1. **Configura las credenciales de Dropbox** en tu `.env` (o en el servicio de secretos que uses):
+   ```bash
+   DROPBOX_ACCESS_TOKEN=<token_proporcionado>
+   DROPBOX_BACKUP_FOLDER=/vet_arce_backups  # opcional, por defecto apunta a esta ruta
+   ```
+   > _Nunca_ subas el token al repositorio. Solo tiene que existir como variable de entorno.
+2. **Instala/actualiza dependencias** para incluir el SDK de Dropbox:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Prueba el comando en local** (el flag `--local-only` evita subir el archivo y deja una copia en la carpeta actual):
+   ```bash
+   python manage.py backup_database --local-only
+   ```
+   - Para bases MySQL el comando ejecuta `mysqldump`, por lo que debes tener esa utilidad disponible en el servidor.
+   - Para SQLite simplemente copia el archivo `.sqlite3`.
+4. **Programa la ejecución diaria** usando `cron`, systemd timers o el scheduler que utilices. Ejemplo con cron ejecutándose todos los días a las 03:00:
+   ```cron
+   0 3 * * * cd /ruta/a/Vet_Arce_Proyect && /ruta/a/.venv/bin/python manage.py backup_database >> /var/log/vet_arce_backup.log 2>&1
+   ```
+
+El comando genera archivos con sello temporal y los sube a la carpeta `/vet_arce_backups` del Dropbox asociado al token. Si el envío falla se mostrará un error detallado en la salida estándar para facilitar el monitoreo.
 
 ## Estructura de carpetas
 ```
