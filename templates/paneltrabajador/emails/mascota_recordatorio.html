@@ -45,6 +45,9 @@
                 <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.6;">
                   <li><strong>RUT registrado:</strong> {{ cliente_rut_formateado }}</li>
                   <li><strong>ID de mascota:</strong> {{ mascota.id_mascota }}</li>
+                  {% if servicio_nombre %}
+                    <li><strong>Servicio listo:</strong> {{ servicio_nombre }}</li>
+                  {% endif %}
                 </ul>
               </div>
 

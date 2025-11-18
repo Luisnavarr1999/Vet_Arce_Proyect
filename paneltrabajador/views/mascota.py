@@ -8,10 +8,12 @@ from django.urls import reverse
 from django.utils.html import strip_tags
 from django.db.models import Q
 from urllib.parse import urljoin
+import logging
 
 from paneltrabajador.forms import (EvolucionClinicaForm,EvolucionClinicaUpdateForm,MascotaDocumentoForm,MascotaForm,)
 from paneltrabajador.models import EvolucionClinica, Mascota, MascotaDocumento
 
+logger = logging.getLogger(__name__)
 
 # para poder usarlo en los correo o si queremos listar
 def _formatear_rut_con_dv(rut):
@@ -35,6 +37,47 @@ def _formatear_rut_con_dv(rut):
         dv_str = str(dv)
 
     return f"{rut_str}-{dv_str}"
+
+def _enviar_recordatorio_mascota(request, mascota, servicio_nombre=None):
+    """Envía el correo de recordatorio de ficha clínica y retorna si se logró enviar."""
+
+    path_consulta = reverse('ambpublico_consulta')
+
+    if getattr(settings, "PUBLIC_BASE_URL", ""):
+        consulta_url = urljoin(settings.PUBLIC_BASE_URL + "/", path_consulta.lstrip("/"))
+    else:
+        consulta_url = request.build_absolute_uri(path_consulta)
+
+    contexto_email = {
+        'mascota': mascota,
+        'cliente': mascota.cliente,
+        'consulta_url': consulta_url,
+        'site_name': 'Veterinaria de Arce',
+        'logo_url': 'https://i.postimg.cc/x1RJ1G0t/Logovetarce.png',
+        'primary_color': '#1a73e8',
+        'website_url': 'https://www.veterinariadearce.cl',
+        'cliente_rut_formateado': _formatear_rut_con_dv(mascota.cliente.rut),
+        'servicio_nombre': servicio_nombre,
+    }
+
+    asunto = "Ficha clínica actualizada de {}".format(mascota.nombre)
+    cuerpo_html = render_to_string('paneltrabajador/emails/mascota_recordatorio.html', contexto_email)
+    cuerpo_texto = strip_tags(cuerpo_html)
+
+    mensaje = EmailMultiAlternatives(
+        subject=asunto,
+        body=cuerpo_texto,
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+        to=[mascota.cliente.email],
+    )
+    mensaje.attach_alternative(cuerpo_html, 'text/html')
+
+    try:
+        mensaje.send()
+        return True
+    except Exception:
+        logger.exception("No se pudo enviar el recordatorio de la mascota %s", mascota.id_mascota)
+        return False
 
 def mascota_listar(request):
     """
@@ -220,7 +263,19 @@ def mascota_historial(request, id_mascota):
                     evolucion=evolucion,
                 )
 
-            messages.success(request, "Se registró una nueva evolución clínica.")
+            servicio_nombre = evolucion.get_servicio_display() if evolucion.servicio else None
+            envio_ok = _enviar_recordatorio_mascota(request, mascota, servicio_nombre)
+
+            if envio_ok:
+                messages.success(
+                    request,
+                    "Se registró una nueva evolución clínica y se notificó al cliente.",
+                )
+            else:
+                messages.warning(
+                    request,
+                    "Se registró la evolución clínica, pero no se pudo enviar el correo de recordatorio.",
+                )
             return redirect('panel_mascota_historial', id_mascota=mascota.id_mascota)
     else:
         form = EvolucionClinicaForm(mascota=mascota)
@@ -359,41 +414,16 @@ def mascota_enviar_recordatorio(request, id_mascota):
         messages.warning(request, "Para enviar un recordatorio debe utilizar el botón correspondiente.")
         return redirect('panel_mascota_listar')
 
-    path_consulta = reverse('ambpublico_consulta')
-
-    if getattr(settings, "PUBLIC_BASE_URL", ""):
-        consulta_url = urljoin(settings.PUBLIC_BASE_URL + "/", path_consulta.lstrip("/"))
+    if _enviar_recordatorio_mascota(request, mascota):
+        messages.success(
+            request,
+            "Se ha enviado el recordatorio al cliente {}.".format(mascota.cliente.nombre_cliente),
+        )
     else:
-        consulta_url = request.build_absolute_uri(path_consulta)
-
-    contexto_email = {
-        'mascota': mascota,
-        'cliente': mascota.cliente,
-        'consulta_url': consulta_url,
-        'site_name': 'Veterinaria de Arce',
-        'logo_url': 'https://i.postimg.cc/x1RJ1G0t/Logovetarce.png',
-        'primary_color': '#1a73e8',
-        'website_url': 'https://www.veterinariadearce.cl',
-        'cliente_rut_formateado': _formatear_rut_con_dv(mascota.cliente.rut),
-    }
-
-    asunto = "Ficha clínica actualizada de {}".format(mascota.nombre)
-    cuerpo_html = render_to_string('paneltrabajador/emails/mascota_recordatorio.html', contexto_email)
-    cuerpo_texto = strip_tags(cuerpo_html)
-
-    mensaje = EmailMultiAlternatives(
-        subject=asunto,
-        body=cuerpo_texto,
-        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-        to=[mascota.cliente.email],
-    )
-    mensaje.attach_alternative(cuerpo_html, 'text/html')
-
-    try:
-        mensaje.send()
-        messages.success(request, "Se ha enviado el recordatorio al cliente {}.".format(mascota.cliente.nombre_cliente))
-    except Exception:
-        messages.error(request, "No se pudo enviar el correo de recordatorio. Inténtelo nuevamente más tarde.")
+        messages.error(
+            request,
+            "No se pudo enviar el correo de recordatorio. Inténtelo nuevamente más tarde.",
+        )
 
     return redirect('panel_mascota_listar')
 
