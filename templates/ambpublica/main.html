@@ -16,51 +16,7 @@
     }
 
     .chatbot-panel {
-      max-height: 420px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .chatbot-messages {
-      flex: 1 1 auto;
-      overflow-y: auto;
-      padding: 0.5rem;
-      background: #f8f9fa;
-      border-radius: 0.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .chatbot-bubble {
-      align-self: flex-start;
-      display: inline-block;
-      padding: 0.4rem 0.6rem;
-      border-radius: 0.75rem;
-      max-width: 90%;
-      word-break: break-word;
-    }
-
-    .chatbot-bubble.bot {
-      background: #ffffff;
-      border: 1px solid #dee2e6;
-    }
-
-    .chatbot-bubble.staff {
-      background: #e7f1ff;
-      border: 1px solid #cfe2ff;
-      color: #052c65;
-    }
-
-    .chatbot-bubble.user {
-      background: #198754;
-      color: #ffffff;
-      margin-left: auto;
-    }
-
-    /* 🔧 FIX visual: evita que el botón "Enviar" desaparezca */
-    .chatbot-panel {
-      height: 420px; /* reemplaza max-height */
+      height: 440px;
       display: flex;
       flex-direction: column;
     }
@@ -83,7 +39,83 @@
       margin-bottom: 0;
       display: flex;
       flex-direction: column;
-      gap: .5rem;
+      gap: .75rem;
+    }
+
+    .chatbot-bubble {
+      display: flex;
+      gap: .75rem;
+      align-items: flex-start;
+    }
+
+    .chatbot-bubble.user {
+      flex-direction: row-reverse;
+    }
+
+    .chatbot-avatar-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #495057;
+      flex-shrink: 0;
+    }
+
+    .chatbot-bubble.bot .chatbot-avatar-circle {
+      background: #e7f1ff;
+      color: #0b5ed7;
+    }
+
+    .chatbot-bubble.user .chatbot-avatar-circle {
+      background: #198754;
+      color: #fff;
+    }
+
+    .chatbot-bubble.staff .chatbot-avatar-circle {
+      background: #d1e7ff;
+      color: #052c65;
+    }
+
+    .chatbot-content {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: .85rem;
+      padding: .5rem .75rem;
+      max-width: 210px;
+      word-break: break-word;
+    }
+
+    .chatbot-bubble.user .chatbot-content {
+      background: #198754;
+      color: #fff;
+      border-color: #146c43;
+    }
+
+    .chatbot-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: .7rem;
+      font-weight: 600;
+      margin-bottom: .25rem;
+      text-transform: capitalize;
+    }
+
+    .chatbot-meta span {
+      color: inherit;
+      opacity: .8;
+    }
+
+    .chatbot-bubble.user .chatbot-meta {
+      flex-direction: row-reverse;
+    }
+
+    .chatbot-text {
+      font-size: .9rem;
+      line-height: 1.4;
     }
 
     #chatbot-form {
@@ -117,6 +149,35 @@
     .chatbot-quick-reply:focus {
       background: #d1e7dd;
       color: #0f5132;
+    }
+
+    .chatbot-typing {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .85rem;
+      color: #0b5ed7;
+    }
+
+    .chatbot-typing .dot {
+      width: 6px;
+      height: 6px;
+      background: currentColor;
+      border-radius: 50%;
+      animation: chatbotBlink 1s infinite ease-in-out;
+    }
+
+    .chatbot-typing .dot:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .chatbot-typing .dot:nth-child(3) {
+      animation-delay: .3s;
+    }
+
+    @keyframes chatbotBlink {
+      0%, 80%, 100% { opacity: .2; }
+      40% { opacity: 1; }
     }
   </style>
 
@@ -227,37 +288,143 @@
   <section id="opiniones" class="py-5 bg-maple-soft autumn-decor">
     <div class="container testimonials-wrap">
       <h2 class="text-center mb-4">Opiniones de Nuestros Clientes</h2>
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card testimonial-card h-100">
-            <div class="card-body">
-              <p class="card-text mb-0">
-                "Mi gata Josefa Faraona recibió un excelente cuidado aquí. ¡Realmente se peinan!"
-                <br><strong>- Cesar Arce</strong>
-              </p>
-            </div>
+      <div class="testimonials-slider" data-active-index="0">
+        <button class="testimonial-nav prev" type="button" aria-label="Opinión anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <div class="testimonials-viewport">
+          <div class="testimonials-track">
+            <article class="card testimonial-card testimonial-slide h-100">
+              <div class="card-body d-flex flex-column">
+                <p class="card-text flex-grow-1">
+                  "Mi gata Josefa Faraona recibió un excelente cuidado aquí. ¡Realmente se peinan!"
+                </p>
+                <div class="testimonial-meta">
+                  <div>
+                    <strong class="d-block">Cesar Arce</strong>
+                    <small class="text-muted">Control preventivo felino</small>
+                  </div>
+                  <div class="testimonial-stars" aria-label="5 de 5 estrellas">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card testimonial-card testimonial-slide h-100">
+              <div class="card-body d-flex flex-column">
+                <p class="card-text flex-grow-1">
+                  "El equipo de Arce tiene los chakras muy alineados. Realmente se preocupan por nuestros amigos peludos."
+                </p>
+                <div class="testimonial-meta">
+                  <div>
+                    <strong class="d-block">Robinson Contreras</strong>
+                    <small class="text-muted">Urgencia para Bruno</small>
+                  </div>
+                  <div class="testimonial-stars" aria-label="5 de 5 estrellas">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card testimonial-card testimonial-slide h-100">
+              <div class="card-body d-flex flex-column">
+                <p class="card-text flex-grow-1">
+                  "¡Servicio profesional y amigable! Mi perico siempre está en buenas manos."
+                </p>
+                <div class="testimonial-meta">
+                  <div>
+                    <strong class="d-block">Danilo Jose Arias</strong>
+                    <small class="text-muted">Rehabilitación de Coco</small>
+                  </div>
+                  <div class="testimonial-stars" aria-label="4.5 de 5 estrellas">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-half"></i>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card testimonial-card testimonial-slide h-100">
+              <div class="card-body d-flex flex-column">
+                <p class="card-text flex-grow-1">
+                  "Nos ayudaron a entender el tratamiento crónico de nuestro viejito bigotes y ahora está más activo que nunca."
+                </p>
+                <div class="testimonial-meta">
+                  <div>
+                    <strong class="d-block">María Fernanda Muñoz</strong>
+                    <small class="text-muted">Plan senior para Bigotes</small>
+                  </div>
+                  <div class="testimonial-stars" aria-label="5 de 5 estrellas">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card testimonial-card testimonial-slide h-100">
+              <div class="card-body d-flex flex-column">
+                <p class="card-text flex-grow-1">
+                  "El seguimiento online de la ficha clínica es comodísimo. Me recuerdan las vacunas y controlan la evolución."
+                </p>
+                <div class="testimonial-meta">
+                  <div>
+                    <strong class="d-block">Javier Pardo</strong>
+                    <small class="text-muted">Tutor de Loba y Milo</small>
+                  </div>
+                  <div class="testimonial-stars" aria-label="4 de 5 estrellas">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star"></i>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card testimonial-card testimonial-slide h-100">
+              <div class="card-body d-flex flex-column">
+                <p class="card-text flex-grow-1">
+                  "A Luna la operaron con un cariño tremendo y las indicaciones post operatorias fueron muy claras."
+                </p>
+                <div class="testimonial-meta">
+                  <div>
+                    <strong class="d-block">Paula Sepúlveda</strong>
+                    <small class="text-muted">Cirugía de Luna</small>
+                  </div>
+                  <div class="testimonial-stars" aria-label="4.5 de 5 estrellas">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-half"></i>
+                  </div>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="card testimonial-card h-100">
-            <div class="card-body">
-              <p class="card-text mb-0">
-                "El equipo de Arce tiene los chakras muy alineados. Realmente se preocupan por nuestros amigos peludos."
-                <br><strong>- Robinson Contreras</strong>
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card testimonial-card h-100">
-            <div class="card-body">
-              <p class="card-text mb-0">
-                "¡Servicio profesional y amigable! Mi perico siempre está en buenas manos."
-                <br><strong>- Danilo Jose Arias</strong>
-              </p>
-            </div>
-          </div>
-        </div>
+        <button class="testimonial-nav next" type="button" aria-label="Opinión siguiente">
+          <i class="bi bi-chevron-right"></i>
+        </button>
       </div>
     </div>
   </section>
@@ -346,6 +513,72 @@
     </div>
   </section>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const slider = document.querySelector(".testimonials-slider");
+      if (!slider) return;
+
+      const track = slider.querySelector(".testimonials-track");
+      const cards = Array.from(track.children);
+      const prevBtn = slider.querySelector(".testimonial-nav.prev");
+      const nextBtn = slider.querySelector(".testimonial-nav.next");
+
+      const getCardsPerView = () => {
+        if (window.innerWidth < 768) return 1;
+        if (window.innerWidth < 1200) return 2;
+        return 3;
+      };
+
+      let cardsPerView = getCardsPerView();
+      let currentIndex = 0;
+
+      const clampIndex = (index) => {
+        const maxIndex = Math.max(0, cards.length - cardsPerView);
+        return Math.min(Math.max(index, 0), maxIndex);
+      };
+
+      const updateButtons = () => {
+        if (prevBtn) {
+          prevBtn.disabled = currentIndex === 0;
+        }
+        if (nextBtn) {
+          nextBtn.disabled = currentIndex >= cards.length - cardsPerView;
+        }
+      };
+
+      const animateToIndex = () => {
+        const targetCard = cards[currentIndex];
+        if (!targetCard) return;
+        const offset = targetCard.offsetLeft;
+        track.style.transform = `translateX(-${offset}px)`;
+        slider.setAttribute("data-active-index", currentIndex);
+        updateButtons();
+      };
+
+      const handleResize = () => {
+        const newCardsPerView = getCardsPerView();
+        if (newCardsPerView !== cardsPerView) {
+          cardsPerView = newCardsPerView;
+          currentIndex = clampIndex(currentIndex);
+        }
+        window.requestAnimationFrame(animateToIndex);
+      };
+
+      prevBtn?.addEventListener("click", () => {
+        currentIndex = clampIndex(currentIndex - cardsPerView);
+        animateToIndex();
+      });
+
+      nextBtn?.addEventListener("click", () => {
+        currentIndex = clampIndex(currentIndex + cardsPerView);
+        animateToIndex();
+      });
+
+      window.addEventListener("resize", handleResize);
+      animateToIndex();
+    });
+  </script>
+
   {# Chatbot #}
   <div id="chatbot-widget" class="chatbot-widget" data-conversation="{{ chatbot_conversation_id|default:'' }}">
     <div class="chatbot-avatar text-center mb-1">
@@ -360,10 +593,12 @@
         <button type="button" class="btn-close" aria-label="Cerrar" id="chatbot-close"></button>
       </div>
       <div class="card-body d-flex flex-column">
-        <div id="chatbot-messages" class="chatbot-messages mb-2">
-          <div class="chatbot-bubble bot">
-            ¡Hola! Soy el asistente virtual de la Veterinaria de Arce. Pregúntame por horarios, reservas o pagos.
-          </div>
+        <div id="chatbot-messages" class="chatbot-messages mb-2"></div>
+        <div id="chatbot-typing" class="chatbot-typing d-none" aria-live="polite">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="dot" aria-hidden="true"></span>
+          <span class="dot" aria-hidden="true"></span>
+          <span>Asistente escribiendo…</span>
         </div>
         <div id="chatbot-quick-replies" class="chatbot-quick-replies d-none" aria-live="polite"></div>
         <form id="chatbot-form" class="d-flex gap-2" autocomplete="off">
@@ -393,7 +628,12 @@
     const input         = document.getElementById("chatbot-input");
     const handoffNotice = document.getElementById("chatbot-handoff");
     const quickReplies  = document.getElementById("chatbot-quick-replies");
+    const typingIndicator = document.getElementById("chatbot-typing");
     const pollUrl       = "{% url 'ambpublico_chatbot_messages' %}";
+    const BOT_NAME = "Asistente Arce";
+    const USER_NAME = "Tú";
+    const STAFF_FALLBACK_NAME = "Recepción";
+    const INITIAL_GREETING = "¡Hola! Soy el asistente virtual de la Veterinaria de Arce. Pregúntame por horarios, servicios o tus reservas.";
 
     const existingConversation = widget.dataset.conversation;
     let conversationId = existingConversation ? parseInt(existingConversation, 10) : null;
@@ -416,10 +656,58 @@
       return null;
     };
 
-    const appendMessage = (text, author, prefix) => {
+    const formatTimestamp = (timestamp) => {
+      if (!timestamp) {
+        return new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" });
+      }
+      try {
+        return new Date(timestamp).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" });
+      } catch (e) {
+        return new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" });
+      }
+    };
+
+    const getDisplayName = (author, meta = {}) => {
+      if (author === "user") return USER_NAME;
+      if (author === "staff") return meta.displayName || meta.staffUser || STAFF_FALLBACK_NAME;
+      return meta.displayName || BOT_NAME;
+    };
+
+    const getAvatarLabel = (author, name) => {
+      if (author === "bot") return "🤖";
+      if (!name) return "•";
+      return name.charAt(0).toUpperCase();
+    };
+
+    const appendMessage = (text, author, meta = {}) => {
       const bubble = document.createElement("div");
       bubble.className = `chatbot-bubble ${author}`;
-      bubble.textContent = prefix ? `${prefix}: ${text}` : text;
+
+      const avatar = document.createElement("div");
+      avatar.className = "chatbot-avatar-circle";
+      const displayName = getDisplayName(author, meta);
+      avatar.textContent = getAvatarLabel(author, displayName);
+
+      const content = document.createElement("div");
+      content.className = "chatbot-content";
+
+      const metaRow = document.createElement("div");
+      metaRow.className = "chatbot-meta";
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = displayName;
+      const timeSpan = document.createElement("span");
+      timeSpan.textContent = formatTimestamp(meta.timestamp);
+      metaRow.appendChild(nameSpan);
+      metaRow.appendChild(timeSpan);
+
+      const body = document.createElement("div");
+      body.className = "chatbot-text";
+      body.textContent = text;
+
+      content.appendChild(metaRow);
+      content.appendChild(body);
+      bubble.appendChild(avatar);
+      bubble.appendChild(content);
       messageList.appendChild(bubble);
       messageList.scrollTop = messageList.scrollHeight;
     };
@@ -428,6 +716,11 @@
       if (!quickReplies) return;
       quickReplies.innerHTML = "";
       quickReplies.classList.add("d-none");
+    };
+
+    const setTyping = (isVisible) => {
+      if (!typingIndicator) return;
+      typingIndicator.classList.toggle("d-none", !isVisible);
     };
 
     const showConfirmationOptions = () => {
@@ -459,7 +752,12 @@
 
     const handleError = () => {
       clearQuickReplies();
-      appendMessage("No pude conectar con el asistente en este momento. Intenta nuevamente más tarde.", "bot");
+      setTyping(false);
+      appendMessage(
+        "No pude conectar con el asistente en este momento. Intenta nuevamente más tarde.",
+        "bot",
+        { displayName: BOT_NAME, timestamp: new Date().toISOString() }
+      );
     };
 
     const stopPolling = () => {
@@ -519,24 +817,36 @@
 
             if (message.author === "client") {
               if (isInitialLoad) {
-                appendMessage(message.content, "user");
+                appendMessage(message.content, "user", {
+                  timestamp: message.created_at,
+                  displayName: USER_NAME,
+                });
               }
               return;
             }
 
             if (message.author === "staff") {
-              appendMessage(message.content, "staff", message.staff_user || "Recepción");
+              appendMessage(message.content, "staff", {
+                displayName: message.staff_user || STAFF_FALLBACK_NAME,
+                timestamp: message.created_at,
+              });
               return;
             }
 
-            appendMessage(message.content, "bot");
+            appendMessage(message.content, "bot", {
+              displayName: BOT_NAME,
+              timestamp: message.created_at,
+            });
           });
         } else if (typeof data.last_id === "number" && (lastMessageId === null || data.last_id > lastMessageId)) {
           lastMessageId = data.last_id;
         }
 
         if (data.state === "closed") {
-          appendMessage("La conversación se cerró. Gracias por escribirnos.", "bot");
+          appendMessage("La conversación se cerró. Gracias por escribirnos.", "bot", {
+            displayName: BOT_NAME,
+            timestamp: new Date().toISOString(),
+          });
           handoffNotice.classList.add("d-none");
           conversationId = null;
           stopPolling();
@@ -574,11 +884,20 @@
     if (conversationId) {
       handoffNotice.classList.remove("d-none");
       startPolling(true);
+    } else {
+      appendMessage(INITIAL_GREETING, "bot", {
+        displayName: BOT_NAME,
+        timestamp: new Date().toISOString(),
+      });
     }
 
     const submitMessage = async (message) => {
-      appendMessage(message, "user");
+      appendMessage(message, "user", {
+        displayName: USER_NAME,
+        timestamp: new Date().toISOString(),
+      });
       handoffNotice.classList.add("d-none");
+      setTyping(true);
 
       try {
         const response = await fetch("{% url 'ambpublico_chatbot_message' %}", {
@@ -595,12 +914,18 @@
 
         const data = await response.json();
         if (data.error) {
-          appendMessage(data.error, "bot");
+          appendMessage(data.error, "bot", {
+            displayName: BOT_NAME,
+            timestamp: new Date().toISOString(),
+          });
           return;
         }
 
         if (data.reply) {
-          appendMessage(data.reply, "bot");
+          appendMessage(data.reply, "bot", {
+            displayName: BOT_NAME,
+            timestamp: new Date().toISOString(),
+          });
         }
 
         if (typeof data.last_message_id === "number") {
@@ -622,6 +947,8 @@
         }
       } catch (err) {
         handleError();
+      } finally {
+        setTyping(false);
       }
     };
 

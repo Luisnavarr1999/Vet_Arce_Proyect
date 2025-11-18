@@ -1,5 +1,6 @@
 from ast import And
 from urllib import request
+from datetime import datetime, time, timedelta
 from typing import Optional
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -31,6 +32,7 @@ from django.core.mail import EmailMultiAlternatives
 
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
+import random
 import re, unicodedata
 
 # Create your views here.
@@ -93,73 +95,118 @@ def _normalize(txt: str) -> str:
     txt = unicodedata.normalize("NFD", txt)
     return "".join(c for c in txt if unicodedata.category(c) != "Mn")
 
-# Cada intent tiene un patrón regex y una respuesta
+# Cada intent tiene un patrón regex y un set de respuestas posibles
 INTENTS = [
     # Saludo / Despedida
-    (re.compile(r"^(ola|hola|buenas|buenos dias|buenas tardes|buenas noches)\b"), 
-     "¡Hola! 😊 Soy el asistente de la Veterinaria de Arce. ¿En qué te ayudo?"),
-    (re.compile(r"\b(gracias|chau|adios|adiós|nos vemos)\b"), 
-     "¡Gracias por escribirnos! 🐾"),
+    (re.compile(r"^(ola|hola|buenas|buenos dias|buenas tardes|buenas noches|oña)\b"), (
+        "¡Hola! 😊 Soy el asistente virtual de la Veterinaria de Arce. ¿En qué te puedo apoyar hoy?",
+        "¡Hola hola! 👋 Estoy aquí para ayudarte con horarios, servicios o tus reservas.",
+        "¡Bienvenido! Soy el asistente de la Veterinaria de Arce. Cuéntame, ¿qué necesitas?",
+    )),
+    (re.compile(r"\b(gracias|chau|adios|adiós|nos vemos)\b"), (
+        "¡Gracias por escribirnos! 🐾 Si necesitas algo más, aquí estoy.",
+        "¡Un gusto ayudarte! Que tengas un excelente día.",
+        "¡Hasta luego! Dale muchos cariños a tu peludo de nuestra parte.",
+    )),
 
     # Horarios
-    (re.compile(r"\b(horario|horarios|abren|cierran|apertura|cierre)\b"), 
-     "Atendemos de lunes a viernes 09:00–19:00 y sábados 10:00–14:00 🕘"),
+    (re.compile(r"\b(horario|horarios|abren|cierran|apertura|cierre)\b"), (
+        "Atendemos de lunes a viernes 09:00–19:00 y los sábados de 10:00–14:00 🕘",
+        "Nuestro horario es lunes a viernes de 09:00 a 19:00, sábados hasta las 14:00.",
+        "Abrimos de 9 a 19 h en semana y los sábados de 10 a 14 h. ¡Te esperamos!",
+    )),
 
     # Ubicación
-    (re.compile(r"\b(ubicacion|ubicación|direccion|dirección|donde|dónde|como llegar)\b"), 
-     "Estamos en Santiago Centro. En la sección Contacto tienes el mapa exacto 📍"),
+    (re.compile(r"\b(ubicacion|ubicación|direccion|dirección|donde|dónde|como llegar)\b"), (
+        "Estamos en Santiago Centro. En la sección Contacto tienes el mapa exacto 📍",
+        "Nos encuentras en pleno Santiago Centro; en Contacto puedes abrir el mapa y trazarte la ruta.",
+        "Nuestra clínica está en Santiago Centro, con fácil acceso. ¿Necesitas que te enviemos el mapa?",
+    )),
 
     # Contacto
-    (re.compile(r"\b(contacto|telefono|teléfono|whatsapp|correo|email)\b"), 
-     "Puedes escribirnos por este chat o llamarnos a recepción. También respondemos por correo."),
+    (re.compile(r"\b(contacto|telefono|teléfono|whatsapp|correo|email)\b"), (
+        "Puedes escribirnos por aquí, llamar a recepción o enviarnos un correo y te respondemos rápido.",
+        "Además del chat, atendemos por teléfono y correo. ¡Elige el canal que más te acomode!",
+    )),
 
     # Servicios y precios
-    (re.compile(r"\b(servicio|servicios|vacuna|vacunas|cirugia|cirugía|dentista|odontologia|peluquer|baño|desparasita)\b"), 
-     "Ofrecemos consulta general, vacunas, odontología y cirugías. ¿Qué servicio te interesa?"),
-    (re.compile(r"\b(precio|precios|cuanto cuesta|tarifa|valen)\b"), 
-     "Los precios varían según el servicio y la mascota. Podemos orientarte por aquí y confirmas en recepción 💳"),
+    (re.compile(r"\b(servicio|servicios|vacuna|vacunas|cirugia|cirugía|dentista|odontologia|peluquer|baño|desparasita)\b"), (
+        "Ofrecemos consulta general, vacunas, odontología y cirugías. ¿Qué servicio te interesa?",
+        "Tenemos consulta médica, procedimientos dentales, cirugías y planes preventivos. ¿Buscabas alguno en particular?",
+    )),
+    (re.compile(r"\b(precio|precios|cuanto cuesta|tarifa|valen)\b"), (
+        "Los precios varían según el servicio y la mascota. Te puedo orientar por aquí y confirmar en recepción 💳",
+        "Dependiendo del servicio cambia el valor. Cuéntame qué necesitas y te doy el rango referencial.",
+    )),
 
     # Pagos
-    (re.compile(r"\b(pago|pagos|tarjeta|efectivo|transfer|transferencia|webpay|promocion|promoción)\b"), 
-     "Aceptamos tarjeta, transferencia y efectivo. Pregunta en recepción por promociones 💳"),
+    (re.compile(r"\b(pago|pagos|tarjeta|efectivo|transfer|transferencia|webpay|promocion|promoción)\b"), (
+        "Aceptamos tarjeta, transferencia y efectivo. Pregunta en recepción por promociones 💳",
+        "Puedes pagar con tarjetas, transferencia o efectivo. Si necesitas boleta o factura, la emitimos al momento.",
+    )),
 
     # Reservas / Cancelaciones
-    (re.compile(r"\b(reserv(ar|a)|agendar|sacar hora|cita nueva)\b"), 
-     "Puedes reservar desde “Reserva de Horas Online”. Si quieres, te voy guiando paso a paso 👍"),
-    (re.compile(r"\b(cancelar (cita|hora)|anular (cita|hora)|reagendar|cambiar hora)\b"), 
-     "Para cancelar o reagendar, indícanos tu número de cita o contáctanos por recepción."),
+    (re.compile(r"\b(reserv(ar|a)|agendar|sacar hora|cita nueva)\b"), (
+        "Puedes reservar desde “Reserva de Horas Online”. Si quieres, te voy guiando paso a paso 👍",
+        "Te ayudo desde aquí y también puedes completar la reserva en la sección Reserva de Horas.",
+    )),
+    (re.compile(r"\b(cancelar (cita|hora)|anular (cita|hora)|reagendar|cambiar hora)\b"), (
+        "Para cancelar o reagendar, indícanos tu número de cita o contáctanos por recepción.",
+        "Si necesitas mover tu cita, con gusto te ayudamos; solo cuéntame el número o escríbenos a recepción.",
+    )),
 
     # Emergencias
-    (re.compile(r"\b(emergencia|emergencias|urgencia|urgencias|fuera de horario)\b"), 
-     "Para emergencias fuera de horario, llámanos y coordinamos ayuda 📞"),
+    (re.compile(r"\b(emergencia|emergencias|urgencia|urgencias|fuera de horario)\b"), (
+        "Para emergencias fuera de horario, llámanos y coordinamos ayuda 📞",
+        "En caso de urgencia contáctanos de inmediato por teléfono para coordinar la atención.",
+    )),
 
     # Políticas / tiempos / requisitos
-    (re.compile(r"\b(politica|política|no show|atraso|tarde|cancelacion|cancelación)\b"), 
-     "Si no puedes asistir, avísanos con anticipación para liberar el cupo. ¡Gracias! 🙏"),
-    (re.compile(r"\b(tiempo|demora|cola|espera|cuanto se demoran)\b"), 
-     "El tiempo de atención depende del día y la demanda. ¡Hacemos lo posible por atender rápido!"),
-    (re.compile(r"\b(requisito|requisitos|primera consulta|documento|documentos)\b"), 
-     "Trae el RUT del tutor y, si tienes, el historial o carnet de tu mascota."),
+    (re.compile(r"\b(politica|política|no show|atraso|tarde|cancelacion|cancelación)\b"), (
+        "Si no puedes asistir, avísanos con anticipación para liberar el cupo. ¡Gracias! 🙏",
+        "Agradecemos que nos avises si te retrasas o debes cancelar, así ayudamos a otra mascota.",
+    )),
+    (re.compile(r"\b(tiempo|demora|cola|espera|cuanto se demoran)\b"), (
+        "El tiempo de atención depende del día y la demanda. ¡Hacemos lo posible por atender rápido!",
+        "Los tiempos pueden variar según la carga del día, pero siempre intentamos agilizar la espera.",
+    )),
+    (re.compile(r"\b(requisito|requisitos|primera consulta|documento|documentos)\b"), (
+        "Trae el RUT del tutor y, si tienes, el historial o carnet de tu mascota.",
+        "Con el RUT del tutor y el historial médico (si lo tienes) es suficiente para partir.",
+    )),
     
     # Otros comunes
-    (re.compile(r"\b(estacionamiento|parking)\b"), 
-     "Tenemos estacionamiento cercano con convenios en ciertos horarios."),
-    (re.compile(r"\b(exotica|exótica|aves|reptil|reptiles|huron|hurón)\b"), 
-     "Atendemos mascotas comunes. Para exóticos, consúltanos caso a caso."),
-    (re.compile(r"\b(domicilio|a domicilio|visita a domicilio)\b"), 
-     "Podemos coordinar visitas a domicilio en zonas cercanas. Escríbenos para evaluar."),
+    (re.compile(r"\b(estacionamiento|parking)\b"), (
+        "Tenemos estacionamiento cercano con convenios en ciertos horarios.",
+        "Podemos indicarte estacionamientos aliados a pocos metros si lo necesitas.",
+    )),
+    (re.compile(r"\b(exotica|exótica|aves|reptil|reptiles|huron|hurón)\b"), (
+        "Atendemos mascotas comunes. Para exóticos, consúltanos caso a caso.",
+        "Para especies exóticas analizamos cada caso; cuéntame qué necesitas y vemos disponibilidad.",
+    )),
+    (re.compile(r"\b(domicilio|a domicilio|visita a domicilio)\b"), (
+        "Podemos coordinar visitas a domicilio en zonas cercanas. Escríbenos para evaluar.",
+        "En algunos sectores realizamos visitas a domicilio; conversemos los detalles y vemos factibilidad.",
+    )),
 ]
+
+FALLBACK_REPLIES = (
+    "No estoy seguro de cómo ayudarte con eso. ¿Quieres que te contacte una recepcionista humana? Responde “sí” o “no”.",
+    "Mmm, esa pregunta me queda grande. Si quieres hablo con recepción para que te apoyen; dime “sí” o “no”.",
+)
+
+def _pick_reply(reply_options):
+    if isinstance(reply_options, (list, tuple)):
+        return random.choice(reply_options)
+    return reply_options
 
 def _rule_based_answer(message: str) -> tuple[str, bool]:
     q = _normalize(message)
     for pattern, reply in INTENTS:
         if pattern.search(q):
-            return reply, False
+            return _pick_reply(reply), False
     # fallback
-    return (
-        "No estoy seguro de cómo ayudarte con eso. ¿Quieres que te contacte una recepcionista humana? Responde “sí” o “no”.",
-        True,
-    )
+    return _pick_reply(FALLBACK_REPLIES), True
 
 def _find_chatbot_answer(message: str):
     return _rule_based_answer(message)
@@ -386,6 +433,99 @@ YES_PHRASES = (
 NO_KEYWORDS = {"no", "nop", "negativo"}
 NO_PHRASES = ("no gracias", "prefiero seguir", "mejor no")
 
+APPOINTMENT_LOOKUP_STATE_KEY = "chatbot_lookup_state"
+AVAILABILITY_STATE_KEY = "chatbot_availability_state"
+APPOINTMENT_LOOKUP_RECENT_DAYS = 7
+FLOW_CANCEL_KEYWORDS = {"cancelar", "cancela", "olvida", "no importa", "gracias igual"}
+
+APPOINTMENT_PATTERNS = [
+    re.compile(r"\b(tengo|tenemos) (una )?(cita|hora)\b"),
+    re.compile(r"\b(citas?|horas?) (agendad[ao]s?|reservad[ao]s?)\b"),
+    re.compile(r"\b(agende|reserve|agendamos|reservamos)\b.*\b(cita|hora)\b"),
+]
+
+APPOINTMENT_PROMPTS = {
+    "ask_rut": (
+        "¡Claro! Para revisar tus citas necesito el RUT del tutor (solo números, sin puntos ni guion).",
+        "Con gusto, primero dime el RUT del tutor, por favor (ej: 12345678).",
+    ),
+    "ask_rut_again": (
+        "No logré reconocer el RUT. ¿Puedes enviarlo en formato 12345678, sin puntos ni dígito verificador?",
+        "Creo que hubo un error con el RUT. Inténtalo nuevamente solo con números, porfa.",
+    ),
+    "ask_pet": (
+        "Gracias. ¿Cómo se llama la mascota que quieres revisar?",
+        "Perfecto, ahora dime el nombre de tu mascota para buscar sus citas.",
+    ),
+    "ask_pet_again": (
+        "No alcancé a captar el nombre. ¿Me lo repites?",
+        "Necesito el nombre de la mascota tal como la registraste. ¿Cuál es?",
+    ),
+    "client_missing": (
+        "No encuentro un tutor con ese RUT en nuestros registros. ¿Lo revisamos nuevamente?",
+        "No ubico ese RUT en la base. ¿Podrías confirmarlo o intentar con otro?",
+    ),
+    "pet_missing": (
+        "No encuentro esa mascota asociada al RUT entregado. ¿Podrías decirme otro nombre o revisar si está bien escrito?",
+        "No veo ese nombre en la ficha del tutor. ¿Quizá usaste otro diminutivo al registrarla?",
+    ),
+    "cancel": (
+        "Sin problema, cuando quieras retomamos la búsqueda de citas.",
+        "Listo, dejamos en pausa la consulta. Si necesitas otra cosa me avisas.",
+    ),
+}
+
+AVAILABILITY_KEYWORDS = (
+    "disponibilidad",
+    "disponible",
+    "horas",
+    "cupo",
+    "cupos",
+    "agenda",
+    "reservar",
+    "agendar",
+)
+
+AVAILABILITY_PROMPTS = {
+    "ask_date": (
+        "¿Para qué día quieres revisar disponibilidad?", 
+        "Encantado. ¿Qué día tienes en mente para revisar si hay cupos?",
+    ),
+    "cancel": (
+        "Sin problema, dime cuando quieras revisar otra fecha.",
+    ),
+}
+
+WEEKDAY_MAP = {
+    "lunes": 0,
+    "martes": 1,
+    "miercoles": 2,
+    "miércoles": 2,
+    "jueves": 3,
+    "viernes": 4,
+    "sabado": 5,
+    "sábado": 5,
+    "domingo": 6,
+}
+
+WEEKDAY_DISPLAY = {
+    0: "lunes",
+    1: "martes",
+    2: "miércoles",
+    3: "jueves",
+    4: "viernes",
+    5: "sábado",
+    6: "domingo",
+}
+
+SERVICE_KEYWORDS = {
+    "general": ("general", "control", "consulta"),
+    "cirugia": ("cirugia", "cirugía", "operacion", "operación"),
+    "dentista": ("dentista", "dental", "odontologia", "odontología"),
+}
+
+DATE_PATTERN = re.compile(r"(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?")
+
 
 def _tokenize(text: str) -> set[str]:
     return set(re.findall(r"\b\w+\b", text))
@@ -416,6 +556,262 @@ def _should_escalate(normalized_message: str) -> Optional[bool]:
             return False
     return None
 
+def _clear_session_state(session, key: str):
+    if key in session:
+        session.pop(key, None)
+        session.modified = True
+
+
+def _format_rut_display(value: int) -> str:
+    digits = f"{value:d}"
+    parts = []
+    while digits:
+        parts.append(digits[-3:])
+        digits = digits[:-3]
+    return ".".join(reversed(parts))
+
+
+def _extract_rut(text: str) -> Optional[int]:
+    match = re.search(r"\b(\d{6,9})\b", text)
+    if match:
+        try:
+            return int(match.group(1))
+        except ValueError:
+            return None
+    return None
+
+
+def _next_weekday(start_date, target_weekday: int):
+    days_ahead = (target_weekday - start_date.weekday()) % 7
+    return start_date + timedelta(days=days_ahead)
+
+
+def _parse_requested_date(normalized_message: str):
+    today = timezone.localdate()
+    if "pasado manana" in normalized_message:
+        return today + timedelta(days=2)
+    if "manana" in normalized_message:
+        return today + timedelta(days=1)
+    if "hoy" in normalized_message:
+        return today
+
+    for word, weekday in WEEKDAY_MAP.items():
+        if re.search(fr"\b{word}\b", normalized_message):
+            return _next_weekday(today, weekday)
+
+    match = DATE_PATTERN.search(normalized_message)
+    if match:
+        day, month, year = match.groups()
+        try:
+            day = int(day)
+            month = int(month)
+            year = int(year) if year else today.year
+            if year < 100:
+                year += 2000
+            candidate = datetime(year, month, day).date()
+        except ValueError:
+            return None
+        if candidate < today:
+            try:
+                candidate = datetime(year + 1, month, day).date()
+            except ValueError:
+                return None
+        return candidate
+
+    return None
+
+
+def _detect_service_code(normalized_message: str) -> Optional[str]:
+    for code, keywords in SERVICE_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword in normalized_message:
+                return code
+    return None
+
+
+def _build_availability_reply(target_date, service_code: Optional[str]) -> str:
+    start_dt = datetime.combine(target_date, time.min)
+    end_dt = datetime.combine(target_date, time.max)
+    if getattr(settings, "USE_TZ", False):
+        tz = timezone.get_current_timezone()
+        start_dt = timezone.make_aware(start_dt, tz)
+        end_dt = timezone.make_aware(end_dt, tz)
+
+    citas = Cita.objects.filter(estado='0', fecha__range=(start_dt, end_dt))
+    if service_code:
+        citas = citas.filter(servicio=service_code)
+
+    count = citas.count()
+    weekday_label = WEEKDAY_DISPLAY.get(target_date.weekday(), target_date.strftime('%A')).capitalize()
+    date_str = target_date.strftime('%d-%m-%Y')
+    service_name = dict(Cita.SERVICIO_CHOICES).get(service_code, None) if service_code else None
+    service_fragment = f" para {service_name}" if service_name else ""
+
+    if count:
+        options = (
+            f"Para {weekday_label} {date_str} contamos con {count} horario(s){service_fragment} disponible(s). Puedes reservar desde la sección Reserva de Horas.",
+            f"¡Buenas noticias! El {weekday_label} {date_str} todavía tenemos {count} cupo(s){service_fragment}. Puedes hacer la reserva online cuando quieras.",
+        )
+    else:
+        options = (
+            f"Ese {weekday_label} {date_str} ya no tiene cupos{service_fragment}. ¿Quieres que revisemos otro día?",
+            f"Por ahora no tenemos disponibilidad{service_fragment} el {weekday_label} {date_str}. Quizá otra fecha te sirve, ¿te parece si la buscamos?",
+        )
+
+    return _pick_reply(options)
+
+
+def _lookup_cita_response(cliente: Cliente, mascota: Mascota):
+    now = timezone.now()
+    recent_cutoff = now - timedelta(days=APPOINTMENT_LOOKUP_RECENT_DAYS)
+
+    citas = Cita.objects.filter(cliente=cliente, mascota=mascota).order_by('fecha')
+    upcoming = citas.filter(fecha__gte=now, estado='1').first()
+    recent = citas.filter(fecha__lt=now, fecha__gte=recent_cutoff, estado='1').order_by('-fecha').first()
+
+    service_labels = dict(Cita.SERVICIO_CHOICES)
+
+    if upcoming:
+        fecha_local = timezone.localtime(upcoming.fecha)
+        servicio = service_labels.get(upcoming.servicio, upcoming.servicio)
+        return _pick_reply((
+            f"Tienes una {servicio} agendada para {fecha_local.strftime('%d-%m-%Y a las %H:%M')}.",
+            f"{mascota.nombre} tiene hora reservada el {fecha_local.strftime('%d-%m-%Y a las %H:%M')} para {servicio}.",
+        ))
+
+    if recent:
+        fecha_local = timezone.localtime(recent.fecha)
+        servicio = service_labels.get(recent.servicio, recent.servicio)
+        return _pick_reply((
+            f"No hay horas próximas, pero asistieron a {servicio} el {fecha_local.strftime('%d-%m-%Y a las %H:%M')}.",
+            f"La última cita registrada fue el {fecha_local.strftime('%d-%m-%Y a las %H:%M')} ({servicio}). Si necesitas agendar otra, puedo orientarte.",
+        ))
+
+    return _pick_reply((
+        f"Por ahora no registramos citas recientes ni próximas para {mascota.nombre}. ¿Quieres que revisemos disponibilidad?",
+        f"No encuentro horas agendadas para {mascota.nombre} en estos días. Si quieres agendar una nueva, te acompaño en el proceso.",
+    ))
+
+
+def _handle_appointment_lookup(session, message: str, normalized_message: str):
+    state = session.get(APPOINTMENT_LOOKUP_STATE_KEY)
+    if state is not None and not isinstance(state, dict):
+        _clear_session_state(session, APPOINTMENT_LOOKUP_STATE_KEY)
+        state = None
+
+    triggered = bool(state)
+    if not triggered:
+        triggered = any(pattern.search(normalized_message) for pattern in APPOINTMENT_PATTERNS)
+
+    if not triggered:
+        return None
+
+    if any(word in normalized_message for word in FLOW_CANCEL_KEYWORDS):
+        _clear_session_state(session, APPOINTMENT_LOOKUP_STATE_KEY)
+        return {"reply": _pick_reply(APPOINTMENT_PROMPTS["cancel"])}
+
+    if not state:
+        rut_candidate = _extract_rut(normalized_message)
+        state = {
+            "rut": rut_candidate,
+            "rut_display": _format_rut_display(rut_candidate) if rut_candidate else None,
+            "pet_name": None,
+            "pet_display": None,
+        }
+        session[APPOINTMENT_LOOKUP_STATE_KEY] = state
+        session.modified = True
+        if rut_candidate:
+            return {"reply": _pick_reply(APPOINTMENT_PROMPTS["ask_pet"])}
+        return {"reply": _pick_reply(APPOINTMENT_PROMPTS["ask_rut"])}
+
+    if not state.get("rut"):
+        rut_candidate = _extract_rut(normalized_message)
+        if rut_candidate:
+            state["rut"] = rut_candidate
+            state["rut_display"] = _format_rut_display(rut_candidate)
+            session[APPOINTMENT_LOOKUP_STATE_KEY] = state
+            session.modified = True
+            return {"reply": _pick_reply(APPOINTMENT_PROMPTS["ask_pet"])}
+        return {"reply": _pick_reply(APPOINTMENT_PROMPTS["ask_rut_again"])}
+
+    if not state.get("pet_name"):
+        pet_name = re.sub(r"\s+", " ", message.strip())
+        if len(pet_name) < 2:
+            return {"reply": _pick_reply(APPOINTMENT_PROMPTS["ask_pet_again"])}
+        state["pet_name"] = pet_name
+        state["pet_display"] = pet_name
+        session[APPOINTMENT_LOOKUP_STATE_KEY] = state
+        session.modified = True
+
+    rut = state.get("rut")
+    pet_name = state.get("pet_name")
+    if not rut or not pet_name:
+        return None
+
+    try:
+        cliente = Cliente.objects.get(rut=rut)
+    except Cliente.DoesNotExist:
+        state["rut"] = None
+        state["rut_display"] = None
+        session[APPOINTMENT_LOOKUP_STATE_KEY] = state
+        session.modified = True
+        return {"reply": _pick_reply(APPOINTMENT_PROMPTS["client_missing"])}
+
+    mascota = Mascota.objects.filter(cliente=cliente, nombre__iexact=pet_name).first()
+    if not mascota:
+        nombres = list(Mascota.objects.filter(cliente=cliente).values_list('nombre', flat=True))
+        hint = ""
+        if nombres:
+            hint = f" Registradas tengo: {', '.join(nombres[:3])}."
+        state["pet_name"] = None
+        state["pet_display"] = None
+        session[APPOINTMENT_LOOKUP_STATE_KEY] = state
+        session.modified = True
+        return {"reply": _pick_reply(APPOINTMENT_PROMPTS["pet_missing"]) + hint}
+
+    reply = _lookup_cita_response(cliente, mascota)
+    _clear_session_state(session, APPOINTMENT_LOOKUP_STATE_KEY)
+    return {"reply": reply}
+
+
+def _handle_availability_question(session, message: str, normalized_message: str):
+    state = session.get(AVAILABILITY_STATE_KEY)
+    if state is not None and not isinstance(state, dict):
+        _clear_session_state(session, AVAILABILITY_STATE_KEY)
+        state = None
+
+    triggered = bool(state)
+    if not triggered:
+        triggered = any(keyword in normalized_message for keyword in AVAILABILITY_KEYWORDS)
+
+    if not triggered:
+        return None
+
+    if any(word in normalized_message for word in FLOW_CANCEL_KEYWORDS):
+        _clear_session_state(session, AVAILABILITY_STATE_KEY)
+        return {"reply": _pick_reply(AVAILABILITY_PROMPTS["cancel"])}
+
+    service_code = (state or {}).get("service") or _detect_service_code(normalized_message)
+    target_date = _parse_requested_date(normalized_message)
+
+    if not target_date:
+        session[AVAILABILITY_STATE_KEY] = {"awaiting_date": True, "service": service_code}
+        session.modified = True
+        return {"reply": _pick_reply(AVAILABILITY_PROMPTS["ask_date"])}
+
+    _clear_session_state(session, AVAILABILITY_STATE_KEY)
+    reply = _build_availability_reply(target_date, service_code)
+    return {"reply": reply}
+
+
+def _handle_contextual_requests(session, message: str, normalized_message: str):
+    appointment = _handle_appointment_lookup(session, message, normalized_message)
+    if appointment:
+        return appointment
+    availability = _handle_availability_question(session, message, normalized_message)
+    if availability:
+        return availability
+    return None
 
 def _ensure_conversation(conversation_id: Optional[int]) -> Optional[ChatConversation]:
     if not conversation_id:
@@ -567,6 +963,12 @@ def chatbot_message(request):
             "pending_confirmation": True,
         }
     )
+  
+  contextual_response = _handle_contextual_requests(session, message, normalized_message)
+  if contextual_response:
+    contextual_response.setdefault("handoff", False)
+    contextual_response.setdefault("pending_confirmation", False)
+    return JsonResponse(contextual_response)
 
   try:
     answer, handoff = _find_chatbot_answer(message)
