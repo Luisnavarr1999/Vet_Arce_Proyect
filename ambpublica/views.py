@@ -29,6 +29,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.formats import date_format
 from django.core.mail import EmailMultiAlternatives
+from django.db.models import Count
 
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
@@ -479,6 +480,8 @@ AVAILABILITY_KEYWORDS = (
     "disponibilidad",
     "disponible",
     "horas",
+    "horario",
+    "horarios",
     "cupo",
     "cupos",
     "agenda",
@@ -638,6 +641,14 @@ def _detect_service_code(normalized_message: str) -> Optional[str]:
     return None
 
 
+def _human_join(items: list[str]) -> str:
+    if not items:
+        return ""
+    if len(items) == 1:
+        return items[0]
+    return ", ".join(items[:-1]) + f" y {items[-1]}"
+
+
 def _build_availability_reply(target_date, service_code: Optional[str]) -> str:
     start_dt = datetime.combine(target_date, time.min)
     end_dt = datetime.combine(target_date, time.max)
@@ -647,24 +658,50 @@ def _build_availability_reply(target_date, service_code: Optional[str]) -> str:
         end_dt = timezone.make_aware(end_dt, tz)
 
     citas = Cita.objects.filter(estado='0', fecha__range=(start_dt, end_dt))
+    service_labels = dict(Cita.SERVICIO_CHOICES)
     if service_code:
         citas = citas.filter(servicio=service_code)
 
     count = citas.count()
     weekday_label = WEEKDAY_DISPLAY.get(target_date.weekday(), target_date.strftime('%A')).capitalize()
     date_str = target_date.strftime('%d-%m-%Y')
-    service_name = dict(Cita.SERVICIO_CHOICES).get(service_code, None) if service_code else None
+    service_name = service_labels.get(service_code, None) if service_code else None
     service_fragment = f" para {service_name}" if service_name else ""
 
-    if count:
+    if service_code:
+        if count:
+            options = (
+                f"Para {weekday_label} {date_str} contamos con {count} horario(s){service_fragment} disponible(s). Puedes reservar desde la sección Reserva de Horas.",
+                f"¡Buenas noticias! El {weekday_label} {date_str} todavía tenemos {count} cupo(s){service_fragment}. Puedes hacer la reserva online cuando quieras.",
+            )
+        else:
+            options = (
+                f"Ese {weekday_label} {date_str} ya no tiene cupos{service_fragment}. ¿Quieres que revisemos otro día?",
+                f"Por ahora no tenemos disponibilidad{service_fragment} el {weekday_label} {date_str}. Quizá otra fecha te sirve, ¿te parece si la buscamos?",
+            )
+        return _pick_reply(options)
+
+    per_service = list(
+        citas.values('servicio')
+        .annotate(total=Count('pk'))
+        .order_by()
+    )
+    available_services = [
+        f"{service_labels.get(row['servicio'], row['servicio'])} ({row['total']})"
+        for row in per_service
+        if row['total'] > 0
+    ]
+
+    if available_services:
+        service_sentence = _human_join(available_services)
         options = (
-            f"Para {weekday_label} {date_str} contamos con {count} horario(s){service_fragment} disponible(s). Puedes reservar desde la sección Reserva de Horas.",
-            f"¡Buenas noticias! El {weekday_label} {date_str} todavía tenemos {count} cupo(s){service_fragment}. Puedes hacer la reserva online cuando quieras.",
+            f"El {weekday_label} {date_str} tenemos cupos disponibles en {service_sentence}. Puedes reservar desde la sección Reserva de Horas.",
+            f"Disponemos de cupos para {service_sentence} el {weekday_label} {date_str}. Si quieres, completa la reserva online cuando gustes.",
         )
     else:
         options = (
-            f"Ese {weekday_label} {date_str} ya no tiene cupos{service_fragment}. ¿Quieres que revisemos otro día?",
-            f"Por ahora no tenemos disponibilidad{service_fragment} el {weekday_label} {date_str}. Quizá otra fecha te sirve, ¿te parece si la buscamos?",
+            f"Ese {weekday_label} {date_str} ya no tiene cupos disponibles. ¿Quieres que revisemos otro servicio o fecha?",
+            f"Por ahora no tenemos disponibilidad en ningún servicio el {weekday_label} {date_str}. Podemos intentar con otra fecha si te acomoda.",
         )
 
     return _pick_reply(options)

@@ -223,212 +223,214 @@
     </div>
   </header>
 
-  {# Nuestros Servicios #}
-  <section id="servicios" class="py-5">
-    <div class="container">
-      <h2 class="text-center">Nuestros Servicios</h2>
-      <hr class="w-25 mx-auto" />
-      <div class="row">
-        <div class="col-12 col-md-4 mb-3">
-          <article class="service-card text-center position-relative h-100">
-            <img src="{% static 'Imagenes/service-consulta.jpg' %}" alt="Consulta general para mascotas" class="service-icon">
-            <h3>Consulta General</h3>
-            <p>Exámenes de rutina, vacunas y atención médica general para mascotas.</p>
-            <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'consulta-general' %}">
-              <span class="visually-hidden">Ver más sobre consulta general</span>
-            </a>
-          </article>
-        </div>
-        <div class="col-12 col-md-4 mb-3">
-          <article class="service-card text-center position-relative h-100">
-            <img src="{% static 'Imagenes/service-cirugia.jpg' %}" alt="Cirugías veterinarias" class="service-icon">
-            <h3>Cirugía</h3>
-            <p>Realizamos cirugías con estándares médicos de alta calidad.</p>
-            <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'cirugia' %}">
-              <span class="visually-hidden">Ver más sobre cirugías veterinarias</span>
-            </a>
-          </article>
-        </div>
-        <div class="col-12 col-md-4 mb-3">
-          <article class="service-card text-center position-relative h-100">
-            <img src="{% static 'Imagenes/service-dentista.jpg' %}" alt="Odontología veterinaria" class="service-icon">
-            <h3>Dentista</h3>
-            <p>Cuidado dental especializado para mascotas.</p>
-            <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'dentista' %}">
-              <span class="visually-hidden">Ver más sobre odontología veterinaria</span>
-            </a>
-          </article>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  {# Reserva de Horas Online #}
-  <section id="reserva" class="py-5">
-    <div class="container">
-      <h2 class="text-center">Reserva de Horas Online</h2>
-      <p class="text-center">Ahorra tiempo y agenda la atención que necesita tu mascota con solo unos clics.</p>
-      <div class="text-center">
-        <a href="{% url 'ambpublico_reserva' %}" class="btn btn-primary btn-lg">Reservar Ahora</a>
-      </div>
-    </div>
-  </section>
-
-  {# Revisión de Ficha Clínica Online #}
-  <section id="ficha-clinica" class="py-5">
-    <div class="container">
-      <h2 class="text-center">Revisión de Ficha Clínica Online</h2>
-      <p class="text-center">Accede a la historia médica de tu mascota desde la comodidad de tu hogar.</p>
-      <div class="text-center">
-        <a href="{% url 'ambpublico_consulta' %}" class="btn btn-info btn-lg">Ver Detalles</a>
-      </div>
-    </div>
-  </section>
-
-  {# Opiniones de Nuestros Clientes #}
-  <section id="opiniones" class="py-5 bg-maple-soft autumn-decor">
-    <div class="container testimonials-wrap">
-      <h2 class="text-center mb-4">Opiniones de Nuestros Clientes</h2>
-      <div class="testimonials-slider" data-active-index="0">
-        <button class="testimonial-nav prev" type="button" aria-label="Opinión anterior">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-
-        <div class="testimonials-viewport">
-          <div class="testimonials-track">
-            <article class="card testimonial-card testimonial-slide h-100">
-              <div class="card-body d-flex flex-column">
-                <p class="card-text flex-grow-1">
-                  "Mi gata Josefa Faraona recibió un excelente cuidado aquí. ¡Realmente se peinan!"
-                </p>
-                <div class="testimonial-meta">
-                  <div>
-                    <strong class="d-block">Cesar Arce</strong>
-                    <small class="text-muted">Control preventivo felino</small>
-                  </div>
-                  <div class="testimonial-stars" aria-label="5 de 5 estrellas">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                </div>
-              </div>
+  <div class="autumn-ambient">
+    {# Nuestros Servicios #}
+    <section id="servicios" class="py-5">
+      <div class="container">
+        <h2 class="text-center">Nuestros Servicios</h2>
+        <hr class="w-25 mx-auto" />
+        <div class="row">
+          <div class="col-12 col-md-4 mb-3">
+            <article class="service-card text-center position-relative h-100">
+              <img src="{% static 'Imagenes/service-consulta.jpg' %}" alt="Consulta general para mascotas" class="service-icon">
+              <h3>Consulta General</h3>
+              <p>Exámenes de rutina, vacunas y atención médica general para mascotas.</p>
+              <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'consulta-general' %}">
+                <span class="visually-hidden">Ver más sobre consulta general</span>
+              </a>
             </article>
-
-            <article class="card testimonial-card testimonial-slide h-100">
-              <div class="card-body d-flex flex-column">
-                <p class="card-text flex-grow-1">
-                  "El equipo de Arce tiene los chakras muy alineados. Realmente se preocupan por nuestros amigos peludos."
-                </p>
-                <div class="testimonial-meta">
-                  <div>
-                    <strong class="d-block">Robinson Contreras</strong>
-                    <small class="text-muted">Urgencia para Bruno</small>
-                  </div>
-                  <div class="testimonial-stars" aria-label="5 de 5 estrellas">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                </div>
-              </div>
+          </div>
+          <div class="col-12 col-md-4 mb-3">
+            <article class="service-card text-center position-relative h-100">
+              <img src="{% static 'Imagenes/service-cirugia.jpg' %}" alt="Cirugías veterinarias" class="service-icon">
+              <h3>Cirugía</h3>
+              <p>Realizamos cirugías con estándares médicos de alta calidad.</p>
+              <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'cirugia' %}">
+                <span class="visually-hidden">Ver más sobre cirugías veterinarias</span>
+              </a>
             </article>
-
-            <article class="card testimonial-card testimonial-slide h-100">
-              <div class="card-body d-flex flex-column">
-                <p class="card-text flex-grow-1">
-                  "¡Servicio profesional y amigable! Mi perico siempre está en buenas manos."
-                </p>
-                <div class="testimonial-meta">
-                  <div>
-                    <strong class="d-block">Danilo Jose Arias</strong>
-                    <small class="text-muted">Rehabilitación de Coco</small>
-                  </div>
-                  <div class="testimonial-stars" aria-label="4.5 de 5 estrellas">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-half"></i>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article class="card testimonial-card testimonial-slide h-100">
-              <div class="card-body d-flex flex-column">
-                <p class="card-text flex-grow-1">
-                  "Nos ayudaron a entender el tratamiento crónico de nuestro viejito bigotes y ahora está más activo que nunca."
-                </p>
-                <div class="testimonial-meta">
-                  <div>
-                    <strong class="d-block">María Fernanda Muñoz</strong>
-                    <small class="text-muted">Plan senior para Bigotes</small>
-                  </div>
-                  <div class="testimonial-stars" aria-label="5 de 5 estrellas">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article class="card testimonial-card testimonial-slide h-100">
-              <div class="card-body d-flex flex-column">
-                <p class="card-text flex-grow-1">
-                  "El seguimiento online de la ficha clínica es comodísimo. Me recuerdan las vacunas y controlan la evolución."
-                </p>
-                <div class="testimonial-meta">
-                  <div>
-                    <strong class="d-block">Javier Pardo</strong>
-                    <small class="text-muted">Tutor de Loba y Milo</small>
-                  </div>
-                  <div class="testimonial-stars" aria-label="4 de 5 estrellas">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star"></i>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article class="card testimonial-card testimonial-slide h-100">
-              <div class="card-body d-flex flex-column">
-                <p class="card-text flex-grow-1">
-                  "A Luna la operaron con un cariño tremendo y las indicaciones post operatorias fueron muy claras."
-                </p>
-                <div class="testimonial-meta">
-                  <div>
-                    <strong class="d-block">Paula Sepúlveda</strong>
-                    <small class="text-muted">Cirugía de Luna</small>
-                  </div>
-                  <div class="testimonial-stars" aria-label="4.5 de 5 estrellas">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-half"></i>
-                  </div>
-                </div>
-              </div>
+          </div>
+          <div class="col-12 col-md-4 mb-3">
+            <article class="service-card text-center position-relative h-100">
+              <img src="{% static 'Imagenes/service-dentista.jpg' %}" alt="Odontología veterinaria" class="service-icon">
+              <h3>Dentista</h3>
+              <p>Cuidado dental especializado para mascotas.</p>
+              <a class="stretched-link" href="{% url 'ambpublico_servicio_detalle' 'dentista' %}">
+                <span class="visually-hidden">Ver más sobre odontología veterinaria</span>
+              </a>
             </article>
           </div>
         </div>
-        <button class="testimonial-nav next" type="button" aria-label="Opinión siguiente">
-          <i class="bi bi-chevron-right"></i>
-        </button>
       </div>
-    </div>
-  </section>
+    </section>
+
+    {# Reserva de Horas Online #}
+    <section id="reserva" class="py-5">
+      <div class="container">
+        <h2 class="text-center">Reserva de Horas Online</h2>
+        <p class="text-center">Ahorra tiempo y agenda la atención que necesita tu mascota con solo unos clics.</p>
+        <div class="text-center">
+          <a href="{% url 'ambpublico_reserva' %}" class="btn btn-primary btn-lg">Reservar Ahora</a>
+        </div>
+      </div>
+    </section>
+
+    {# Revisión de Ficha Clínica Online #}
+    <section id="ficha-clinica" class="py-5">
+      <div class="container">
+        <h2 class="text-center">Revisión de Ficha Clínica Online</h2>
+        <p class="text-center">Accede a la historia médica de tu mascota desde la comodidad de tu hogar.</p>
+        <div class="text-center">
+          <a href="{% url 'ambpublico_consulta' %}" class="btn btn-info btn-lg">Ver Detalles</a>
+        </div>
+      </div>
+    </section>
+
+    {# Opiniones de Nuestros Clientes #}
+    <section id="opiniones" class="py-5 bg-maple-soft autumn-decor">
+      <div class="container testimonials-wrap">
+        <h2 class="text-center mb-4">Opiniones de Nuestros Clientes</h2>
+        <div class="testimonials-slider" data-active-index="0">
+          <button class="testimonial-nav prev" type="button" aria-label="Opinión anterior">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+
+          <div class="testimonials-viewport">
+            <div class="testimonials-track">
+              <article class="card testimonial-card testimonial-slide h-100">
+                <div class="card-body d-flex flex-column">
+                  <p class="card-text flex-grow-1">
+                    "Mi gata Josefa Faraona recibió un excelente cuidado aquí. ¡Realmente se peinan!"
+                  </p>
+                  <div class="testimonial-meta">
+                    <div>
+                      <strong class="d-block">Cesar Arce</strong>
+                      <small class="text-muted">Control preventivo felino</small>
+                    </div>
+                    <div class="testimonial-stars" aria-label="5 de 5 estrellas">
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card testimonial-card testimonial-slide h-100">
+                <div class="card-body d-flex flex-column">
+                  <p class="card-text flex-grow-1">
+                    "El equipo de Arce tiene los chakras muy alineados. Realmente se preocupan por nuestros amigos peludos."
+                  </p>
+                  <div class="testimonial-meta">
+                    <div>
+                      <strong class="d-block">Robinson Contreras</strong>
+                      <small class="text-muted">Urgencia para Bruno</small>
+                    </div>
+                    <div class="testimonial-stars" aria-label="5 de 5 estrellas">
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card testimonial-card testimonial-slide h-100">
+                <div class="card-body d-flex flex-column">
+                  <p class="card-text flex-grow-1">
+                    "¡Servicio profesional y amigable! Mi perico siempre está en buenas manos."
+                  </p>
+                  <div class="testimonial-meta">
+                    <div>
+                      <strong class="d-block">Danilo Jose Arias</strong>
+                      <small class="text-muted">Rehabilitación de Coco</small>
+                    </div>
+                    <div class="testimonial-stars" aria-label="4.5 de 5 estrellas">
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-half"></i>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card testimonial-card testimonial-slide h-100">
+                <div class="card-body d-flex flex-column">
+                  <p class="card-text flex-grow-1">
+                    "Nos ayudaron a entender el tratamiento crónico de nuestro viejito bigotes y ahora está más activo que nunca."
+                  </p>
+                  <div class="testimonial-meta">
+                    <div>
+                      <strong class="d-block">María Fernanda Muñoz</strong>
+                      <small class="text-muted">Plan senior para Bigotes</small>
+                    </div>
+                    <div class="testimonial-stars" aria-label="5 de 5 estrellas">
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card testimonial-card testimonial-slide h-100">
+                <div class="card-body d-flex flex-column">
+                  <p class="card-text flex-grow-1">
+                    "El seguimiento online de la ficha clínica es comodísimo. Me recuerdan las vacunas y controlan la evolución."
+                  </p>
+                  <div class="testimonial-meta">
+                    <div>
+                      <strong class="d-block">Javier Pardo</strong>
+                      <small class="text-muted">Tutor de Loba y Milo</small>
+                    </div>
+                    <div class="testimonial-stars" aria-label="4 de 5 estrellas">
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star"></i>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card testimonial-card testimonial-slide h-100">
+                <div class="card-body d-flex flex-column">
+                  <p class="card-text flex-grow-1">
+                    "A Luna la operaron con un cariño tremendo y las indicaciones post operatorias fueron muy claras."
+                  </p>
+                  <div class="testimonial-meta">
+                    <div>
+                      <strong class="d-block">Paula Sepúlveda</strong>
+                      <small class="text-muted">Cirugía de Luna</small>
+                    </div>
+                    <div class="testimonial-stars" aria-label="4.5 de 5 estrellas">
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-fill"></i>
+                      <i class="bi bi-star-half"></i>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+          <button class="testimonial-nav next" type="button" aria-label="Opinión siguiente">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
 
   {# Contáctanos #}
   <section id="contacto" class="py-5 bg-maple-cream">
@@ -635,6 +637,12 @@
     const USER_NAME = "Tú";
     const STAFF_FALLBACK_NAME = "Recepción";
     const INITIAL_GREETING = "¡Hola! Soy el asistente virtual de la Veterinaria de Arce. Pregúntame por horarios, servicios o tus reservas.";
+    const FAQ_QUICK_REPLIES = [
+      { label: "🐾 ¿Cuáles son los horarios?", message: "¿Cuáles son los horarios?" },
+      { label: "💉 Quiero reservar una hora", message: "Quiero reservar una hora" },
+      { label: "📍 ¿Dónde están ubicados?", message: "¿Dónde están ubicados?" },
+      { label: "📋 Ver mis citas agendadas", message: "Quiero ver mis citas agendadas" },
+    ];
 
     const existingConversation = widget.dataset.conversation;
     let conversationId = existingConversation ? parseInt(existingConversation, 10) : null;
@@ -643,6 +651,7 @@
     }
     let pollTimer = null;
     let lastMessageId = null;
+    let faqQuickRepliesDismissed = Boolean(conversationId);
 
     const togglePanel = (show) => {
       const shouldShow = typeof show === "boolean" ? show : panel.classList.contains("d-none");
@@ -719,36 +728,61 @@
       quickReplies.classList.add("d-none");
     };
 
+    const dismissFaqQuickReplies = () => {
+      faqQuickRepliesDismissed = true;
+      clearQuickReplies();
+    };
+
+    const renderQuickReplies = (options = []) => {
+      if (!quickReplies) return;
+      clearQuickReplies();
+      if (!options.length) return;
+
+      options.forEach((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "chatbot-quick-reply";
+        button.textContent = option.label;
+        button.addEventListener("click", () => {
+          dismissFaqQuickReplies();
+          if (typeof option.onClick === "function") {
+            option.onClick();
+          } else if (option.message) {
+            submitMessage(option.message);
+          }
+        });
+        quickReplies.appendChild(button);
+      });
+
+      quickReplies.classList.remove("d-none");
+    };
+
     const setTyping = (isVisible) => {
       if (!typingIndicator) return;
       typingIndicator.classList.toggle("d-none", !isVisible);
     };
 
     const showConfirmationOptions = () => {
-      if (!quickReplies) return;
-      quickReplies.innerHTML = "";
+      renderQuickReplies([
+        {
+          label: "Sí, hablar con recepción",
+          onClick: () => submitMessage("Sí quiero hablar con la recepción"),
+        },
+        {
+          label: "No, gracias",
+          onClick: () => submitMessage("No, gracias"),
+        },
+      ]);
+    };
 
-      const yesOption = document.createElement("button");
-      yesOption.type = "button";
-      yesOption.className = "chatbot-quick-reply";
-      yesOption.textContent = "Sí, hablar con recepción";
-      yesOption.addEventListener("click", () => {
-        clearQuickReplies();
-        submitMessage("Sí quiero hablar con la recepción");
-      });
-
-      const noOption = document.createElement("button");
-      noOption.type = "button";
-      noOption.className = "chatbot-quick-reply";
-      noOption.textContent = "No, gracias";
-      noOption.addEventListener("click", () => {
-        clearQuickReplies();
-        submitMessage("No, gracias");
-      });
-
-      quickReplies.appendChild(yesOption);
-      quickReplies.appendChild(noOption);
-      quickReplies.classList.remove("d-none");
+    const showFaqQuickReplies = () => {
+      if (conversationId || faqQuickRepliesDismissed) return;
+      renderQuickReplies(
+        FAQ_QUICK_REPLIES.map((item) => ({
+          label: item.label,
+          onClick: () => submitMessage(item.message),
+        }))
+      );
     };
 
     const handleError = () => {
@@ -850,7 +884,9 @@
           });
           handoffNotice.classList.add("d-none");
           conversationId = null;
+          faqQuickRepliesDismissed = false;
           stopPolling();
+          showFaqQuickReplies();
           return;
         }
 
@@ -878,19 +914,6 @@
         schedulePoll();
       }
     };
-
-    toggleButton.addEventListener("click", () => togglePanel());
-    closeButton.addEventListener("click", () => togglePanel(false));
-
-    if (conversationId) {
-      handoffNotice.classList.remove("d-none");
-      startPolling(true);
-    } else {
-      appendMessage(INITIAL_GREETING, "bot", {
-        displayName: BOT_NAME,
-        timestamp: new Date().toISOString(),
-      });
-    }
 
     const submitMessage = async (message) => {
       appendMessage(message, "user", {
@@ -943,6 +966,8 @@
 
         if (data.pending_confirmation) {
           showConfirmationOptions();
+        } else if (!conversationId) {
+          showFaqQuickReplies();
         } else {
           clearQuickReplies();
         }
@@ -953,13 +978,27 @@
       }
     };
 
+    toggleButton.addEventListener("click", () => togglePanel());
+    closeButton.addEventListener("click", () => togglePanel(false));
+
+    if (conversationId) {
+      handoffNotice.classList.remove("d-none");
+      startPolling(true);
+    } else {
+      appendMessage(INITIAL_GREETING, "bot", {
+        displayName: BOT_NAME,
+        timestamp: new Date().toISOString(),
+      });
+      showFaqQuickReplies();
+    }
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const message = input.value.trim();
       if (!message) return;
 
       input.value = "";
-      clearQuickReplies();
+      dismissFaqQuickReplies();
       submitMessage(message);
     });
 
