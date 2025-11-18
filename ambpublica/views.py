@@ -556,6 +556,15 @@ def _should_escalate(normalized_message: str) -> Optional[bool]:
             return False
     return None
 
+def _contains_negative_intent(normalized_message: str) -> bool:
+    tokens = _tokenize(normalized_message)
+    if tokens & NO_KEYWORDS:
+        return True
+    for phrase in NO_PHRASES:
+        if phrase in normalized_message:
+            return True
+    return False
+
 def _clear_session_state(session, key: str):
     if key in session:
         session.pop(key, None)
@@ -706,7 +715,10 @@ def _handle_appointment_lookup(session, message: str, normalized_message: str):
     if not triggered:
         return None
 
-    if any(word in normalized_message for word in FLOW_CANCEL_KEYWORDS):
+    wants_cancel = any(word in normalized_message for word in FLOW_CANCEL_KEYWORDS)
+    if not wants_cancel and state:
+        wants_cancel = _contains_negative_intent(normalized_message)
+    if wants_cancel:
         _clear_session_state(session, APPOINTMENT_LOOKUP_STATE_KEY)
         return {"reply": _pick_reply(APPOINTMENT_PROMPTS["cancel"])}
 

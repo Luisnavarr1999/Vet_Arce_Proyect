@@ -147,3 +147,22 @@ class ChatbotFlowTests(TestCase):
         self.assertIn(day_keyword, normalized_reply)
         self.assertTrue("cupo" in normalized_reply or "horario" in normalized_reply)
         self.assertFalse(data["handoff"])
+
+    @mock.patch("ambpublica.views.random.choice", side_effect=lambda seq: seq[0])
+    def test_appointment_lookup_can_be_cancelled_with_no(self, mock_choice):
+        # Start the flow
+        response = self._post("¿Pueden revisar si tengo una cita?")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("RUT", data["reply"])
+
+        # Provide invalid RUT to trigger retry prompt
+        response = self._post("abc")
+        data = response.json()
+        self.assertIn("rut", _normalize(data["reply"]))
+
+        # Say "no" to exit the flow gracefully
+        response = self._post("no")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("sin problema", _normalize(data["reply"]))
