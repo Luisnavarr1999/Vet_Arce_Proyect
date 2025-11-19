@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
+from django.db.models import Q
 from paneltrabajador.forms import ClienteForm
 from paneltrabajador.models import Cliente, Mascota
 def cliente_listado(request):
@@ -22,7 +23,23 @@ def cliente_listado(request):
 
     # Obtenemos todos los objetos del modelo
     clientes = Cliente.objects.all()
-    return render(request, 'paneltrabajador/cliente/listado.html', {'clientes': clientes})
+     # Procesamos el filtro de búsqueda
+    termino_busqueda = request.GET.get('q', '').strip()
+    if termino_busqueda:
+        clientes = clientes.filter(
+            Q(rut__icontains=termino_busqueda) |
+            Q(nombre_cliente__icontains=termino_busqueda) |
+            Q(direccion__icontains=termino_busqueda) |
+            Q(telefono__icontains=termino_busqueda) |
+            Q(email__icontains=termino_busqueda)
+        )
+
+    contexto = {
+        'clientes': clientes,
+        'termino_busqueda': termino_busqueda,
+    }
+
+    return render(request, 'paneltrabajador/cliente/listado.html', contexto)
 
 
 def cliente_crear(request):

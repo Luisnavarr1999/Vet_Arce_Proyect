@@ -3,11 +3,21 @@
   Listado - Clientes
 {% endblock title %}
 {% block content %}
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <h3 class="fw-light">Listado de clientes</h3>
-    {% if perms.paneltrabajador.add_cliente %}
-      <a href="{% url 'panel_cliente_nuevo' %}" class="btn btn-success">Agregar nuevo cliente</a>
-    {% endif %}
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
+    <h3 class="fw-light mb-0">Listado de clientes</h3>
+    <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
+      <form method="get" class="d-flex gap-2" role="search">
+        <input type="search"
+               class="form-control"
+               name="q"
+               placeholder="Buscar por RUT, nombre, email..."
+               value="{{ termino_busqueda }}">
+        <button type="submit" class="btn btn-outline-primary">Buscar</button>
+      </form>
+      {% if perms.paneltrabajador.add_cliente %}
+        <a href="{% url 'panel_cliente_nuevo' %}" class="btn btn-success">Agregar nuevo cliente</a>
+      {% endif %}
+    </div>
   </div>
   <table class="table table-hover">
     <thead>
