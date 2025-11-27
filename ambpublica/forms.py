@@ -107,21 +107,36 @@ class CitaForm(forms.ModelForm):
         if servicio:
             citas_disponibles = citas_disponibles.filter(servicio=servicio)
 
-        # Crea una lista de tuplas en el formato adecuado para el campo de selección
+        # Crea la estructura de opciones y datos para el calendario interactivo
         opciones = []
-        for cita in citas_disponibles:
+        self.available_slots = []
+        for cita in citas_disponibles.order_by('fecha'):
             fecha_local = localtime(cita.fecha)
             fecha_texto = date_format(fecha_local, 'DATE_FORMAT')
             hora_texto = date_format(fecha_local, 'TIME_FORMAT')
             veterinario = cita.usuario.get_full_name() or cita.usuario.get_username()
+            photo_url = getattr(getattr(cita.usuario, 'panel_profile', None), 'photo_url', None)
+            servicio_nombre = cita.get_servicio_display()
             opciones.append(
                 (
                     cita.n_cita,
                     f"{fecha_texto} a las {hora_texto} - Veterinario: {veterinario}",
                 )
             )
+            self.available_slots.append(
+                {
+                    'id': str(cita.n_cita),
+                    'date': fecha_local.date().isoformat(),
+                    'time': hora_texto,
+                    'date_label': fecha_texto,
+                    'datetime_label': f"{fecha_texto} a las {hora_texto}",
+                    'veterinario': veterinario,
+                    'veterinario_photo': photo_url,
+                    'servicio': servicio_nombre,
+                }
+            )
 
-        # Agrega las opciones al campo de selección
+        # Agrega las opciones al campo de selección (se mostrará como campo oculto en la vista)
         self.fields['n_cita'] = forms.ChoiceField(
             choices=opciones,
             widget=forms.Select(attrs={'class': 'form-control'}),

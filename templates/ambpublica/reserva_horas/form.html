@@ -4,6 +4,175 @@
 {% endblock title %}
 {% block content %}
 
+  {% if step == 'final' %}
+    <style>
+      .booking-calendar {
+        background: #f9fafb;
+        border: 1px solid #e6e8eb;
+        border-radius: 16px;
+        padding: 1.25rem;
+      }
+
+      .calendar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+
+      .calendar-weekday {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #8b909a;
+      }
+
+      .calendar-day-btn {
+        width: 100%;
+        border: 1px solid #e6e8eb;
+        background: #fff;
+        border-radius: 12px;
+        padding: 0.75rem 0.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        min-height: 3.25rem;
+      }
+
+      .calendar-day-btn.available:hover,
+      .calendar-day-btn.available:focus {
+        transform: translateY(-2px);
+        border-color: #f0c15e;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+      }
+
+      .calendar-day-btn.available {
+        cursor: pointer;
+        color: #3b4148;
+        font-weight: 600;
+      }
+
+      .calendar-day-btn.disabled {
+        background: #f0f2f5;
+        color: #b0b5bf;
+        cursor: not-allowed;
+      }
+
+      .calendar-day-btn.selected {
+        border-color: #2fb171;
+        background: #e8f7ef;
+        color: #236b45;
+        font-weight: 700;
+      }
+
+      .time-slot-btn {
+        border-radius: 999px;
+        border: 1px solid #dfe3e6;
+        background: #fff;
+        color: #1f2a36;
+        padding: 0.55rem 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.15s ease;
+      }
+
+      .time-slot-btn .time-label {
+        font-weight: 700;
+      }
+
+      .time-slot-btn .vet-label {
+        color: #66707b;
+        font-size: 0.9rem;
+      }
+
+      .time-slot-btn:hover,
+      .time-slot-btn:focus {
+        border-color: #f0c15e;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+      }
+
+      .time-slot-btn.active {
+        background: linear-gradient(135deg, #2fb171, #36c581);
+        color: #fff;
+        border-color: #2fb171;
+        box-shadow: 0 10px 18px rgba(47, 177, 113, 0.25);
+      }
+
+      .time-slot-btn.active .vet-label {
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .slot-helper {
+        color: #77808b;
+        font-size: 0.95rem;
+      }
+
+      .summary-card {
+        border: 1px solid #e6e8eb;
+        border-radius: 16px;
+        background: #fff7ec;
+        padding: 1.25rem;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      }
+
+      .summary-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      }
+
+      .summary-avatar-fallback {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f0c15e, #f88d3b);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 2rem;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      }
+
+      .summary-meta {
+        display: grid;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+        gap: 0.6rem;
+      }
+
+      .summary-label {
+        color: #7a828c;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.2rem;
+      }
+
+      .summary-value {
+        font-weight: 700;
+        color: #1f2a36;
+        font-size: 1.05rem;
+      }
+
+      @media (min-width: 992px) {
+        .summary-card.sticky-lg {
+          position: sticky;
+          top: 1rem;
+        }
+      }
+    </style>
+  {% endif %}
+
   {# HERO INICIAL (PRIMER PASO O SIN HORAS) #}
   {% if step == '' or step == 'nohours' %}
     <section class="maple-hero-block text-center my-4">
@@ -188,9 +357,106 @@
         </div>
       {% endif %}
 
-      <form method="post" class="maple-form">
+      <form method="post" class="maple-form" id="booking-form">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% if step == 'final' %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+              {{ form.non_field_errors|join:' ' }}
+            </div>
+          {% endif %}
+
+          <div class="d-none">
+            {{ form.n_cita }}
+          </div>
+
+          <div class="row g-4 align-items-start">
+            <div class="col-lg-8">
+              <div class="booking-calendar shadow-sm">
+                <div class="calendar-header">
+                  <div>
+                    <div class="text-uppercase text-muted small fw-semibold">Seleccione una Fecha y Hora:</div>
+                    <div class="h5 mb-0" id="current-month-label"></div>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-outline-maple" type="button" id="prev-month-btn" aria-label="Mes anterior">
+                      <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-outline-maple" type="button" id="next-month-btn" aria-label="Mes siguiente">
+                      <i class="bi bi-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="calendar-grid mb-2" id="calendar-weekdays">
+                  <div class="calendar-weekday text-center">L</div>
+                  <div class="calendar-weekday text-center">M</div>
+                  <div class="calendar-weekday text-center">M</div>
+                  <div class="calendar-weekday text-center">J</div>
+                  <div class="calendar-weekday text-center">V</div>
+                  <div class="calendar-weekday text-center">S</div>
+                  <div class="calendar-weekday text-center">D</div>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+              </div>
+
+              <div class="maple-info-card mt-3" id="time-slot-panel">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="rounded-circle bg-warning text-white d-inline-flex justify-content-center align-items-center" style="width: 2.5rem; height: 2.5rem;">
+                    <i class="bi bi-clock-history"></i>
+                  </span>
+                  <div>
+                    <div class="text-uppercase text-muted small fw-semibold">Horas disponibles</div>
+                    <div class="fw-bold" id="time-slot-title">Selecciona una fecha</div>
+                  </div>
+                </div>
+                <div id="time-slot-list" class="d-flex flex-wrap gap-2"></div>
+                <p class="slot-helper mb-0" id="time-slot-helper">Elige un día en el calendario para ver sus horarios disponibles.</p>
+              </div>
+
+              {% if form.n_cita.errors %}
+                <div class="alert alert-danger mt-3" role="alert">
+                  {{ form.n_cita.errors|join:' ' }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="col-lg-4">
+              <div class="summary-card sticky-lg" id="selection-summary" hidden>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <div id="summary-avatar-wrapper">
+                    <img src="" alt="Fotografía del veterinario" class="summary-avatar d-none" id="summary-avatar" />
+                    <div class="summary-avatar-fallback" id="summary-avatar-fallback" aria-hidden="true">
+                      <i class="bi bi-person-fill"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="summary-label mb-1">Profesional</div>
+                    <div class="h5 mb-0" id="summary-vet">—</div>
+                  </div>
+                </div>
+
+                <div class="summary-meta">
+                  <div>
+                    <div class="summary-label">Fecha seleccionada</div>
+                    <div class="summary-value" id="summary-date">—</div>
+                  </div>
+                  <div>
+                    <div class="summary-label">Hora seleccionada</div>
+                    <div class="summary-value" id="summary-time">—</div>
+                  </div>
+                  {% if servicio_nombre %}
+                    <div>
+                      <div class="summary-label">Servicio</div>
+                      <div class="summary-value" id="summary-service">{{ servicio_nombre }}</div>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          {{ form.as_p }}
+        {% endif %}
 
         <button type="submit" class="btn btn-maple-green w-100 mb-2">
           {% if step == 'final' %}Confirmar reserva{% else %}Continuar{% endif %}
@@ -263,6 +529,229 @@
     </div>  {# cierre maple-card #}
 
   {% endif %}  {# cierre del else de step != 'nohours' #}
+
+  {% if step == 'final' %}
+    {{ available_slots|json_script:"slot-data" }}
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const slotDataElement = document.getElementById('slot-data');
+        const slotData = slotDataElement ? JSON.parse(slotDataElement.textContent) : [];
+
+        const slotsByDate = slotData.reduce((acc, slot) => {
+          if (!acc[slot.date]) acc[slot.date] = [];
+          acc[slot.date].push(slot);
+          return acc;
+        }, {});
+
+        const availableDates = Object.keys(slotsByDate).sort();
+        const selectField = document.getElementById('id_n_cita');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const monthLabel = document.getElementById('current-month-label');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+        const timeSlotList = document.getElementById('time-slot-list');
+        const timeSlotHelper = document.getElementById('time-slot-helper');
+        const timeSlotTitle = document.getElementById('time-slot-title');
+        const summaryCard = document.getElementById('selection-summary');
+        const summaryVet = document.getElementById('summary-vet');
+        const summaryDate = document.getElementById('summary-date');
+        const summaryTime = document.getElementById('summary-time');
+        const summaryAvatar = document.getElementById('summary-avatar');
+        const summaryAvatarFallback = document.getElementById('summary-avatar-fallback');
+
+        if (selectField) {
+          selectField.classList.add('d-none');
+          selectField.setAttribute('aria-hidden', 'true');
+        }
+
+        const findSlotById = (id) => slotData.find((slot) => slot.id === id);
+
+        let selectedSlotId = selectField ? selectField.value : null;
+        let selectedDate = null;
+
+        if (selectedSlotId) {
+          const selectedSlot = findSlotById(selectedSlotId);
+          if (selectedSlot) {
+            selectedDate = selectedSlot.date;
+          } else {
+            selectedSlotId = null;
+          }
+        }
+
+        const minMonthDate = availableDates.length ? new Date(`${availableDates[0]}T00:00:00`) : new Date();
+        const maxMonthDate = availableDates.length ? new Date(`${availableDates[availableDates.length - 1]}T00:00:00`) : new Date();
+        const startingMonth = selectedDate || availableDates[0];
+        let currentMonth = startingMonth ? new Date(`${startingMonth}T00:00:00`) : new Date();
+
+        const formatMonth = (date) =>
+          date.toLocaleDateString('es-CL', {month: 'long', year: 'numeric'}).replace(/^./, (s) => s.toUpperCase());
+
+        const renderCalendar = () => {
+          if (!calendarGrid || !monthLabel) return;
+
+          const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+          const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+          const offset = (startOfMonth.getDay() + 6) % 7; // Empezando en lunes
+
+          calendarGrid.innerHTML = '';
+          monthLabel.textContent = formatMonth(currentMonth);
+
+          for (let i = 0; i < offset; i += 1) {
+            const spacer = document.createElement('div');
+            spacer.className = 'calendar-day-btn disabled';
+            spacer.setAttribute('aria-hidden', 'true');
+            calendarGrid.appendChild(spacer);
+          }
+
+          for (let day = 1; day <= endOfMonth.getDate(); day += 1) {
+            const dateObj = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+            const dateStr = dateObj.toISOString().slice(0, 10);
+            const hasSlots = Boolean(slotsByDate[dateStr]);
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'calendar-day-btn text-center';
+            btn.textContent = day;
+
+            if (hasSlots) {
+              btn.classList.add('available');
+              btn.addEventListener('click', () => handleDateSelection(dateStr));
+            } else {
+              btn.classList.add('disabled');
+              btn.disabled = true;
+              btn.setAttribute('aria-disabled', 'true');
+            }
+
+            if (selectedDate === dateStr) {
+              btn.classList.add('selected');
+            }
+
+            calendarGrid.appendChild(btn);
+          }
+
+          if (prevMonthBtn) {
+            const prevMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+            prevMonthBtn.disabled = prevMonth < new Date(minMonthDate.getFullYear(), minMonthDate.getMonth(), 1);
+          }
+
+          if (nextMonthBtn) {
+            const nextMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+            nextMonthBtn.disabled = nextMonth > new Date(maxMonthDate.getFullYear(), maxMonthDate.getMonth(), 1);
+          }
+        };
+
+        const updateSummary = (slot) => {
+          if (!summaryCard) return;
+
+          if (!slot) {
+            summaryCard.hidden = true;
+            return;
+          }
+
+          summaryCard.hidden = false;
+          summaryVet.textContent = slot.veterinario;
+          summaryDate.textContent = slot.date_label;
+          summaryTime.textContent = slot.time;
+
+          if (summaryAvatar) {
+            if (slot.veterinario_photo) {
+              summaryAvatar.src = slot.veterinario_photo;
+              summaryAvatar.classList.remove('d-none');
+              summaryAvatarFallback.classList.add('d-none');
+            } else {
+              summaryAvatar.classList.add('d-none');
+              summaryAvatarFallback.classList.remove('d-none');
+            }
+          }
+        };
+
+        const selectSlot = (slot) => {
+          selectedDate = slot.date;
+          selectedSlotId = slot.id;
+          if (selectField) {
+            selectField.value = slot.id;
+          }
+          renderTimeSlots(slot.date);
+          renderCalendar();
+          updateSummary(slot);
+        };
+
+        const renderTimeSlots = (dateStr) => {
+          if (!timeSlotList) return;
+
+          timeSlotList.innerHTML = '';
+
+          if (!dateStr) {
+            timeSlotHelper.textContent = 'Elige un día en el calendario para ver sus horarios disponibles.';
+            timeSlotTitle.textContent = 'Selecciona una fecha';
+            updateSummary(null);
+            return;
+          }
+
+          const slots = slotsByDate[dateStr] || [];
+          timeSlotTitle.textContent = slots.length ? 'Selecciona un horario' : 'Sin horarios disponibles';
+          timeSlotHelper.textContent = slots.length
+            ? 'Elige la hora que prefieras para continuar con tu reserva.'
+            : 'Esta fecha no cuenta con horarios disponibles.';
+
+          slots.forEach((slot) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'time-slot-btn';
+            btn.innerHTML = `<span class="time-label">${slot.time}</span><span class="vet-label">${slot.veterinario}</span>`;
+
+            if (slot.id === selectedSlotId) {
+              btn.classList.add('active');
+            }
+
+            btn.addEventListener('click', () => selectSlot(slot));
+            timeSlotList.appendChild(btn);
+          });
+
+          if (slots.length && !selectedSlotId) {
+            timeSlotHelper.textContent = 'Recuerda seleccionar una hora para confirmar tu reserva.';
+          }
+        };
+
+        const handleDateSelection = (dateStr) => {
+          selectedDate = dateStr;
+          selectedSlotId = null;
+          if (selectField) {
+            selectField.value = '';
+          }
+          renderTimeSlots(dateStr);
+          renderCalendar();
+          updateSummary(null);
+        };
+
+        if (prevMonthBtn) {
+          prevMonthBtn.addEventListener('click', () => {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+            renderCalendar();
+          });
+        }
+
+        if (nextMonthBtn) {
+          nextMonthBtn.addEventListener('click', () => {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+            renderCalendar();
+          });
+        }
+
+        const initialSlot = selectedSlotId ? findSlotById(selectedSlotId) : null;
+        if (!selectedDate && availableDates.length) {
+          currentMonth = new Date(`${availableDates[0]}T00:00:00`);
+        }
+
+        renderCalendar();
+        renderTimeSlots(selectedDate);
+        if (initialSlot) {
+          updateSummary(initialSlot);
+          renderTimeSlots(initialSlot.date);
+        }
+      });
+    </script>
+  {% endif %}
 
 {% endblock content %}
 

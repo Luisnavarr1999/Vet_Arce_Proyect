@@ -1474,6 +1474,7 @@ def reserva_hora(request):
             'mascota': mascota,
             'cliente': cliente,
             'servicio_nombre': servicio_nombre,
+            'available_slots': getattr(form, 'available_slots', []),
         }
 
         # Hacemos return aquí para que no se cargue el contexto de más abajo
