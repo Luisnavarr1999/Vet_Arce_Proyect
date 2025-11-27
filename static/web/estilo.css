@@ -892,3 +892,82 @@ header.home{
     font-size: 1.1rem;
   }
 }
+
+/* ===== Ajuste para movil ===== */
+@media (max-width: 575.98px) {
+  /* Hero: textos legibles y espaciado cómodo */
+  .hero-carousel {
+    min-height: 70vh;
+  }
+
+  .hero-content {
+    padding: 2.25rem 1.25rem 2.75rem;
+    gap: 0.35rem;
+  }
+
+  .hero-content h1 {
+    font-size: 1.9rem;
+  }
+
+  .hero-content .lead {
+    font-size: 1.05rem;
+  }
+
+  /* Barra promo más compacta */
+  .maple-subbar {
+    font-size: 0.9rem;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .promo-track {
+    gap: 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  /* Servicios: tarjetas aireadas en una columna */
+  .service-card {
+    padding: 1.25rem;
+  }
+
+  .service-card p {
+    margin-bottom: 0;
+  }
+
+  /* Opiniones: carrusel más fácil de navegar con el pulgar */
+  .testimonials-wrap {
+    padding-inline: 0;
+  }
+
+  .testimonials-slider {
+    padding: 0.25rem;
+  }
+
+  .testimonial-card {
+    padding: 0.5rem;
+  }
+
+  .testimonial-nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Evitar desplazamiento horizontal por decoraciones full-bleed */
+  .autumn-decor {
+    padding-inline: 1rem;
+    overflow: hidden;
+  }
+
+  .autumn-decor::before,
+  .autumn-decor::after {
+    display: none;
+  }
+
+  /* Widget de chatbot a ancho completo controlado */
+  .chatbot-widget {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    width: auto;
+    max-width: none;
+  }
+}

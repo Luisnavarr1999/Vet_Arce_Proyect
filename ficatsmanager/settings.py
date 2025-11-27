@@ -144,6 +144,7 @@ if HAS_CSP:
     INSTALLED_APPS.append('csp')
 
 INSTALLED_APPS += [
+    'ficatsmanager',
     'ambpublica',
     'paneltrabajador',
     'django.contrib.admindocs',
