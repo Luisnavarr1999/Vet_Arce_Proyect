@@ -73,8 +73,12 @@ def analytics_insights(request):
         .order_by("-total", "cliente__nombre_cliente")[:5]
     )
 
+    evoluciones_base = EvolucionClinica.objects.filter(creado_en__gte=inicio_180_dias)
+    if not puede_ver_global:
+        evoluciones_base = evoluciones_base.filter(cita__usuario=request.user)
+
     evoluciones_por_mes = (
-        EvolucionClinica.objects.filter(creado_en__gte=inicio_180_dias)
+        evoluciones_base
         .annotate(periodo=Cast(TruncMonth("creado_en"), output_field=DateField()))
         .values("periodo", "servicio")
         .annotate(total=Count("pk"))
@@ -93,6 +97,8 @@ def analytics_insights(request):
 
 
     chat_conversaciones = ChatConversation.objects.filter(created_at__gte=inicio_90_dias)
+    if not puede_ver_global:
+        chat_conversaciones = chat_conversaciones.filter(assigned_to=request.user)
     chat_totales = chat_conversaciones.aggregate(
         pendientes=Count("pk", filter=Q(state=ChatConversation.STATE_PENDING)),
         activas=Count("pk", filter=Q(state=ChatConversation.STATE_ACTIVE)),
