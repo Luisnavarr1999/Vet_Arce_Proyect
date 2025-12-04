@@ -30,6 +30,7 @@ urlpatterns = [
 
     path('panel/', vistas_panel.home, name="panel_home"),
     path('panel/dashboard/', vistas_panel.dashboard, name='panel_dashboard'),
+    path('panel/analitica/', vistas_panel.analytics_insights, name='panel_analytics'),
     path('panel/perfil/', vistas_panel.perfil, name='panel_perfil'),
     
     path('panel/password/recuperar/', vistas_panel.password_reset_request, name='panel_password_reset'),

@@ -1,0 +1,218 @@
+{% extends "./master.html" %}
+{% block title %}Analítica y minería de datos{% endblock title %}
+{% block content %}
+  <section class="dashboard-hero card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h2 class="fw-semibold mb-2">Analítica y minería de datos</h2>
+      <p class="mb-0 text-muted">
+        Indicadores en vivo desde {{ fecha_desde }} (citas y chat) y {{ fecha_desde_larga }} (evoluciones clínicas).
+        La vista muestra información de {{ alcance_global|yesno:"toda la veterinaria,sus casos asignados" }}.
+      </p>
+    </div>
+  </section>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <span class="text-muted d-block">Citas evaluadas (90 días)</span>
+          <h3 class="fw-semibold mb-0">{{ total_citas_periodo }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <span class="text-muted d-block">Asistencia</span>
+          <h3 class="fw-semibold mb-0">{{ tasa_asistencia }}%</h3>
+          <small class="text-muted">{{ total_asistidas }} con asistencia registrada</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <span class="text-muted d-block">No show</span>
+          <h3 class="fw-semibold mb-0">{{ tasa_no_show }}%</h3>
+          <small class="text-muted">{{ total_no_show }} ausencias</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <span class="text-muted d-block">Cancelación</span>
+          <h3 class="fw-semibold mb-0">{{ tasa_cancelacion }}%</h3>
+          <small class="text-muted">{{ total_canceladas }} canceladas</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-lg-7">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header border-0 bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="d-flex flex-column">
+            <h5 class="mb-0 fw-semibold text-primary">Rendimiento por servicio</h5>
+            <span class="badge text-bg-light text-muted" style="width: fit-content;">Últimos 90 días</span>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if servicios_resumen %}
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Servicio</th>
+                    <th class="text-center">Reservadas</th>
+                    <th class="text-center">Asistidas</th>
+                    <th class="text-center">No show</th>
+                    <th class="text-center">Canceladas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in servicios_resumen %}
+                    <tr>
+                      <td>{{ item.servicio }}</td>
+                      <td class="text-center">{{ item.total }}</td>
+                      <td class="text-center">{{ item.asistidas }}</td>
+                      <td class="text-center">{{ item.no_show }}</td>
+                      <td class="text-center">{{ item.canceladas }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="alert alert-soft mb-0">Aún no hay citas registradas en el periodo.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card dashboard-card shadow-sm border-0 h-100">
+        <div class="card-header border-0 bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="d-flex flex-column">
+            <h5 class="mb-0 fw-semibold text-primary">Clientes recurrentes</h5>
+            <span class="badge text-bg-light text-muted" style="width: fit-content;">Últimos 6 meses</span>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if clientes_recurrentes %}
+            <ol class="mb-0 ps-3">
+              {% for cliente in clientes_recurrentes %}
+                <li class="mb-2">
+                  <div class="fw-semibold">{{ cliente.cliente__nombre_cliente }}</div>
+                  <div class="text-muted small">{{ cliente.total }} reservas</div>
+                </li>
+              {% endfor %}
+            </ol>
+          {% else %}
+            <div class="alert alert-soft mb-0">No hay reservas suficientes para calcular recurrencia.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card dashboard-card shadow-sm border-0 mb-4">
+    <div class="card-header border-0 bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div class="d-flex flex-column">
+        <h5 class="mb-0 fw-semibold text-primary">Evoluciones clínicas por mes</h5>
+        <span class="badge text-bg-light text-muted" style="width: fit-content;">Últimos 6 meses</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if evoluciones_series %}
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Servicio</th>
+                <th class="text-center">Evoluciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for periodo, datos in evoluciones_series.items %}
+                {% for item in datos %}
+                  <tr>
+                    <td>{{ periodo }}</td>
+                    <td>{{ item.servicio }}</td>
+                    <td class="text-center">{{ item.total }}</td>
+                  </tr>
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert alert-soft mb-0">Todavía no se registran evoluciones clínicas en este periodo.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card dashboard-card shadow-sm border-0">
+    <div class="card-header border-0 bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div class="d-flex flex-column">
+        <h5 class="mb-0 fw-semibold text-primary">Chat en vivo</h5>
+        <span class="badge text-bg-light text-muted" style="width: fit-content;">Últimos 90 días</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if chat_totales.total %}
+        <div class="row g-3 mb-3">
+          <div class="col-md-3">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <div class="text-muted small">Conversaciones</div>
+              <div class="fw-semibold fs-4">{{ chat_totales.total }}</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <div class="text-muted small">Pendientes</div>
+              <div class="fw-semibold fs-4">{{ chat_totales.pendientes }}</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <div class="text-muted small">Activas</div>
+              <div class="fw-semibold fs-4">{{ chat_totales.activas }}</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <div class="text-muted small">Cerradas</div>
+              <div class="fw-semibold fs-4">{{ chat_totales.cerradas }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-4">
+            <div class="p-3 border rounded-3 h-100">
+              <div class="text-muted small">Conversaciones contestadas</div>
+              <div class="fw-semibold fs-5">{{ metrica_respuesta.conversaciones_contestadas|default:0 }}</div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="p-3 border rounded-3 h-100">
+              <div class="text-muted small">Demora promedio de primera respuesta</div>
+              <div class="fw-semibold fs-6">
+                {% if metrica_respuesta.demora_promedio %}
+                  {{ metrica_respuesta.demora_promedio }}
+                {% else %}
+                  Sin respuestas registradas
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="alert alert-soft mb-0">No hay conversaciones en el rango de fechas.</div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock content %}

@@ -13,6 +13,7 @@ from .chat import (
     chat_conversation_messages,
     chat_pending_count,
 )
+from .analytics import analytics_insights
 
 from .profile import perfil
 

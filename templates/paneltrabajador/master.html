@@ -99,6 +99,13 @@
                             <span>Dashboard</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if '/panel/analitica/' in request.path_info %} active{% endif %}"
+                           href="{% url 'panel_analytics' %}">
+                            <i class="bi bi-bar-chart-line sidebar-icon"></i>
+                            <span>Analítica</span>
+                        </a>
+                    </li>
                     {% endif %}
 
                     {% if perms.paneltrabajador.view_cliente %}
