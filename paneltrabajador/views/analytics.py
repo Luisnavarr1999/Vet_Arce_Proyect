@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F, Min, Q
 from django.shortcuts import redirect, render
 from django.utils import timezone
-from django.db.models.functions import TruncMonth, Cast
+from django.db.models.functions import Cast, ExtractHour, TruncMonth
 from django.db.models import DateField
 
 from paneltrabajador.models import ChatConversation, ChatMessage, Cita, EvolucionClinica
@@ -123,6 +123,81 @@ def analytics_insights(request):
         demora_promedio=Avg("demora_respuesta"),
     )
 
+     # --- Minería ligera: estimación de riesgo de no-show para las próximas citas ---
+    historial_modelo = citas_base.filter(
+        fecha__lt=ahora, fecha__gte=inicio_180_dias, asistencia__in=["A", "N"]
+    )
+    total_historial = historial_modelo.count()
+    base_no_show = (
+        historial_modelo.filter(asistencia="N").count() / total_historial
+        if total_historial
+        else 0
+    )
+
+    servicio_no_show = {
+        item["servicio"]: item["no_show"] / item["total"]
+        for item in historial_modelo.values("servicio")
+        .annotate(
+            total=Count("pk"),
+            no_show=Count("pk", filter=Q(asistencia="N")),
+        )
+        .filter(total__gte=5)
+    }
+
+    hora_no_show = {}
+    hora_stats = (
+        historial_modelo.annotate(hora=ExtractHour("fecha"))
+        .values("hora")
+        .annotate(total=Count("pk"), no_show=Count("pk", filter=Q(asistencia="N")))
+    )
+    for stat in hora_stats:
+        hora = stat["hora"]
+        if stat["total"] >= 5 and hora is not None:
+            hora_no_show[int(hora)] = stat["no_show"] / stat["total"]
+
+    def riesgo_no_show(cita):
+        if not total_historial:
+            return 0, ["Sin suficientes datos históricos"]
+
+        explicaciones = ["Tasa base calculada con los últimos 6 meses"]
+        servicio_rate = servicio_no_show.get(cita.servicio, base_no_show)
+        hora_local = timezone.localtime(cita.fecha).hour
+        hora_rate = hora_no_show.get(hora_local, base_no_show)
+
+        puntaje = (base_no_show * 0.4) + (servicio_rate * 0.35) + (hora_rate * 0.25)
+
+        if servicio_rate != base_no_show:
+            explicaciones.append(
+                f"Servicio con tasa histórica de no-show del {round(servicio_rate * 100, 1)}%"
+            )
+        if hora_rate != base_no_show:
+            explicaciones.append(
+                f"Horario con tasa histórica del {round(hora_rate * 100, 1)}%"
+            )
+
+        return round(puntaje * 100, 1), explicaciones
+
+    proximas_citas = (
+        citas_base.filter(estado="1", fecha__gte=ahora)
+        .order_by("fecha")[:8]
+    )
+    proximas_con_riesgo = []
+    servicio_labels = dict(Cita.SERVICIO_CHOICES)
+    for cita in proximas_citas:
+        probabilidad, explicaciones = riesgo_no_show(cita)
+        nivel = (
+            "Alto" if probabilidad >= 40 else "Medio" if probabilidad >= 20 else "Bajo"
+        )
+        proximas_con_riesgo.append(
+            {
+                "cita": cita,
+                "probabilidad": probabilidad,
+                "nivel": nivel,
+                "servicio": servicio_labels.get(cita.servicio, cita.servicio),
+                "explicaciones": explicaciones,
+            }
+        )
+
     contexto = {
         "alcance_global": puede_ver_global,
         "total_citas_periodo": total_citas_periodo,
@@ -140,6 +215,8 @@ def analytics_insights(request):
         "metrica_respuesta": metrica_respuesta,
         "fecha_desde": inicio_90_dias.date(),
         "fecha_desde_larga": inicio_180_dias.date(),
+        "proximas_con_riesgo": proximas_con_riesgo,
+        "base_no_show": round(base_no_show * 100, 1),
     }
 
     return render(request, "paneltrabajador/analytics.html", contexto)

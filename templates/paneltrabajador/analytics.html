@@ -49,6 +49,56 @@
     </div>
   </div>
 
+  <div class="card dashboard-card shadow-sm border-0 mb-4">
+    <div class="card-header border-0 bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div class="d-flex flex-column">
+        <h5 class="mb-0 fw-semibold text-primary">Predicción de riesgo de no-show</h5>
+        <span class="badge text-bg-light text-muted" style="width: fit-content;">Modelo heurístico con últimos 6 meses (base {{ base_no_show }}%)</span>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if proximas_con_riesgo %}
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Cita</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th class="text-center">Prob. no-show</th>
+                <th>Factores</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in proximas_con_riesgo %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ item.cita.cliente.nombre_cliente|default:"Sin cliente" }}</div>
+                    <div class="text-muted small">{{ item.nivel }} riesgo</div>
+                  </td>
+                  <td>{{ item.servicio }}</td>
+                  <td>{{ item.cita.fecha|date:"d M Y H:i" }}</td>
+                  <td class="text-center">
+                    <span class="badge text-bg-light">{{ item.probabilidad }}%</span>
+                  </td>
+                  <td>
+                    <ul class="mb-0 small text-muted ps-3">
+                      {% for nota in item.explicaciones %}
+                        <li>{{ nota }}</li>
+                      {% endfor %}
+                    </ul>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert alert-soft mb-0">No hay citas futuras suficientes para estimar riesgo.</div>
+      {% endif %}
+    </div>
+  </div>
+
   <div class="row g-3 mb-4">
     <div class="col-lg-7">
       <div class="card dashboard-card shadow-sm border-0 h-100">
