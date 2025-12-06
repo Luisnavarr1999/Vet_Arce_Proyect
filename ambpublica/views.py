@@ -420,9 +420,15 @@ YES_KEYWORDS = {
     "afirmativo",
     "ok",
     "okay",
+    "okey",
     "dale",
+    "va",
+    "vale",
     "porfavor",
     "porfa",
+    "listo",
+    "super",
+    "seguro",
 }
 YES_PHRASES = (
     "quiero hablar",
@@ -430,14 +436,33 @@ YES_PHRASES = (
     "hablar con la recepcion",
     "hablar con recepcion",
     "hablar con una recepcionista",
+    "por supuesto",
+    "de acuerdo",
+    "me parece",
 )
-NO_KEYWORDS = {"no", "nop", "negativo"}
-NO_PHRASES = ("no gracias", "prefiero seguir", "mejor no")
+NO_KEYWORDS = {"no", "nop", "negativo", "nel", "nada", "nanai"}
+NO_PHRASES = (
+    "no gracias",
+    "prefiero seguir",
+    "mejor no",
+    "no por ahora",
+    "mejor despues",
+    "prefiero no",
+)
 
 APPOINTMENT_LOOKUP_STATE_KEY = "chatbot_lookup_state"
 AVAILABILITY_STATE_KEY = "chatbot_availability_state"
 APPOINTMENT_LOOKUP_RECENT_DAYS = 7
-FLOW_CANCEL_KEYWORDS = {"cancelar", "cancela", "olvida", "no importa", "gracias igual"}
+FLOW_CANCEL_KEYWORDS = {
+    "cancelar",
+    "cancela",
+    "olvida",
+    "no importa",
+    "gracias igual",
+    "no",
+    "prefiero no",
+    "mejor no",
+}
 
 APPOINTMENT_PATTERNS = [
     re.compile(r"\b(tengo|tenemos) (una )?(cita|hora)\b"),
@@ -836,7 +861,11 @@ def _handle_availability_question(session, message: str, normalized_message: str
     if not triggered:
         return None
 
-    if any(word in normalized_message for word in FLOW_CANCEL_KEYWORDS):
+    wants_cancel = any(word in normalized_message for word in FLOW_CANCEL_KEYWORDS)
+    if not wants_cancel and state:
+        wants_cancel = _contains_negative_intent(normalized_message)
+
+    if wants_cancel:
         _clear_session_state(session, AVAILABILITY_STATE_KEY)
         return {"reply": _pick_reply(AVAILABILITY_PROMPTS["cancel"])}
 
