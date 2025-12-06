@@ -166,3 +166,51 @@ class ChatbotFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn("sin problema", _normalize(data["reply"]))
+
+
+class CancelarCitaViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.usuario = get_user_model().objects.create_user(
+            username="vet",
+            password="pass1234",
+            first_name="Ana",
+            last_name="Veterinaria",
+        )
+        cls.cliente = Cliente.objects.create(
+            rut=12345678,
+            nombre_cliente="Cliente Demo",
+            direccion="Av. Siempre Viva 123",
+            telefono="+56912345678",
+            email="cliente@example.com",
+        )
+        cls.mascota = Mascota.objects.create(
+            nombre="Bigotes",
+            numero_chip=9876543210000,
+            especie="Gato",
+            raza="Doméstico",
+            fecha_nacimiento=timezone.now().date(),
+            cliente=cls.cliente,
+            historial_medico="",
+        )
+        cls.cita = Cita.objects.create(
+            cliente=cls.cliente,
+            mascota=cls.mascota,
+            estado='1',
+            usuario=cls.usuario,
+            fecha=timezone.now() + timedelta(days=1),
+            servicio='general',
+            asistencia='P',
+        )
+
+    def test_cancelar_cita_successfully_updates_state(self):
+        response = self.client.post(
+            reverse("ambpublico_cancelar_cita"),
+            data={"rut": "12.345.678-5", "n_cita": self.cita.n_cita},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.cita.refresh_from_db()
+        self.assertEqual(self.cita.estado, '2')
+        self.assertIsNone(self.cita.asistencia)
+        self.assertContains(response, "exitosamente")
