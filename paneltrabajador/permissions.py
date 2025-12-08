@@ -45,9 +45,7 @@ ROLE_DEFINITIONS = (
         name='veterinario',
         permissions=(
             "view_user",
-            "change_cita",
             "view_cita",
-            "view_cliente",
             "change_mascota",
             "view_mascota",
             "view_producto",
