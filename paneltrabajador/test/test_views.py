@@ -15,7 +15,7 @@ class CitaViewTests(TestCase):
         cls.client = Client()
         cls.group, _ = Group.objects.get_or_create(name="veterinario")
         permissions = Permission.objects.filter(
-            codename__in=["add_cita", "change_cita"]
+            codename__in=["add_cita", "change_cita", "view_cita"]
         )
         cls.veterinario = get_user_model().objects.create_user(
             username="veterinario",
@@ -26,6 +26,30 @@ class CitaViewTests(TestCase):
         )
         cls.veterinario.groups.add(cls.group)
         cls.veterinario.user_permissions.set(permissions)
+
+        cls.other_veterinario = get_user_model().objects.create_user(
+            username="otrosvet",
+            password="testpass123",
+            email="other.vet@example.com",
+            first_name="Otro",
+            last_name="Vet",
+        )
+        cls.other_veterinario.groups.add(cls.group)
+        cls.other_veterinario.user_permissions.set(permissions)
+
+        gerente_group, _ = Group.objects.get_or_create(name="gerente")
+        cls.gerente = get_user_model().objects.create_user(
+            username="gerente",
+            password="testpass123",
+            email="manager@example.com",
+            first_name="Gere",
+            last_name="Nte",
+        )
+        cls.gerente.groups.add(gerente_group)
+        cls.gerente.user_permissions.set(
+            Permission.objects.filter(codename__in=["view_cita"])
+        )
+
 
         cls.cliente = Cliente.objects.create(
             rut=11111111,
@@ -49,6 +73,15 @@ class CitaViewTests(TestCase):
             estado='1',
             usuario=cls.veterinario,
             fecha=timezone.now() + timedelta(days=2),
+            servicio='general',
+        )
+
+        cls.other_cita = Cita.objects.create(
+            cliente=cls.cliente,
+            mascota=cls.mascota,
+            estado='1',
+            usuario=cls.other_veterinario,
+            fecha=timezone.now() + timedelta(days=3),
             servicio='general',
         )
 
@@ -92,3 +125,24 @@ class CitaViewTests(TestCase):
         self.existing_cita.refresh_from_db()
         self.assertEqual(self.existing_cita.servicio, "dentista")
         self.assertEqual(self.existing_cita.usuario, self.veterinario)
+
+    def test_listado_filtra_citas_por_veterinario_autenticado(self):
+        response = self.client.get(reverse("panel_cita_listar"))
+
+        self.assertEqual(response.status_code, 200)
+        citas_listadas = list(response.context["citas"].values_list("usuario", flat=True))
+        self.assertTrue(all(usuario_id == self.veterinario.id for usuario_id in citas_listadas))
+        self.assertIn(self.veterinario.id, citas_listadas)
+        self.assertNotIn(self.other_veterinario.id, citas_listadas)
+
+    def test_listado_gerente_ve_todas_las_citas(self):
+        self.client.force_login(self.gerente)
+
+        response = self.client.get(reverse("panel_cita_listar"))
+
+        self.assertEqual(response.status_code, 200)
+        citas_listadas = set(response.context["citas"].values_list("n_cita", flat=True))
+        self.assertSetEqual(
+            citas_listadas,
+            {self.existing_cita.n_cita, self.other_cita.n_cita},
+        )

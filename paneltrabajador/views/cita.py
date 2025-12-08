@@ -39,6 +39,11 @@ def cita_listar(request):
     asistencia_labels = dict(Cita.ASISTENCIA_CHOICES)
     servicio_labels = dict(Cita.SERVICIO_CHOICES)
 
+    grupos_usuario = set(request.user.groups.values_list('name', flat=True))
+    es_gerente = 'gerente' in grupos_usuario
+    es_recepcionista = 'recepcionista' in grupos_usuario
+    es_veterinario = 'veterinario' in grupos_usuario
+
     if estado and estado in estado_labels:
         filtros_queryset['estado'] = estado
         filtros_aplicados.append(f"Estado: {estado_labels[estado]}")
@@ -52,6 +57,9 @@ def cita_listar(request):
         filtros_aplicados.append(f"Asistencia: {asistencia_labels[asistencia]}")
 
     citas = Cita.get_for_listado(**filtros_queryset)
+
+    if es_veterinario and not (es_gerente or es_recepcionista):
+        citas = citas.filter(usuario=request.user)
 
     fecha_desde = None
     if fecha_desde_raw:
